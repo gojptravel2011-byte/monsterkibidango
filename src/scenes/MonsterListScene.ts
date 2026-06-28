@@ -32,11 +32,11 @@ export class MonsterListScene extends Phaser.Scene {
         fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
       });
       this.add.text(100, y + 34, `HP: ${m.hp} / ${m.maxHp}　なつき度: ${m.affection}`, {
-        fontSize: '14px', color: '#aaaaaa', fontFamily: 'sans-serif',
+        fontSize: '18px', color: '#aaaaaa', fontFamily: 'sans-serif',
       });
       const skillNames = m.skills.map(s => SKILLS[s]?.name ?? s).join('　');
       this.add.text(100, y + 54, `わざ: ${skillNames}`, {
-        fontSize: '13px', color: '#88ddff', fontFamily: 'sans-serif',
+        fontSize: '17px', color: '#88ddff', fontFamily: 'sans-serif',
       });
     });
 

@@ -33,7 +33,7 @@ export class ShopScene extends Phaser.Scene {
       const dialogs = STORY_EVENTS.shopIntro.dialogs;
       // 簡易表示
       this.add.text(w / 2, 60, dialogs[0].text, {
-        fontSize: '16px', color: '#aaffaa', fontFamily: 'sans-serif',
+        fontSize: '20px', color: '#aaffaa', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     }
 
@@ -47,10 +47,10 @@ export class ShopScene extends Phaser.Scene {
         fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
       });
       this.add.text(20, y + 30, this.describeItem(item), {
-        fontSize: '13px', color: '#aaaaaa', fontFamily: 'sans-serif',
+        fontSize: '17px', color: '#aaaaaa', fontFamily: 'sans-serif',
       });
       this.add.text(w - 130, y + 18, `${item.price}まい`, {
-        fontSize: '16px', color: '#ffdd44', fontFamily: 'sans-serif',
+        fontSize: '20px', color: '#ffdd44', fontFamily: 'sans-serif',
       });
 
       const buyBtn = this.add.rectangle(w - 50, y + 18, 70, 40, 0x3355aa)
@@ -60,7 +60,7 @@ export class ShopScene extends Phaser.Scene {
         .on('pointerover', () => buyBtn.setFillStyle(0x5577cc))
         .on('pointerout', () => buyBtn.setFillStyle(0x3355aa));
       this.add.text(w - 50, y + 18, 'かう', {
-        fontSize: '16px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     });
 

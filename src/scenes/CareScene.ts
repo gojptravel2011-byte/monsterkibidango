@@ -37,7 +37,7 @@ export class CareScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { this.selectedIndex = i; this.scene.restart(); });
       this.add.text(x, 65, species?.name ?? m.speciesId, {
-        fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     });
 
@@ -48,10 +48,10 @@ export class CareScene extends Phaser.Scene {
     this.add.image(w / 2, 160, species?.spriteKey ?? 'player').setDisplaySize(90, 90);
 
     const hp = this.add.text(w / 2, 215, `HP: ${mon.hp}/${mon.maxHp}`, {
-      fontSize: '16px', color: '#88ff88', fontFamily: 'sans-serif',
+      fontSize: '20px', color: '#88ff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     const aff = this.add.text(w / 2, 238, `なつき度: ${mon.affection}`, {
-      fontSize: '16px', color: '#ffaaff', fontFamily: 'sans-serif',
+      fontSize: '20px', color: '#ffaaff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     this.statusTexts = [hp, aff];
 

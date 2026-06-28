@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { VirtualPad } from '../ui/VirtualPad';
 import { MessageWindow } from '../ui/MessageWindow';
 import { getState, setFlag, getFlag, createMonsterInstance } from '../state/playerState';
 import { countStep, resetStepCount, generateEncounter } from '../systems/encounter';
@@ -16,7 +15,6 @@ export class MapScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
   private lastVx: number = 1;
   private playerLabel!: Phaser.GameObjects.Text;
-  private pad!: VirtualPad;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key };
   private msgWin!: MessageWindow;
@@ -39,11 +37,10 @@ export class MapScene extends Phaser.Scene {
       .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(10);
     this.player.play('player_idle');
     this.playerLabel = this.add.text(pos.x, pos.y - 30, getState().name.charAt(0), {
-      fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(11);
 
-    this.pad = new VirtualPad(this);
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = {
       up: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -67,7 +64,7 @@ export class MapScene extends Phaser.Scene {
     }).setDepth(150).setScrollFactor(0);
 
     this.coinsText = this.add.text(10, 36, '', {
-      fontSize: '16px', color: '#ffdd44', fontFamily: 'sans-serif',
+      fontSize: '20px', color: '#ffdd44', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 3,
     }).setDepth(150).setScrollFactor(0);
 
@@ -120,7 +117,7 @@ export class MapScene extends Phaser.Scene {
       const zone = this.add.rectangle(conn.x, conn.y, 60, 80, 0xffffff, 0.2)
         .setStrokeStyle(2, 0xffffff);
       const label = this.add.text(conn.x, conn.y - 50, conn.label, {
-        fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
         stroke: '#000000', strokeThickness: 2,
       }).setOrigin(0.5);
       this.connections.push({ zone, toField: conn.toField });
@@ -146,7 +143,7 @@ export class MapScene extends Phaser.Scene {
     });
     // ラベル
     const txt = this.add.text(x, y - 46, label, {
-      fontSize: '13px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '17px', color: '#ffffff', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 3, align: 'center',
     }).setOrigin(0.5).setDepth(5);
     this.decorations.push(circle, txt);
@@ -175,7 +172,7 @@ export class MapScene extends Phaser.Scene {
       // おみせ（右の建物）→ 近づくと発動
       this.decorations.push(
         this.add.rectangle(500, 280, 80, 40, 0xddaa44).setStrokeStyle(2, 0xffcc66).setDepth(3),
-        this.add.text(500, 280, 'おみせ', { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(4),
+        this.add.text(500, 280, 'おみせ', { fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(4),
       );
       this.addTriggerZone(500, 320, 'おみせ\nはいる', 0xffcc44,
         'おみせに\nはいりますか？',
@@ -185,7 +182,7 @@ export class MapScene extends Phaser.Scene {
       // 砂場
       this.decorations.push(
         this.add.rectangle(w / 2 - 150, h * 0.45, 100, 70, 0xeedd88).setDepth(2).setStrokeStyle(2, 0xaa9944),
-        this.add.text(w / 2 - 150, h * 0.45, 'すなば', { fontSize: '13px', color: '#886622', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(3),
+        this.add.text(w / 2 - 150, h * 0.45, 'すなば', { fontSize: '17px', color: '#886622', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(3),
       );
 
       // おちばひろいエリア（ほいくえんに移動）
@@ -203,7 +200,7 @@ export class MapScene extends Phaser.Scene {
       const calcArea = this.add.rectangle(w / 2 + 180, h * 0.65, 90, 60, 0x3355aa).setDepth(2)
         .setStrokeStyle(2, 0x8888ff);
       const calcLabel = this.add.text(w / 2 + 180, h * 0.65, 'けいさん\nコーナー', {
-        fontSize: '13px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
+        fontSize: '17px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
       }).setOrigin(0.5).setDepth(3);
       this.decorations.push(calcArea, calcLabel);
       this.addTriggerZone(w / 2 + 180, h * 0.70, 'けいさん\nゲーム', 0x4466cc,
@@ -222,7 +219,7 @@ export class MapScene extends Phaser.Scene {
         this.add.image(teacherX, teacherY, 'npc_sensei')
           .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(3),
         this.add.text(teacherX, teacherY + 36, 'せんせい', {
-          fontSize: '12px', color: '#3333aa', fontFamily: 'sans-serif', fontStyle: 'bold',
+          fontSize: '20px', color: '#3333aa', fontFamily: 'sans-serif', fontStyle: 'bold',
           stroke: '#ffffff', strokeThickness: 2,
         }).setOrigin(0.5).setDepth(4),
       );
@@ -247,7 +244,7 @@ export class MapScene extends Phaser.Scene {
             .setDisplaySize(PLAYER_SIZE * 1.3, PLAYER_SIZE * 1.7).setDepth(3)
             .setFlipX(i % 2 === 0),
           this.add.text(pos.x, pos.y + 34, studentNames[i], {
-            fontSize: '11px', color: '#333333', fontFamily: 'sans-serif',
+            fontSize: '20px', color: '#333333', fontFamily: 'sans-serif',
             stroke: '#ffffff', strokeThickness: 2,
           }).setOrigin(0.5).setDepth(4),
         );
@@ -325,7 +322,7 @@ export class MapScene extends Phaser.Scene {
       // ボスゾーン：近づくと発動
       this.decorations.push(
         this.add.text(w / 2, h / 2 - 80, 'くらやみの\nあるじ', {
-          fontSize: '16px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
+          fontSize: '20px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
           stroke: '#000000', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(6),
       );
@@ -341,10 +338,25 @@ export class MapScene extends Phaser.Scene {
     if (this.scene.isPaused()) return;
 
     const state = getState();
-    const left = this.pad.state.left || this.cursors.left.isDown || this.wasd.left.isDown;
-    const right = this.pad.state.right || this.cursors.right.isDown || this.wasd.right.isDown;
-    const up = this.pad.state.up || this.cursors.up.isDown || this.wasd.up.isDown;
-    const down = this.pad.state.down || this.cursors.down.isDown || this.wasd.down.isDown;
+    // タッチ：プレイヤーから見た方向で移動
+    let touchLeft = false, touchRight = false, touchUp = false, touchDown = false;
+    const ptr = this.input.activePointer;
+    if (ptr.isDown) {
+      const dx = ptr.x - this.player.x;
+      const dy = ptr.y - this.player.y;
+      const DEAD = 28;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > DEAD) touchRight = true;
+        else if (dx < -DEAD) touchLeft = true;
+      } else {
+        if (dy > DEAD) touchDown = true;
+        else if (dy < -DEAD) touchUp = true;
+      }
+    }
+    const left  = touchLeft  || this.cursors.left.isDown  || this.wasd.left.isDown;
+    const right = touchRight || this.cursors.right.isDown || this.wasd.right.isDown;
+    const up    = touchUp    || this.cursors.up.isDown    || this.wasd.up.isDown;
+    const down  = touchDown  || this.cursors.down.isDown  || this.wasd.down.isDown;
 
     let vx = 0, vy = 0;
     if (left) vx = -SPEED;

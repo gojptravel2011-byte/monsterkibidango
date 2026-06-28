@@ -41,15 +41,15 @@ export class ArithmeticScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.questionNoText = this.add.text(w / 2, 72, '', {
-      fontSize: '16px', color: '#aaaaff', fontFamily: 'sans-serif',
+      fontSize: '20px', color: '#aaaaff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     this.scoreText = this.add.text(10, 36, 'せいかい: 0', {
-      fontSize: '16px', color: '#88ffaa', fontFamily: 'sans-serif',
+      fontSize: '20px', color: '#88ffaa', fontFamily: 'sans-serif',
     });
 
     this.timeText = this.add.text(w - 10, 36, 'のこり: 15', {
-      fontSize: '16px', color: '#ffaaaa', fontFamily: 'sans-serif',
+      fontSize: '20px', color: '#ffaaaa', fontFamily: 'sans-serif',
     }).setOrigin(1, 0.5);
 
     this.questionText = this.add.text(w / 2, h * 0.35, '', {

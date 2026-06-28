@@ -22,16 +22,16 @@ export class MessageWindow {
       .setStrokeStyle(3, 0x8888ff).setDepth(100).setScrollFactor(0).setVisible(false);
 
     this.speakerText = scene.add.text(20, y + 12, '', {
-      fontSize: '18px', color: '#aaffaa', fontFamily: 'sans-serif',
+      fontSize: '26px', color: '#aaffaa', fontFamily: 'sans-serif',
     }).setDepth(101).setScrollFactor(0).setVisible(false);
 
     this.bodyText = scene.add.text(20, y + 40, '', {
-      fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '24px', color: '#ffffff', fontFamily: 'sans-serif',
       wordWrap: { width: w - 50 },
     }).setDepth(101).setScrollFactor(0).setVisible(false);
 
     this.continueIndicator = scene.add.text(w - 40, y + winH - 30, '▼', {
-      fontSize: '20px', color: '#ffff88',
+      fontSize: '24px', color: '#ffff88',
     }).setDepth(101).setScrollFactor(0).setVisible(false);
 
     scene.tweens.add({
@@ -74,14 +74,14 @@ export class MessageWindow {
       .setStrokeStyle(2, 0x44ee44).setDepth(110).setScrollFactor(0)
       .setInteractive({ useHandCursor: true });
     const yesLbl = scene.add.text(w * 0.30, btnY, 'はい', {
-      fontSize: '22px', color: '#44ee44', fontFamily: 'sans-serif',
+      fontSize: '26px', color: '#44ee44', fontFamily: 'sans-serif',
     }).setOrigin(0.5).setDepth(111).setScrollFactor(0);
 
     const noBg = scene.add.rectangle(w * 0.70, btnY, 140, 48, 0x442222, 0.95)
       .setStrokeStyle(2, 0xee4444).setDepth(110).setScrollFactor(0)
       .setInteractive({ useHandCursor: true });
     const noLbl = scene.add.text(w * 0.70, btnY, 'いいえ', {
-      fontSize: '22px', color: '#ee4444', fontFamily: 'sans-serif',
+      fontSize: '26px', color: '#ee4444', fontFamily: 'sans-serif',
     }).setOrigin(0.5).setDepth(111).setScrollFactor(0);
 
     yesBg.on('pointerdown', () => { this.hide(); onYes(); });
