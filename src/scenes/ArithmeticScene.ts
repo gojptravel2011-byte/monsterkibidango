@@ -37,19 +37,19 @@ export class ArithmeticScene extends Phaser.Scene {
 
     this.add.rectangle(w / 2, h / 2, w, h, 0x112244);
     this.add.text(w / 2, 36, 'たしざん・ひきざん', {
-      fontSize: '22px', color: '#ffdd44', fontFamily: 'sans-serif',
+      fontSize: '30px', color: '#ffdd44', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     this.questionNoText = this.add.text(w / 2, 72, '', {
-      fontSize: '20px', color: '#aaaaff', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#aaaaff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     this.scoreText = this.add.text(10, 36, 'せいかい: 0', {
-      fontSize: '20px', color: '#88ffaa', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#88ffaa', fontFamily: 'sans-serif',
     });
 
     this.timeText = this.add.text(w - 10, 36, 'のこり: 15', {
-      fontSize: '20px', color: '#ffaaaa', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffaaaa', fontFamily: 'sans-serif',
     }).setOrigin(1, 0.5);
 
     this.questionText = this.add.text(w / 2, h * 0.35, '', {
@@ -58,7 +58,7 @@ export class ArithmeticScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     this.feedbackText = this.add.text(w / 2, h * 0.52, '', {
-      fontSize: '28px', color: '#ffff44', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffff44', fontFamily: 'sans-serif',
       stroke: '#333300', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(10);
 
@@ -215,20 +215,20 @@ export class ArithmeticScene extends Phaser.Scene {
       : 'またちゃれんじしてね！';
 
     this.add.text(w / 2, h * 0.28, `せいかい：${this.score} / ${this.totalQuestions}`, {
-      fontSize: '28px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     this.add.text(w / 2, h * 0.40, resultMsg, {
-      fontSize: '26px', color: resultColor, fontFamily: 'sans-serif', align: 'center',
+      fontSize: '34px', color: resultColor, fontFamily: 'sans-serif', align: 'center',
     }).setOrigin(0.5);
 
     this.add.text(w / 2, h * 0.55, `コイン　${coins}まい　ゲット！`, {
-      fontSize: '22px', color: '#88ff88', fontFamily: 'sans-serif',
+      fontSize: '30px', color: '#88ff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     if (this.score >= 4) {
       this.add.text(w / 2, h * 0.63, 'たべのこ　ゲット！', {
-        fontSize: '20px', color: '#aaffaa', fontFamily: 'sans-serif',
+        fontSize: '36px', color: '#aaffaa', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     }
 

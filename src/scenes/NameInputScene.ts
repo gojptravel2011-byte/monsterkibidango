@@ -13,7 +13,7 @@ export class NameInputScene extends Phaser.Scene {
     this.add.rectangle(w / 2, h / 2, w, h, 0x112244);
 
     this.add.text(w / 2, h * 0.2, 'なまえを　いれてね！', {
-      fontSize: '26px',
+      fontSize: '34px',
       color: '#ffffff',
       fontFamily: 'sans-serif',
     }).setOrigin(0.5);
@@ -62,7 +62,7 @@ export class NameInputScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', decide);
     this.add.text(w / 2, h * 0.65, 'けってい！', {
-      fontSize: '24px',
+      fontSize: '32px',
       color: '#ffffff',
       fontFamily: 'sans-serif',
     }).setOrigin(0.5);

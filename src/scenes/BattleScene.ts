@@ -61,10 +61,10 @@ export class BattleScene extends Phaser.Scene {
     this.enemySprite = this.add.image(w * 0.65, h * 0.26, eSpecies?.spriteKey ?? 'monster_kurosuke')
       .setDisplaySize(96, 96).setFlipX(true);
     this.enemyNameText = this.add.text(w * 0.35, h * 0.12, `${eSpecies?.name ?? this.enemy.speciesId} Lv.${this.enemy.level}`, {
-      fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
     });
     this.enemyHpText = this.add.text(w * 0.35, h * 0.18, '', {
-      fontSize: '24px', color: '#88ff88', fontFamily: 'sans-serif',
+      fontSize: '32px', color: '#88ff88', fontFamily: 'sans-serif',
     });
 
     // 味方スプライト
@@ -72,10 +72,10 @@ export class BattleScene extends Phaser.Scene {
     this.allySprite = this.add.image(w * 0.25, h * 0.49, aSpecies?.spriteKey ?? 'player')
       .setDisplaySize(96, 96);
     this.allyNameText = this.add.text(w * 0.5, h * 0.37, `${aSpecies?.name ?? 'なかま'} Lv.${this.ally?.level ?? 1}`, {
-      fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
     });
     this.allyHpText = this.add.text(w * 0.5, h * 0.43, '', {
-      fontSize: '24px', color: '#88ff88', fontFamily: 'sans-serif',
+      fontSize: '32px', color: '#88ff88', fontFamily: 'sans-serif',
     });
 
     this.msgWin = new MessageWindow(this);
@@ -138,7 +138,7 @@ export class BattleScene extends Phaser.Scene {
         .on('pointerover', () => bg.setFillStyle(0x5566aa))
         .on('pointerout', () => bg.setFillStyle(0x334488));
       const text = this.add.text(x, y, cmd.label, {
-        fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       this.commandButtons.push(bg, text);
     });
@@ -169,7 +169,7 @@ export class BattleScene extends Phaser.Scene {
       .setStrokeStyle(2, 0xaa4444).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.showCommandMenu());
     const backTxt = this.add.text(w / 2, h * 0.58, 'もどる', {
-      fontSize: '26px', color: '#ffaaaa', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffaaaa', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     this.commandButtons.push(backBg, backTxt);
 
@@ -187,10 +187,10 @@ export class BattleScene extends Phaser.Scene {
           this.switchAlly(m);
         });
       const nameTxt = this.add.text(60, y - 10, `${species?.name ?? m.speciesId}  Lv.${m.level}`, {
-        fontSize: '24px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '32px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0, 0.5);
       const hpTxt = this.add.text(60, y + 16, `HP: ${m.hp} / ${m.maxHp}`, {
-        fontSize: '24px', color: hpColor, fontFamily: 'sans-serif',
+        fontSize: '32px', color: hpColor, fontFamily: 'sans-serif',
       }).setOrigin(0, 0.5);
       const icon = this.add.image(36, y, species?.spriteKey ?? 'player').setDisplaySize(44, 44);
       this.commandButtons.push(btn, nameTxt, hpTxt, icon);
@@ -228,7 +228,7 @@ export class BattleScene extends Phaser.Scene {
         .on('pointerover', () => bg.setFillStyle(0x336655))
         .on('pointerout', () => bg.setFillStyle(0x225544));
       const text = this.add.text(x, y, `${skill.name}\nいりょく:${skill.power}`, {
-        fontSize: '24px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
+        fontSize: '32px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
       }).setOrigin(0.5);
       this.commandButtons.push(bg, text);
     });
@@ -238,7 +238,7 @@ export class BattleScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     const cancelText = this.add.text(w / 2, h * 0.85, 'もどる', {
-      fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     this.commandButtons.push(cancelBg, cancelText);
   }
@@ -274,7 +274,7 @@ export class BattleScene extends Phaser.Scene {
           this.msgWin.show('', `${item.name}を　つかった！\nHPが ${heal} かいふく！`, () => this.enemyTurn());
         });
       const text = this.add.text(x, y, `${item.name}（${inv.count}こ）`, {
-        fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       this.commandButtons.push(bg, text);
     });
@@ -284,7 +284,7 @@ export class BattleScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     this.commandButtons.push(cancelBg, this.add.text(w / 2, h * 0.85, 'もどる', {
-      fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5));
   }
 
@@ -324,7 +324,7 @@ export class BattleScene extends Phaser.Scene {
           }
         });
       const ballText = this.add.text(x, y, `${item.name}（${inv.count}こ）`, {
-        fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       this.commandButtons.push(bg, ballText);
     });
@@ -334,7 +334,7 @@ export class BattleScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     this.commandButtons.push(cancelBg, this.add.text(w / 2, h * 0.85, 'もどる', {
-      fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5));
   }
 
@@ -447,7 +447,7 @@ export class BattleScene extends Phaser.Scene {
       onComplete: () => {
         const w = this.scale.width, h = this.scale.height;
         const faintTxt = this.add.text(w * 0.25, h * 0.46, 'たおれた…', {
-          fontSize: '26px', color: '#ff6666', fontFamily: 'sans-serif',
+          fontSize: '34px', color: '#ff6666', fontFamily: 'sans-serif',
           stroke: '#330000', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(50);
         this.time.delayedCall(700, () => {

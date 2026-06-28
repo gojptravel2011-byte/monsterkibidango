@@ -16,13 +16,13 @@ export class CareScene extends Phaser.Scene {
 
     this.add.rectangle(w / 2, h / 2, w, h, 0x112233, 0.95);
     this.add.text(w / 2, 28, 'そだてる', {
-      fontSize: '22px', color: '#ffff88', fontFamily: 'sans-serif',
+      fontSize: '30px', color: '#ffff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     const state = getState();
     if (state.party.length === 0) {
       this.add.text(w / 2, h / 2, 'なかまが　いないよ！', {
-        fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       this.addCloseButton();
       return;
@@ -37,7 +37,7 @@ export class CareScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { this.selectedIndex = i; this.scene.restart(); });
       this.add.text(x, 65, species?.name ?? m.speciesId, {
-        fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     });
 
@@ -48,10 +48,10 @@ export class CareScene extends Phaser.Scene {
     this.add.image(w / 2, 160, species?.spriteKey ?? 'player').setDisplaySize(90, 90);
 
     const hp = this.add.text(w / 2, 215, `HP: ${mon.hp}/${mon.maxHp}`, {
-      fontSize: '20px', color: '#88ff88', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#88ff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     const aff = this.add.text(w / 2, 238, `なつき度: ${mon.affection}`, {
-      fontSize: '20px', color: '#ffaaff', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffaaff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     this.statusTexts = [hp, aff];
 
@@ -88,7 +88,7 @@ export class CareScene extends Phaser.Scene {
         .on('pointerover', () => bg.setFillStyle(0x5566aa))
         .on('pointerout', () => bg.setFillStyle(0x334488));
       this.add.text(w / 2, y, a.label, {
-        fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     });
 
@@ -118,7 +118,7 @@ export class CareScene extends Phaser.Scene {
 
   private showEffect(x: number, y: number, msg: string): void {
     const text = this.add.text(x, y - 30, msg, {
-      fontSize: '18px', color: '#ffff44', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffff44', fontFamily: 'sans-serif',
     }).setOrigin(0.5).setDepth(50);
     this.tweens.add({
       targets: text,
@@ -137,7 +137,7 @@ export class CareScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.stop('CareScene'));
     this.add.text(w / 2, h - 50, 'もどる', {
-      fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
   }
 }

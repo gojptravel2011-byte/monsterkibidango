@@ -29,15 +29,15 @@ export class MinigameScene extends Phaser.Scene {
 
     this.add.rectangle(w / 2, h / 2, w, h, 0x334422);
     this.add.text(w / 2, 36, 'おちばを　あつめよう！', {
-      fontSize: '22px', color: '#ffdd44', fontFamily: 'sans-serif',
+      fontSize: '30px', color: '#ffdd44', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     this.countText = this.add.text(w / 2, 70, 'あつめた: 0 / 10', {
-      fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     this.timeText = this.add.text(w - 10, 36, 'のこり: 20', {
-      fontSize: '18px', color: '#ffaaaa', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffaaaa', fontFamily: 'sans-serif',
     }).setOrigin(1, 0.5);
 
     // 落ち葉を定期的に生成
@@ -108,19 +108,19 @@ export class MinigameScene extends Phaser.Scene {
       if (success) addItem('tabenoko', 1);
 
       this.add.text(w / 2, h / 2 - 40, success ? 'すごい！　ぜんぶ　あつめた！' : 'がんばった！', {
-        fontSize: '24px', color: '#ffff44', fontFamily: 'sans-serif',
+        fontSize: '32px', color: '#ffff44', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       this.add.text(w / 2, h / 2 + 10, `コイン　${coins}まい　ゲット！`, {
-        fontSize: '20px', color: '#88ff88', fontFamily: 'sans-serif',
+        fontSize: '36px', color: '#88ff88', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       if (success) {
         this.add.text(w / 2, h / 2 + 45, 'たべのこ　ゲット！', {
-          fontSize: '18px', color: '#aaffaa', fontFamily: 'sans-serif',
+          fontSize: '34px', color: '#aaffaa', fontFamily: 'sans-serif',
         }).setOrigin(0.5);
       }
     } else {
       this.add.text(w / 2, h / 2, 'ざんねん…\nまた　ちゃれんじ　してね！', {
-        fontSize: '22px', color: '#ffaaaa', fontFamily: 'sans-serif', align: 'center',
+        fontSize: '30px', color: '#ffaaaa', fontFamily: 'sans-serif', align: 'center',
       }).setOrigin(0.5);
     }
 

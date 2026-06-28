@@ -37,7 +37,7 @@ export class MapScene extends Phaser.Scene {
       .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(10);
     this.player.play('player_idle');
     this.playerLabel = this.add.text(pos.x, pos.y - 30, getState().name.charAt(0), {
-      fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(11);
 
@@ -59,12 +59,12 @@ export class MapScene extends Phaser.Scene {
     // HUD
     const w = this.scale.width;
     this.fieldNameText = this.add.text(10, 10, '', {
-      fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 3,
     }).setDepth(150).setScrollFactor(0);
 
     this.coinsText = this.add.text(10, 36, '', {
-      fontSize: '20px', color: '#ffdd44', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffdd44', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 3,
     }).setDepth(150).setScrollFactor(0);
 
@@ -117,7 +117,7 @@ export class MapScene extends Phaser.Scene {
       const zone = this.add.rectangle(conn.x, conn.y, 60, 80, 0xffffff, 0.2)
         .setStrokeStyle(2, 0xffffff);
       const label = this.add.text(conn.x, conn.y - 50, conn.label, {
-        fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
         stroke: '#000000', strokeThickness: 2,
       }).setOrigin(0.5);
       this.connections.push({ zone, toField: conn.toField });
@@ -143,7 +143,7 @@ export class MapScene extends Phaser.Scene {
     });
     // ラベル
     const txt = this.add.text(x, y - 46, label, {
-      fontSize: '17px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '32px', color: '#ffffff', fontFamily: 'sans-serif',
       stroke: '#000000', strokeThickness: 3, align: 'center',
     }).setOrigin(0.5).setDepth(5);
     this.decorations.push(circle, txt);
@@ -164,7 +164,7 @@ export class MapScene extends Phaser.Scene {
       // 看板
       this.decorations.push(
         this.add.text(w / 2, 60, 'ほいくえん', {
-          fontSize: '22px', color: '#664400', fontFamily: 'sans-serif', fontStyle: 'bold',
+          fontSize: '30px', color: '#664400', fontFamily: 'sans-serif', fontStyle: 'bold',
           stroke: '#ffffff', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(3),
       );
@@ -172,7 +172,7 @@ export class MapScene extends Phaser.Scene {
       // おみせ（右の建物）→ 近づくと発動
       this.decorations.push(
         this.add.rectangle(500, 280, 80, 40, 0xddaa44).setStrokeStyle(2, 0xffcc66).setDepth(3),
-        this.add.text(500, 280, 'おみせ', { fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(4),
+        this.add.text(500, 280, 'おみせ', { fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(4),
       );
       this.addTriggerZone(500, 320, 'おみせ\nはいる', 0xffcc44,
         'おみせに\nはいりますか？',
@@ -182,27 +182,44 @@ export class MapScene extends Phaser.Scene {
       // 砂場
       this.decorations.push(
         this.add.rectangle(w / 2 - 150, h * 0.45, 100, 70, 0xeedd88).setDepth(2).setStrokeStyle(2, 0xaa9944),
-        this.add.text(w / 2 - 150, h * 0.45, 'すなば', { fontSize: '17px', color: '#886622', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(3),
+        this.add.text(w / 2 - 150, h * 0.45, 'すなば', { fontSize: '32px', color: '#886622', fontFamily: 'sans-serif' }).setOrigin(0.5).setDepth(3),
       );
 
-      // おちばひろいエリア（ほいくえんに移動）
-      const kouyouTree = this.add.circle(w / 2 - 240, h * 0.40, 32, 0xcc6622).setDepth(2);
+      // おちばひろいエリア：大きい木
+      const treeX = w / 2 - 240, treeY = h * 0.38;
+      // 幹
       this.decorations.push(
-        kouyouTree,
-        this.add.text(w / 2 - 240, h * 0.40, '🍂', { fontSize: '24px' }).setOrigin(0.5).setDepth(3),
+        this.add.rectangle(treeX, treeY + 60, 24, 80, 0x774422).setDepth(2),
       );
-      this.addTriggerZone(w / 2 - 240, h * 0.45, 'おちば\nひろい', 0xcc6622,
+      // 葉（3層の円で大きな木）
+      this.decorations.push(
+        this.add.circle(treeX, treeY + 20, 56, 0x228833).setDepth(2),
+        this.add.circle(treeX - 34, treeY + 6, 40, 0x33aa44).setDepth(2),
+        this.add.circle(treeX + 34, treeY + 6, 40, 0x33aa44).setDepth(2),
+        this.add.circle(treeX, treeY - 22, 44, 0x44cc55).setDepth(2),
+      );
+      // 落ち葉
+      [[-20, 32], [22, 52], [-12, 72], [16, 36], [-32, 56]].forEach(([dx, dy]) => {
+        this.decorations.push(
+          this.add.text(treeX + dx, treeY + dy, '🍂', { fontSize: '22px' }).setDepth(3),
+        );
+      });
+      this.addTriggerZone(treeX, treeY + 95, 'おちば\nひろい', 0xcc6622,
         'おちばひろいを\nしますか？',
         () => { this.scene.start('MinigameScene'); },
       );
 
-      // たしざん・ひきざんゲーム
-      const calcArea = this.add.rectangle(w / 2 + 180, h * 0.65, 90, 60, 0x3355aa).setDepth(2)
-        .setStrokeStyle(2, 0x8888ff);
-      const calcLabel = this.add.text(w / 2 + 180, h * 0.65, 'けいさん\nコーナー', {
-        fontSize: '17px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
-      }).setOrigin(0.5).setDepth(3);
-      this.decorations.push(calcArea, calcLabel);
+      // たしざん・ひきざんゲーム（算数マーク付き黒板）
+      const calcX = w / 2 + 180, calcY = h * 0.64;
+      this.decorations.push(
+        this.add.rectangle(calcX, calcY, 120, 100, 0x1a3d1a).setDepth(2).setStrokeStyle(3, 0x8888ff),
+        this.add.text(calcX, calcY - 14, '＋ －', {
+          fontSize: '30px', color: '#ffff88', fontFamily: 'sans-serif', fontStyle: 'bold',
+        }).setOrigin(0.5).setDepth(3),
+        this.add.text(calcX, calcY + 24, 'けいさん', {
+          fontSize: '18px', color: '#aaffaa', fontFamily: 'sans-serif',
+        }).setOrigin(0.5).setDepth(3),
+      );
       this.addTriggerZone(w / 2 + 180, h * 0.70, 'けいさん\nゲーム', 0x4466cc,
         'たしざん・ひきざん\nゲームをしますか？',
         () => { this.scene.start('ArithmeticScene'); },
@@ -219,7 +236,7 @@ export class MapScene extends Phaser.Scene {
         this.add.image(teacherX, teacherY, 'npc_sensei')
           .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(3),
         this.add.text(teacherX, teacherY + 36, 'せんせい', {
-          fontSize: '20px', color: '#3333aa', fontFamily: 'sans-serif', fontStyle: 'bold',
+          fontSize: '36px', color: '#3333aa', fontFamily: 'sans-serif', fontStyle: 'bold',
           stroke: '#ffffff', strokeThickness: 2,
         }).setOrigin(0.5).setDepth(4),
       );
@@ -244,7 +261,7 @@ export class MapScene extends Phaser.Scene {
             .setDisplaySize(PLAYER_SIZE * 1.3, PLAYER_SIZE * 1.7).setDepth(3)
             .setFlipX(i % 2 === 0),
           this.add.text(pos.x, pos.y + 34, studentNames[i], {
-            fontSize: '20px', color: '#333333', fontFamily: 'sans-serif',
+            fontSize: '36px', color: '#333333', fontFamily: 'sans-serif',
             stroke: '#ffffff', strokeThickness: 2,
           }).setOrigin(0.5).setDepth(4),
         );
@@ -322,7 +339,7 @@ export class MapScene extends Phaser.Scene {
       // ボスゾーン：近づくと発動
       this.decorations.push(
         this.add.text(w / 2, h / 2 - 80, 'くらやみの\nあるじ', {
-          fontSize: '20px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
+          fontSize: '36px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
           stroke: '#000000', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(6),
       );

@@ -45,7 +45,7 @@ export class TitleScene extends Phaser.Scene {
 
     // サブタイトル
     this.add.text(w / 2, h * 0.38, 'いっしょに　ぼうけんしよう', {
-      fontSize: '18px',
+      fontSize: '34px',
       color: '#44ffff',
       fontFamily: 'sans-serif',
     }).setOrigin(0.5);
@@ -70,7 +70,7 @@ export class TitleScene extends Phaser.Scene {
 
     // コピーライト
     this.add.text(w - 10, h - 10, '© 2025', {
-      fontSize: '12px',
+      fontSize: '36px',
       color: '#888888',
       fontFamily: 'sans-serif',
     }).setOrigin(1, 1);
@@ -81,7 +81,7 @@ export class TitleScene extends Phaser.Scene {
       .setStrokeStyle(4, 0xaaaaff)
       .setInteractive({ useHandCursor: true });
     const text = this.add.text(x, y, label, {
-      fontSize: '24px',
+      fontSize: '32px',
       color: '#ffffff',
       fontFamily: 'sans-serif',
     }).setOrigin(0.5);

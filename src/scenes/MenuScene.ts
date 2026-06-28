@@ -18,7 +18,7 @@ export class MenuScene extends Phaser.Scene {
       .setStrokeStyle(3, 0x8888ff);
 
     this.add.text(w / 2, h * 0.18, 'メニュー', {
-      fontSize: '26px', color: '#ffff88', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     const items = [
@@ -37,14 +37,14 @@ export class MenuScene extends Phaser.Scene {
         .on('pointerover', () => bg.setFillStyle(0x5566aa))
         .on('pointerout', () => bg.setFillStyle(0x334488));
       const text = this.add.text(w / 2, y, item.label, {
-        fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
       this.buttons.push(bg, text);
     });
 
     // コイン表示
     this.add.text(w / 2, h * 0.88, `コイン: ${getState().coins}まい`, {
-      fontSize: '18px', color: '#ffdd44', fontFamily: 'sans-serif',
+      fontSize: '34px', color: '#ffdd44', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
   }
 
@@ -55,7 +55,7 @@ export class MenuScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
     this.add.text(w / 2, h / 2, 'セーブしたよ！', {
-      fontSize: '24px', color: '#88ff88', fontFamily: 'sans-serif',
+      fontSize: '32px', color: '#88ff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
     this.time.delayedCall(1500, () => this.close());
   }

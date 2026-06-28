@@ -12,13 +12,13 @@ export class MonsterListScene extends Phaser.Scene {
 
     this.add.rectangle(w / 2, h / 2, w, h, 0x112233, 0.95);
     this.add.text(w / 2, 30, 'てもちモンスター', {
-      fontSize: '22px', color: '#ffff88', fontFamily: 'sans-serif',
+      fontSize: '30px', color: '#ffff88', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
 
     const state = getState();
     if (state.party.length === 0) {
       this.add.text(w / 2, h / 2, 'まだ　なかまが　いないよ！', {
-        fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
       }).setOrigin(0.5);
     }
 
@@ -29,14 +29,14 @@ export class MonsterListScene extends Phaser.Scene {
         .setStrokeStyle(2, 0x8888ff);
       this.add.image(60, y + 35, species?.spriteKey ?? 'player').setDisplaySize(60, 60);
       this.add.text(100, y + 12, `${species?.name ?? m.speciesId}　Lv.${m.level}`, {
-        fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
       });
       this.add.text(100, y + 34, `HP: ${m.hp} / ${m.maxHp}　なつき度: ${m.affection}`, {
-        fontSize: '18px', color: '#aaaaaa', fontFamily: 'sans-serif',
+        fontSize: '34px', color: '#aaaaaa', fontFamily: 'sans-serif',
       });
       const skillNames = m.skills.map(s => SKILLS[s]?.name ?? s).join('　');
       this.add.text(100, y + 54, `わざ: ${skillNames}`, {
-        fontSize: '17px', color: '#88ddff', fontFamily: 'sans-serif',
+        fontSize: '32px', color: '#88ddff', fontFamily: 'sans-serif',
       });
     });
 
@@ -46,7 +46,7 @@ export class MonsterListScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.stop('MonsterListScene'));
     this.add.text(w / 2, h - 50, 'もどる', {
-      fontSize: '20px', color: '#ffffff', fontFamily: 'sans-serif',
+      fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5);
   }
 }
