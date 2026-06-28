@@ -5,7 +5,7 @@ import type { Item } from '../data/items';
 import { STORY_EVENTS } from '../data/story';
 import { getFlag, setFlag } from '../state/playerState';
 
-const SHOP_ITEMS = ['tabenoko', 'honyakuki', 'okyuball', 'daikyuball', 'kiracolla'];
+const SHOP_ITEMS = ['tabenoko', 'honyakuki', 'kiracolla'];
 
 export class ShopScene extends Phaser.Scene {
   private coinsText!: Phaser.GameObjects.Text;

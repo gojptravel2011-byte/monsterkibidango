@@ -225,6 +225,26 @@ export class MapScene extends Phaser.Scene {
         () => { this.scene.start('ArithmeticScene'); },
       );
 
+      // えんちょうせんせい（きびだんご屋）
+      const enchoX = 100, enchoY = h * 0.50;
+      this.decorations.push(
+        this.add.image(enchoX, enchoY, 'npc_encho')
+          .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(3),
+        this.add.text(enchoX, enchoY + 36, 'えんちょう', {
+          fontSize: '20px', color: '#112244', fontFamily: 'sans-serif', fontStyle: 'bold',
+          stroke: '#ffffff', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(4),
+        // きびだんご屋の看板
+        this.add.rectangle(enchoX, enchoY - 60, 110, 36, 0xffdd44).setDepth(3).setStrokeStyle(2, 0xcc9900),
+        this.add.text(enchoX, enchoY - 60, 'きびだんごやさん', {
+          fontSize: '16px', color: '#442200', fontFamily: 'sans-serif', fontStyle: 'bold',
+        }).setOrigin(0.5).setDepth(4),
+      );
+      this.addTriggerZone(enchoX, enchoY + 55, 'きびだんご\nやさん', 0xffaa22,
+        'えんちょうせんせいの\nきびだんごやさんに\nはいりますか？',
+        () => { this.scene.launch('BallShopScene').pause(); },
+      );
+
       // 花
       for (let i = 0; i < 8; i++) {
         this.decorations.push(this.add.image(60 + i * 80, h * 0.7, 'deco_flower').setDepth(2));

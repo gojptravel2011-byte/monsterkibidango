@@ -12,6 +12,8 @@ import { MenuScene } from './scenes/MenuScene';
 import { EndingScene } from './scenes/EndingScene';
 import { MinigameScene } from './scenes/MinigameScene';
 import { ArithmeticScene } from './scenes/ArithmeticScene';
+import { BallShopScene } from './scenes/BallShopScene';
+import { ItemListScene } from './scenes/ItemListScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -32,6 +34,8 @@ const config: Phaser.Types.Core.GameConfig = {
     EndingScene,
     MinigameScene,
     ArithmeticScene,
+    BallShopScene,
+    ItemListScene,
   ],
   scale: {
     mode: Phaser.Scale.FIT,

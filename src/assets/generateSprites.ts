@@ -5,6 +5,7 @@ import Phaser from 'phaser';
 // generateAllSprites() の呼び出しを削除するだけでよい
 
 export function generateAllSprites(scene: Phaser.Scene): void {
+  genNpcEncho(scene);
   genPlayerFrames(scene);
   genNpcSensei(scene);
   genNpcGaku(scene);
@@ -149,6 +150,18 @@ function genPlayerFrames(scene: Phaser.Scene): void {
 }
 
 // ---- 先生（NPC 48×64） ----
+// ---- えんちょうせんせい（NPC 48×64） ----
+function genNpcEncho(scene: Phaser.Scene): void {
+  const g = make(scene);
+  drawChar(g, {
+    hairColor: 0xcccccc, hairStyle: 'short',   // 白髪
+    skinColor: 0xffcc99, shirtColor: 0x112244, // 濃紺のスーツ
+    pantsColor: 0x111133, shoeColor: 0x111111,
+    glasses: true, frame: 0,
+  });
+  fin(g, 'npc_encho', 48, 64);
+}
+
 function genNpcSensei(scene: Phaser.Scene): void {
   const g = make(scene);
   drawChar(g, {
