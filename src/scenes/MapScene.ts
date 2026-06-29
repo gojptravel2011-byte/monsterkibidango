@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { MessageWindow } from '../ui/MessageWindow';
-import { getState, setFlag, getFlag, createMonsterInstance } from '../state/playerState';
+import { getState, setFlag, getFlag, addItem, createMonsterInstance } from '../state/playerState';
 import { countStep, resetStepCount, generateEncounter } from '../systems/encounter';
 import { FIELDS } from '../data/fields';
 import { STORY_EVENTS } from '../data/story';
@@ -374,105 +374,177 @@ export class MapScene extends Phaser.Scene {
       );
     } else if (fieldId === 'dungeon') {
       // ─── 地下迷路 ────────────────────────────────────────────
-      // 横壁バリア（ギャップが左右交互に切替）で蛇行ルートを強制。
-      // 縦仕切り壁はなし（当たり判定との兼ね合いで狭すぎる問題を回避）。
-      // 正解ルート: 入口(375,1020)→左端へ→上→右端へ→上→左端へ→上→中央へ→ボス
-      const WC  = 0x2a1040;
-      const GC  = 0x8844cc;
-      const WC2 = 0x1a0830;
+      // 正解ルート: 入口(375,1020)→右→上→左→上→右→上→左→上→中央→ボス
+      // ギャップは全て220px以上確保（当たり判定r=18を差し引いても184px余裕）
+      //
+      // ゾーン構成（下から上）:
+      //   Z1: y=900→1200  入口ゾーン（右の行き止まりに宝箱1）
+      //   Z2: y=700→900   F1通過後（左側に行き止まり・右へ進む）
+      //   Z3: y=500→700   F2通過後（右の行き止まりに宝箱2、左へ進む）
+      //   Z4: y=300→500   F3通過後（左から右へ、行き止まり多数）
+      //   Z5: y=150→300   F4通過後（中央上へ・回復ゾーン）
+      const WC  = 0x3a1a5a;
+      const GC  = 0x9955dd;
+      const WC2 = 0x1e0a30;
 
       this.decorations.push(
-        this.add.rectangle(w / 2, h / 2, w, h, 0x0d0018).setDepth(0),
+        this.add.rectangle(w / 2, h / 2, w, h, 0x080012).setDepth(0),
       );
 
-      // ─ 壁データ: [cx, cy, width, height] ─
-      // 横バリア壁（各フロア。ギャップ部分だけ省いて2本に分割）
-      //   F1 y=890: ギャップ 左端 x=0→200
-      //   F2 y=680: ギャップ 右端 x=550→750
-      //   F3 y=470: ギャップ 左端 x=0→200
-      //   F4 y=260: ギャップ 中央 x=275→475
+      // ── 主要横バリア壁 [cx, cy, width, height] ──
+      // F1 y=900: 右ギャップ x=520→750(230px)  → blocks x=0→520
+      // F2 y=700: 左ギャップ x=0→230(230px)    → blocks x=230→750
+      // F3 y=500: 右ギャップ x=520→750(230px)  → blocks x=0→520
+      // F4 y=300: 左ギャップ x=0→230(230px)    → blocks x=230→750
+      // F5 y=160: 中央ギャップ x=250→490(240px) → blocks 両端
       const floorWalls: [number, number, number, number][] = [
-        // F1 y=890: x=200→750 を塞ぐ（左ギャップ200px）
-        [475, 890, 550, 40],
-        // F2 y=680: x=0→550 を塞ぐ（右ギャップ200px）
-        [275, 680, 550, 40],
-        // F3 y=470: x=200→750 を塞ぐ（左ギャップ200px）
-        [475, 470, 550, 40],
-        // F4 y=260: 左右それぞれ塞ぐ（中央ギャップ200px）
-        [137, 260, 274, 40],   // x=0→274
-        [613, 260, 274, 40],   // x=476→750
+        [260, 900, 520, 40],      // F1: x=0→520
+        [490, 700, 520, 40],      // F2: x=230→750
+        [260, 500, 520, 40],      // F3: x=0→520
+        [490, 300, 520, 40],      // F4: x=230→750
+        [125, 160, 250, 40],      // F5 左: x=0→250
+        [620, 160, 260, 40],      // F5 右: x=490→750
       ];
 
-      // 行き止まり壁（迷路感を出す短い壁）
-      const deadEnds: [number, number, number, number][] = [
-        // Z1(y=890→1200): 中央縦壁で左右に分断、右は行き止まり
-        [560, 1030, 36, 260],   // 縦壁 x=560, y=900→1160
-        [655, 970, 170, 36],    // 右エリア行き止まり横壁
-        // Z2(y=680→890): 右端に来たら上にいけるよう誘導、左は行き止まり
-        [130, 800, 220, 36],    // 左エリア行き止まり（左端に来た直後）
-        [560, 770, 36, 200],    // 右側縦壁（右端エリアを狭める）
-        // Z3(y=470→680): 左端から出て右へ行くエリア、中央は行き止まり
-        [375, 580, 310, 36],    // 中央横壁（行き止まり）
-        [190, 560, 36, 180],    // 左縦壁（左端エリアを狭める）
-        // Z4(y=260→470): 中央から入るエリア、左右は行き止まり
-        [100, 380, 160, 36],    // 左側行き止まり
-        [650, 380, 160, 36],    // 右側行き止まり
+      // ── 行き止まり壁・ポケット壁 ──
+      // Z1: 中央に縦壁(x=370)でエリアを左右に分け、左側のみギャップへ誘導
+      //     右側は宝箱1(きびだんご)へのポケット
+      // Z2: F1ギャップ(右端)から入り左へ。右端に縦壁。左側は浅い行き止まり
+      // Z3: F2ギャップ(左端)から入り右へ。中央に縦壁。右側ポケットに宝箱2
+      // Z4: F3ギャップ(右端)から入り左へ。中央横壁で行き止まり
+      // Z5: 回復ゾーン配置
+      const pocketWalls: [number, number, number, number][] = [
+        // Z1: 縦壁(x=370, y=910→1140)でエリア分断 + 右ポケット蓋
+        [370, 1035, 40, 250],    // 縦壁 y=910→1160
+        [560, 980, 340, 40],     // 右ポケット蓋（行き止まり）y=980
+        // Z2: 右側縦壁(x=630, y=710→895)で右エリアを絞る
+        [630, 800, 40, 190],     // 右縦壁
+        [400, 800, 400, 40],     // 左エリア行き止まり横壁
+        // Z3: 中央縦壁(x=370, y=510→695)でエリア分断 + 右ポケット蓋
+        [370, 600, 40, 190],     // 縦壁
+        [200, 580, 340, 40],     // 左ポケット行き止まり
+        // Z4: 中央横壁(y=400) + 左縦壁で複雑化
+        [375, 400, 500, 40],     // 中央横壁
+        [130, 400, 260, 40],     // 左部分（右に重複しないよう調整）→ 削除して下の縦壁のみに
+        [120, 400, 40, 190],     // 左縦壁(x=120, y=305→495)
+        // Z5: ボス手前の空間（特に壁なし、広々と）
       ];
 
-      const allWalls = [...floorWalls, ...deadEnds];
+      // Z4 のダブル壁を修正
+      // → pocketWalls から [130, 400, 260, 40] を除外し、正しい壁のみ
+
+      const allWalls: [number, number, number, number][] = [
+        ...floorWalls,
+        // Z1
+        [370, 1035, 40, 250],
+        [560, 980, 340, 40],
+        // Z2
+        [630, 800, 40, 190],
+        [400, 800, 400, 40],
+        // Z3
+        [370, 600, 40, 190],
+        [200, 580, 340, 40],
+        // Z4
+        [375, 400, 500, 40],
+        [120, 400, 40, 190],
+        // 追加行き止まり
+        [630, 430, 220, 40],    // Z4右側行き止まり
+        [375, 220, 240, 40],    // Z5中央横壁（行き止まり）
+      ];
 
       // 当たり判定登録
       allWalls.forEach(([cx, cy, ww, wh]) => {
         this.dungeonWalls.push({ x: cx, y: cy, w: ww, h: wh });
       });
 
-      // 描画
+      // 描画（壁）
       allWalls.forEach(([cx, cy, ww, wh]) => {
         this.decorations.push(
           this.add.rectangle(cx, cy, ww, wh, WC).setStrokeStyle(2, GC).setDepth(3),
-          this.add.rectangle(cx, cy, Math.max(ww - 8, 4), Math.max(wh - 8, 4), WC2).setDepth(3),
+          this.add.rectangle(cx, cy, Math.max(ww - 10, 4), Math.max(wh - 10, 4), WC2).setDepth(3),
         );
       });
 
       // 床グリッド（薄線）
-      for (let ty = 100; ty < h; ty += 80) {
+      for (let ty = 80; ty < h; ty += 100) {
         this.decorations.push(
-          this.add.rectangle(w / 2, ty, w, 1, 0x3a1a5a, 0.25).setDepth(1),
+          this.add.rectangle(w / 2, ty, w, 1, 0x4a2a6a, 0.2).setDepth(1),
         );
       }
-      for (let tx = 60; tx < w; tx += 80) {
+      for (let tx = 50; tx < w; tx += 100) {
         this.decorations.push(
-          this.add.rectangle(tx, h / 2, 1, h, 0x3a1a5a, 0.25).setDepth(1),
+          this.add.rectangle(tx, h / 2, 1, h, 0x4a2a6a, 0.2).setDepth(1),
         );
       }
 
-      // 松明（炎アニメーション）
-      const torches: [number, number][] = [
-        [100, 950], [100, 750], [100, 540],   // 左ルート沿い
-        [650, 750], [650, 540], [375, 330],   // 右ルート・中央
-        [375, 820], [560, 600], [190, 390],   // 各エリア点在
-      ];
-      torches.forEach(([tx, ty]) => {
-        this.decorations.push(
-          this.add.circle(tx, ty, 18, 0xff6600, 0.85).setDepth(4),
-          this.add.circle(tx, ty, 34, 0xff3300, 0.18).setDepth(4),
-          this.add.circle(tx, ty,  8, 0xffee88, 0.9).setDepth(5),
+      // ── 宝箱1: きびだんご（Z1 右ポケット x=600, y=1050）──
+      if (!getFlag('treasure_kibidango')) {
+        const bx1 = 600, by1 = 1050;
+        const chest1 = this.add.rectangle(bx1, by1, 50, 40, 0xaa6600)
+          .setStrokeStyle(3, 0xffdd44).setDepth(5);
+        this.add.rectangle(bx1, by1 - 10, 50, 14, 0xcc8800)
+          .setStrokeStyle(2, 0xffee88).setDepth(6);
+        this.add.text(bx1, by1 + 30, 'たからばこ', {
+          fontSize: '18px', color: '#ffdd44', fontFamily: 'sans-serif',
+          stroke: '#000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(6);
+        this.decorations.push(chest1);
+        this.addTriggerZone(bx1, by1, 'あける', 0xffcc00,
+          'たからばこを あけますか？\n（きびだんご ×1）',
+          () => {
+            addItem('daikyuball', 1);
+            setFlag('treasure_kibidango', true);
+            this.showMessage('きびだんごを\nてにいれた！');
+          },
         );
-        const flicker = this.add.circle(tx, ty, 22, 0xff8800, 0.35).setDepth(4);
-        this.decorations.push(flicker);
-        this.tweens.add({
-          targets: flicker, scaleX: 1.3, scaleY: 0.8, alpha: 0.15,
-          duration: 600 + Math.random() * 400,
-          yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        });
+      }
+
+      // ── 宝箱2: かるいきびだんご（Z3 右ポケット x=600, y=600）──
+      if (!getFlag('treasure_karui')) {
+        const bx2 = 600, by2 = 600;
+        const chest2 = this.add.rectangle(bx2, by2, 50, 40, 0xaa6600)
+          .setStrokeStyle(3, 0xffdd44).setDepth(5);
+        this.add.rectangle(bx2, by2 - 10, 50, 14, 0xcc8800)
+          .setStrokeStyle(2, 0xffee88).setDepth(6);
+        this.add.text(bx2, by2 + 30, 'たからばこ', {
+          fontSize: '18px', color: '#ffdd44', fontFamily: 'sans-serif',
+          stroke: '#000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(6);
+        this.decorations.push(chest2);
+        this.addTriggerZone(bx2, by2, 'あける', 0xffcc00,
+          'たからばこを あけますか？\n（かるいきびだんご ×2）',
+          () => {
+            addItem('okyuball', 2);
+            setFlag('treasure_karui', true);
+            this.showMessage('かるいきびだんごを\n2こ てにいれた！');
+          },
+        );
+      }
+
+      // ── 回復ゾーン（Z5 右寄り x=620, y=230）──
+      const healX = 620, healY = 230;
+      const healCircle = this.add.circle(healX, healY, 40, 0x00ff88, 0.15)
+        .setStrokeStyle(3, 0x00ff88, 0.8).setDepth(4);
+      this.add.text(healX, healY, '✦', {
+        fontSize: '30px', color: '#00ffaa',
+        stroke: '#005522', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(5);
+      this.add.text(healX, healY + 52, 'かいふく\nゾーン', {
+        fontSize: '18px', color: '#00ffaa', fontFamily: 'sans-serif',
+        align: 'center', stroke: '#000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(5);
+      this.tweens.add({
+        targets: healCircle, scaleX: 1.25, scaleY: 1.25, alpha: 0.3,
+        duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
       });
-
-      // ヒントテキスト
-      this.decorations.push(
-        this.add.text(375, 1035, 'さきにすすめ', {
-          fontSize: '22px', color: '#9966cc', fontFamily: 'sans-serif',
-          stroke: '#000000', strokeThickness: 2,
-        }).setOrigin(0.5).setDepth(5),
+      this.decorations.push(healCircle);
+      this.addTriggerZone(healX, healY, 'かいふく', 0x00ff88,
+        'かいふくゾーンです。\nパーティのHPを\nかいふくしますか？',
+        () => {
+          const state = getState();
+          state.party.forEach(m => { m.hp = m.maxHp; });
+          this.showMessage('パーティのHPが\nかいふくした！');
+        },
       );
 
       // ボスの扉
@@ -606,6 +678,10 @@ export class MapScene extends Phaser.Scene {
       if (rx > wl && rx < wr && ry > wt && ry < wb) { ry = cy; break; }
     }
     return [rx, ry];
+  }
+
+  private showMessage(text: string): void {
+    this.msgWin.show('', text);
   }
 
   private changeField(toField: string): void {
