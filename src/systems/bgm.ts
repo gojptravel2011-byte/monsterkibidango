@@ -1,7 +1,7 @@
 // Web Audio API によるBGM管理
 // ブラウザのAutoplay制限のため、最初のユーザー操作後に BGM.init() を呼ぶこと
 
-type TrackId = 'title' | 'field' | 'field_dark' | 'battle' | 'boss' | 'ending';
+type TrackId = 'title' | 'field' | 'field_dark' | 'battle' | 'boss' | 'ending' | 'opening';
 
 interface Note { freq: number; dur: number; }
 
@@ -195,6 +195,73 @@ const ENDING_BASS: Note[] = [
 ];
 
 // ====================================================
+// オープニング「はじまりの予感」
+// Dマイナー・ドラマチック 84BPM・サイン波・神秘＆壮大
+// 静かな導入から盛り上がるビルドアップ構成
+// ====================================================
+const OP = 84;
+const OPENING_MELODY: Note[] = [
+  // フレーズA（静かな導入・Dm）
+  rest(q(OP)),
+  n(293, dq(OP)), n(262, e(OP)),            // D C（低め、静か）
+  n(293, h(OP)),                             // D
+  rest(q(OP)), n(349, q(OP)),               // F
+  n(392, dq(OP)), n(349, e(OP)),            // G F
+  n(330, h(OP)),                             // E
+  rest(h(OP)),
+
+  // フレーズB（緊張感が高まる）
+  n(440, q(OP)), n(415, e(OP)), n(440, e(OP)),  // A G# A
+  n(494, dq(OP)), n(440, e(OP)),            // B A
+  n(523, q(OP)), n(494, q(OP)),             // C B
+  n(440, h(OP)),                             // A
+  n(392, q(OP)), n(349, q(OP)),             // G F
+  n(330, h(OP)),                             // E
+
+  // フレーズC（クライマックス・壮大に）
+  n(587, q(OP)), n(659, e(OP)), n(587, e(OP)),  // D5 E5 D5
+  n(523, dq(OP)), n(494, e(OP)),            // C5 B4
+  n(587, q(OP)), n(523, q(OP)),             // D5 C5
+  n(494, h(OP)),                             // B4
+  n(440, e(OP)), n(494, e(OP)), n(440, e(OP)), n(392, e(OP)),  // A B A G
+  n(349, h(OP)),                             // F
+
+  // フレーズD（壮大な締め・英雄の旅立ち）
+  n(440, q(OP)), n(523, q(OP)),             // A C
+  n(587, dq(OP)), n(523, e(OP)),            // D C
+  n(494, q(OP)), n(440, q(OP)),             // B A
+  n(392, h(OP)),                             // G
+  n(349, q(OP)), n(392, q(OP)), n(440, e(OP)), n(392, e(OP)),  // F G A G
+  n(330, h(OP)), rest(q(OP)),               // E → 静寂
+];
+
+const OPENING_BASS: Note[] = [
+  // フレーズA（Dm）
+  rest(q(OP)),
+  n(147, dh(OP)),                           // D2
+  n(131, dh(OP)),                           // C2
+  rest(h(OP)),
+
+  // フレーズB（Am → F → C → G）
+  n(110, h(OP)),                            // A2
+  n(165, h(OP)),                            // E2（5度）
+  n(131, h(OP)),                            // C2
+  n(98, h(OP)),                             // G1
+
+  // フレーズC（Dm → C → Bb → A）
+  n(147, h(OP)),                            // D2
+  n(131, h(OP)),                            // C2
+  n(117, h(OP)),                            // Bb1
+  n(110, h(OP)),                            // A2
+
+  // フレーズD（Dm → F → C → Dm締め）
+  n(147, h(OP)),                            // D2
+  n(131, h(OP)),                            // C2
+  n(98, h(OP)),                             // G1
+  n(147, h(OP)), rest(q(OP)),              // D2 → 静寂
+];
+
+// ====================================================
 // トラック定義
 // ====================================================
 interface TrackDef {
@@ -244,6 +311,12 @@ const TRACKS: Record<TrackId, TrackDef> = {
     wave: 'sine', bassWave: 'sine',
     vol: 0.13, bassVol: 0.05,
     attack: 0.10, release: 0.20,
+  },
+  opening: {
+    melody: OPENING_MELODY, bass: OPENING_BASS,
+    wave: 'sine', bassWave: 'sine',
+    vol: 0.12, bassVol: 0.05,
+    attack: 0.15, release: 0.25,
   },
 };
 

@@ -105,6 +105,24 @@ export const FIELDS: Record<string, FieldDef> = {
     encounterLevelMax: 1,
     connections: [
       { toField: 'jinja', label: 'じんじゃへ', x: 375, y: 1140 },
+      { toField: 'dungeon', label: 'ちかへ', x: 375, y: 60 },
+    ],
+  },
+  dungeon: {
+    id: 'dungeon',
+    name: 'ちかめいろ',
+    bgColor: 0x221133,
+    skyColor: 0x110022,
+    encounters: [
+      { speciesId: 'honon', weight: 25 },
+      { speciesId: 'denkon', weight: 25 },
+      { speciesId: 'iwagon', weight: 25 },
+      { speciesId: 'mizubon', weight: 25 },
+    ],
+    encounterLevelMin: 8,
+    encounterLevelMax: 12,
+    connections: [
+      { toField: 'shogakko', label: 'もどる', x: 375, y: 1140 },
     ],
   },
 };

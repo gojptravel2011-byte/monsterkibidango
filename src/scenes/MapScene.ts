@@ -88,12 +88,12 @@ export class MapScene extends Phaser.Scene {
     this.events.on('resume', () => {
       this.updateHUD();
       const f = getState().position.field;
-      BGM.play(['jinja', 'shogakko'].includes(f) ? 'field_dark' : 'field');
+      BGM.play(['jinja', 'shogakko', 'dungeon'].includes(f) ? 'field_dark' : 'field');
     });
 
     // BGM開始（フィールドに応じて）
     const startField = getState().position.field;
-    const darkFields = ['jinja', 'shogakko'];
+    const darkFields = ['jinja', 'shogakko', 'dungeon'];
     BGM.play(darkFields.includes(startField) ? 'field_dark' : 'field');
   }
 
@@ -349,20 +349,75 @@ export class MapScene extends Phaser.Scene {
       );
 
     } else if (fieldId === 'shogakko') {
+      // 学校の建物
       this.decorations.push(
         this.add.image(w / 2, 130, 'deco_school').setDepth(2),
         this.add.rectangle(w / 2, h / 2, w, h, 0x000022).setAlpha(0.3).setDepth(3),
         this.add.rectangle(w / 2, h * 0.68, w * 0.8, h * 0.2, 0xcc9966).setDepth(1),
       );
-      // ボスゾーン：近づくと発動
+      // 地下への入口（上部・暗い穴）
       this.decorations.push(
-        this.add.text(w / 2, h / 2 - 80, 'くらやみの\nあるじ', {
-          fontSize: '36px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
-          stroke: '#000000', strokeThickness: 3,
-        }).setOrigin(0.5).setDepth(6),
+        this.add.rectangle(w / 2, 80, 80, 60, 0x110022).setStrokeStyle(3, 0x6633aa).setDepth(4),
+        this.add.text(w / 2, 80, 'ちか\nへ', {
+          fontSize: '22px', color: '#cc88ff', fontFamily: 'sans-serif', align: 'center',
+          stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(5),
       );
-      this.addTriggerZone(w / 2, h / 2 - 40, 'ちかづく', 0x880000,
-        'くらやみのあるじに\nいどみますか？',
+      // 警告テキスト
+      this.decorations.push(
+        this.add.text(w / 2, h * 0.45, 'あやしい　けはいが\nする…', {
+          fontSize: '28px', color: '#aaaaff', fontFamily: 'sans-serif', align: 'center',
+          stroke: '#000000', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(5),
+      );
+    } else if (fieldId === 'dungeon') {
+      // 暗い地下迷路
+      const wallColor = 0x332244;
+      const glowColor = 0x6633aa;
+
+      // 天井・床
+      this.decorations.push(
+        this.add.rectangle(w / 2, h / 2, w, h, 0x110011).setDepth(0),
+      );
+
+      // 迷路の壁（横・縦の壁ブロック）
+      const walls: [number, number, number, number][] = [
+        // [x, y, width, height]
+        [150, 200, 180, 30],
+        [550, 200, 180, 30],
+        [w/2, 380, 220, 30],
+        [100, 560, 200, 30],
+        [600, 560, 200, 30],
+        [300, 740, 150, 30],
+        [500, 740, 150, 30],
+        [w/2, 900, 280, 30],
+      ];
+      walls.forEach(([wx, wy, ww, wh]) => {
+        this.decorations.push(
+          this.add.rectangle(wx, wy, ww, wh, wallColor).setStrokeStyle(2, glowColor).setDepth(3),
+        );
+      });
+
+      // 松明（光の演出）
+      [[100, 300], [650, 300], [200, 650], [550, 650], [375, 500]].forEach(([tx, ty]) => {
+        this.decorations.push(
+          this.add.circle(tx, ty, 12, 0xff8800, 0.8).setDepth(4),
+          this.add.circle(tx, ty, 22, 0xff4400, 0.25).setDepth(4),
+        );
+      });
+
+      // ボスへの扉（上部）
+      this.decorations.push(
+        this.add.rectangle(w / 2, 80, 100, 70, 0x440022).setStrokeStyle(3, 0xff0000).setDepth(4),
+        this.add.text(w / 2, 80, '⚠ ボスの\nへや', {
+          fontSize: '22px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
+          stroke: '#000000', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(5),
+      );
+
+      // ボストリガー（扉の前）
+      this.addTriggerZone(w / 2, 140, 'とびら', 0x880000,
+        'くらやみのあるじが\niてをよんでいる…\nいどみますか？',
         () => this.triggerRasuboss(),
       );
     }
@@ -494,7 +549,7 @@ export class MapScene extends Phaser.Scene {
     this.updateHUD();
     this.showFieldEvent(toField);
     // BGM切り替え
-    const darkFields = ['jinja', 'shogakko'];
+    const darkFields = ['jinja', 'shogakko', 'dungeon'];
     BGM.play(darkFields.includes(toField) ? 'field_dark' : 'field');
   }
 

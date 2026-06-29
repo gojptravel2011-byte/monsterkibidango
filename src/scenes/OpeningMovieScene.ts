@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { getState } from '../state/playerState';
+import { BGM } from '../systems/bgm';
 
 // {NAME} は再生時に主人公の名前に置き換わる
 const SHOT_TEMPLATES: { file: string; caption: string }[] = [
@@ -28,6 +29,7 @@ export class OpeningMovieScene extends Phaser.Scene {
 
     // Canvas 領域に HTML overlay を作成してから再生開始
     this.buildOverlay();
+    BGM.play('opening');
     this.playShot(0);
   }
 
@@ -152,6 +154,7 @@ export class OpeningMovieScene extends Phaser.Scene {
 
   private goToOpening(): void {
     this.removeOverlay();
+    BGM.stop();
     this.scene.start('OpeningScene');
   }
 
