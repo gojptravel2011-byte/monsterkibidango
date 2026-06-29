@@ -3,6 +3,7 @@ import { BootScene } from './scenes/BootScene';
 import { TitleScene } from './scenes/TitleScene';
 import { NameInputScene } from './scenes/NameInputScene';
 import { OpeningScene } from './scenes/OpeningScene';
+import { OpeningMovieScene } from './scenes/OpeningMovieScene';
 import { MapScene } from './scenes/MapScene';
 import { BattleScene } from './scenes/BattleScene';
 import { MonsterListScene } from './scenes/MonsterListScene';
@@ -24,6 +25,7 @@ const config: Phaser.Types.Core.GameConfig = {
     BootScene,
     TitleScene,
     NameInputScene,
+    OpeningMovieScene,
     OpeningScene,
     MapScene,
     BattleScene,

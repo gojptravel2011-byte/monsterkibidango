@@ -54,7 +54,7 @@ export class NameInputScene extends Phaser.Scene {
       const name = input.value.trim() || 'あなた';
       getState().name = name;
       document.body.removeChild(input);
-      this.scene.start('OpeningScene');
+      this.scene.start('OpeningMovieScene');
     };
 
     this.add.rectangle(w / 2, h * 0.65, 200, 60, 0x3355aa)
