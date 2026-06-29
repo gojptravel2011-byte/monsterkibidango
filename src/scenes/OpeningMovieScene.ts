@@ -1,14 +1,15 @@
 import Phaser from 'phaser';
+import { getState } from '../state/playerState';
 
-// ショットごとのテロップ（ひらがな）
-const SHOTS: { file: string; caption: string }[] = [
-  { file: 'shot01', caption: 'むかしむかし、ふしぎなせかいがありました。' },
-  { file: 'shot02', caption: 'そこには、いろんなモンスターがくらしていました。' },
-  { file: 'shot03', caption: 'ある日、きびだんごのちからがめざめます。' },
-  { file: 'shot04', caption: 'モンスターたちと　なかよくなるために—' },
-  { file: 'shot05', caption: 'ぼうけんの　たびに　でかけましょう。' },
-  { file: 'shot06', caption: 'ともだちを　ふやして　まちを　まもろう！' },
-  { file: 'shot07', caption: 'さあ、きみの　ぼうけんが　はじまるよ！' },
+// {NAME} は再生時に主人公の名前に置き換わる
+const SHOT_TEMPLATES: { file: string; caption: string }[] = [
+  { file: 'shot01', caption: 'いつもとかわらないせかい。' },
+  { file: 'shot02', caption: 'とあるよふけに、とつぜんいんせきがふってきました。' },
+  { file: 'shot03', caption: 'つぎのひのあさ、なぜかおとなにはみえないモンスターたちがあらわれました。' },
+  { file: 'shot04', caption: '{NAME}は、モンスターであるくろすけにであいます。' },
+  { file: 'shot05', caption: 'くろすけ「このせかいが、わるいひとにかえられてしまっている。このままだとせかいがあぶない」' },
+  { file: 'shot06', caption: 'そうして、{NAME}はせかいをまもるためはしりだした。' },
+  { file: 'shot07', caption: 'さあ、モンスターとのぼうけんが　はじまるよ！' },
 ];
 
 export class OpeningMovieScene extends Phaser.Scene {
@@ -102,16 +103,18 @@ export class OpeningMovieScene extends Phaser.Scene {
 
   private playShot(index: number): void {
     if (this.skipped) return;
-    if (index >= SHOTS.length) {
+    if (index >= SHOT_TEMPLATES.length) {
       this.goToOpening();
       return;
     }
 
-    const shot = SHOTS[index];
+    const shot = SHOT_TEMPLATES[index];
+    const playerName = getState().name || 'あなた';
+    const caption = shot.caption.replace(/\{NAME\}/g, playerName);
     const vid = this.videoEl!;
 
     // テロップ更新
-    if (this.captionEl) this.captionEl.textContent = shot.caption;
+    if (this.captionEl) this.captionEl.textContent = caption;
 
     // 前のリスナーをすべて外す
     const newVid = vid.cloneNode(false) as HTMLVideoElement;
