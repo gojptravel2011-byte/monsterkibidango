@@ -1,39 +1,103 @@
 import Phaser from 'phaser';
-import { TS } from '../ui/StyledText';
 
-const SHOTS = ['shot01', 'shot02', 'shot03', 'shot04', 'shot05', 'shot06', 'shot07'];
+// ショットごとのテロップ（ひらがな）
+const SHOTS: { file: string; caption: string }[] = [
+  { file: 'shot01', caption: 'むかしむかし、ふしぎなせかいがありました。' },
+  { file: 'shot02', caption: 'そこには、いろんなモンスターがくらしていました。' },
+  { file: 'shot03', caption: 'ある日、きびだんごのちからがめざめます。' },
+  { file: 'shot04', caption: 'モンスターたちと　なかよくなるために—' },
+  { file: 'shot05', caption: 'ぼうけんの　たびに　でかけましょう。' },
+  { file: 'shot06', caption: 'ともだちを　ふやして　まちを　まもろう！' },
+  { file: 'shot07', caption: 'さあ、きみの　ぼうけんが　はじまるよ！' },
+];
 
 export class OpeningMovieScene extends Phaser.Scene {
-  private vid: Phaser.GameObjects.Video | null = null;
+  private videoEl: HTMLVideoElement | null = null;
+  private captionEl: HTMLDivElement | null = null;
+  private skipEl: HTMLDivElement | null = null;
   private skipped = false;
 
   constructor() { super('OpeningMovieScene'); }
 
   create(): void {
-    const { width: w, height: h } = this.scale;
+    this.skipped = false;
 
-    this.add.rectangle(w / 2, h / 2, w, h, 0x000000).setDepth(0);
-
-    // スキップボタン（右下）
-    const skipTxt = this.add.text(w - 20, h - 28, 'スキップ ▶', {
-      ...TS.body,
-      color: '#ffffff',
-      backgroundColor: '#00000099',
-      padding: { x: 18, y: 10 },
-    }).setOrigin(1, 1).setDepth(100).setInteractive({ useHandCursor: true });
-
-    skipTxt.on('pointerdown', () => this.doSkip());
-
-    // スペースキーでもスキップ
+    // スペースキーでスキップ
     this.input.keyboard?.on('keydown-SPACE', () => this.doSkip());
 
-    // ボタン以外の画面タップでスキップ
-    this.input.on('pointerdown', (_ptr: Phaser.Input.Pointer, objs: Phaser.GameObjects.GameObject[]) => {
-      if (objs.length === 0) this.doSkip();
-    });
-
-    this.skipped = false;
+    // Canvas 領域に HTML overlay を作成してから再生開始
+    this.buildOverlay();
     this.playShot(0);
+  }
+
+  /** Canvas の BoundingRect にぴったり重なる video/caption/skip を DOM に作る */
+  private buildOverlay(): void {
+    const rect = this.game.canvas.getBoundingClientRect();
+
+    // ── 動画要素 ──
+    const vid = document.createElement('video');
+    vid.playsInline = true;
+    vid.setAttribute('playsinline', ''); // iOS 対応
+    vid.style.cssText = `
+      position: fixed;
+      left: ${rect.left}px;
+      top: ${rect.top}px;
+      width: ${rect.width}px;
+      height: ${rect.height}px;
+      object-fit: contain;
+      background: #000;
+      z-index: 800;
+      display: block;
+    `;
+    document.body.appendChild(vid);
+    this.videoEl = vid;
+
+    // ── テロップ要素（動画の下部に重ねる） ──
+    const cap = document.createElement('div');
+    const capFontSize = Math.max(14, Math.round(rect.height * 0.038));
+    cap.style.cssText = `
+      position: fixed;
+      left: ${rect.left}px;
+      bottom: ${window.innerHeight - rect.bottom + Math.round(rect.height * 0.06)}px;
+      width: ${rect.width}px;
+      text-align: center;
+      font-size: ${capFontSize}px;
+      font-family: 'Klee One', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+      color: #ffffff;
+      text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+                   0 2px 8px rgba(0,0,0,0.9);
+      z-index: 801;
+      padding: 6px 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.55));
+      line-height: 1.5;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    `;
+    document.body.appendChild(cap);
+    this.captionEl = cap;
+
+    // ── スキップボタン ──
+    const skip = document.createElement('div');
+    const skipFontSize = Math.max(14, Math.round(rect.height * 0.034));
+    skip.textContent = 'スキップ ▶';
+    skip.style.cssText = `
+      position: fixed;
+      right: ${window.innerWidth - rect.right + Math.round(rect.width * 0.03)}px;
+      bottom: ${window.innerHeight - rect.bottom + Math.round(rect.height * 0.025)}px;
+      font-size: ${skipFontSize}px;
+      font-family: 'Klee One', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+      color: #ffffff;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 6px;
+      padding: 6px 16px;
+      cursor: pointer;
+      z-index: 802;
+      user-select: none;
+    `;
+    skip.addEventListener('pointerdown', () => this.doSkip());
+    document.body.appendChild(skip);
+    this.skipEl = skip;
   }
 
   private playShot(index: number): void {
@@ -43,55 +107,60 @@ export class OpeningMovieScene extends Phaser.Scene {
       return;
     }
 
-    const { width: w, height: h } = this.scale;
+    const shot = SHOTS[index];
+    const vid = this.videoEl!;
 
-    // 前のビデオを破棄
-    if (this.vid) {
-      this.vid.stop();
-      this.vid.destroy();
-      this.vid = null;
-    }
+    // テロップ更新
+    if (this.captionEl) this.captionEl.textContent = shot.caption;
 
-    const url = `opening/${SHOTS[index]}.mp4`;
-    const vid = this.add.video(w / 2, h / 2).setDepth(1);
-    vid.setDisplaySize(w, h);
-    this.vid = vid;
+    // 前のリスナーをすべて外す
+    const newVid = vid.cloneNode(false) as HTMLVideoElement;
+    vid.parentNode?.replaceChild(newVid, vid);
+    this.videoEl = newVid;
+    newVid.playsInline = true;
+    newVid.setAttribute('playsinline', '');
 
-    const next = () => { this.playShot(index + 1); };
+    const next = () => this.playShot(index + 1);
 
-    vid.once('complete', next);
-    vid.once('error', () => {
-      console.warn(`OpeningMovie: ${SHOTS[index]} をスキップ（読み込みエラー）`);
-      next();
+    // 12 秒ガード（ストール対策）
+    const guardId = setTimeout(next, 12000);
+    const clearGuard = () => clearTimeout(guardId);
+
+    newVid.addEventListener('ended', () => { clearGuard(); next(); }, { once: true });
+    newVid.addEventListener('error', () => {
+      console.warn(`OpeningMovie: ${shot.file} をスキップ（エラー）`);
+      clearGuard(); next();
+    }, { once: true });
+
+    newVid.src = `opening/${shot.file}.mp4`;
+    newVid.load();
+    newVid.play().catch(() => {
+      // autoplay ブロック時はユーザー操作待ちにしてスキップで回避
+      console.warn(`OpeningMovie: autoplay blocked for ${shot.file}`);
     });
-
-    // タイムアウト保険（動画が止まったまま進まなくなるのを防ぐ）
-    const guard = this.time.delayedCall(12000, next);
-    vid.once('complete', () => guard.remove());
-    vid.once('error',    () => guard.remove());
-
-    try {
-      vid.loadURL(url, false);
-      vid.play(false);
-    } catch {
-      next();
-    }
   }
 
   private doSkip(): void {
     if (this.skipped) return;
     this.skipped = true;
-    this.vid?.stop();
+    this.videoEl?.pause();
     this.goToOpening();
   }
 
   private goToOpening(): void {
+    this.removeOverlay();
     this.scene.start('OpeningScene');
   }
 
-  // シーン破棄時にビデオを確実に停止
+  private removeOverlay(): void {
+    this.videoEl?.pause();
+    [this.videoEl, this.captionEl, this.skipEl].forEach(el => el?.parentNode?.removeChild(el));
+    this.videoEl = null;
+    this.captionEl = null;
+    this.skipEl = null;
+  }
+
   shutdown(): void {
-    this.vid?.stop();
-    this.vid = null;
+    this.removeOverlay();
   }
 }
