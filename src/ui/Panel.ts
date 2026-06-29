@@ -17,7 +17,7 @@ export function drawPanel(
     cornerDeco?: boolean;
   } = {},
 ): Phaser.GameObjects.Graphics {
-  const { scrollFactor = 0, depth = 50, alpha = T.panelAlpha, cornerDeco = false } = opts;
+  const { scrollFactor = 0, depth = -1, alpha = T.panelAlpha, cornerDeco = false } = opts;
 
   const g = scene.add.graphics().setDepth(depth).setScrollFactor(scrollFactor);
 
@@ -67,7 +67,7 @@ export function makeBtn(
   x: number, y: number, w: number, h: number,
   opts: { depth?: number; scrollFactor?: number } = {},
 ): Phaser.GameObjects.Rectangle {
-  const { depth = 51, scrollFactor = 0 } = opts;
+  const { depth = 0, scrollFactor = 0 } = opts;
   return scene.add.rectangle(x, y, w, h, T.panelMid, 0.92)
     .setStrokeStyle(1.5, T.borderGold)
     .setDepth(depth)

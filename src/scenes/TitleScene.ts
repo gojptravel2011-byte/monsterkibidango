@@ -13,7 +13,7 @@ export class TitleScene extends Phaser.Scene {
     const h = this.scale.height;
 
     // 夜空背景
-    this.add.rectangle(w / 2, h / 2, w, h, T.panelDark);
+    this.add.rectangle(w / 2, h / 2, w, h, T.panelDark).setDepth(0);
 
     // 星 ×60
     for (let i = 0; i < 60; i++) {
@@ -23,11 +23,11 @@ export class TitleScene extends Phaser.Scene {
         Math.random() * 1.5 + 0.5,
         T.borderGold,
         Math.random() * 0.5 + 0.1,
-      );
+      ).setDepth(1);
     }
 
     // 地面（下1/4 緑）
-    this.add.rectangle(w / 2, h * 0.875, w, h * 0.25, 0x336622);
+    this.add.rectangle(w / 2, h * 0.875, w, h * 0.25, 0x336622).setDepth(1);
 
     // タイトル
     this.add.text(w / 2, h * 0.22, 'モンスター', {
@@ -36,7 +36,7 @@ export class TitleScene extends Phaser.Scene {
       color: T.textGold,
       stroke: '#050b1a',
       strokeThickness: 5,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(2);
 
     this.add.text(w / 2, h * 0.33, 'きびだんご', {
       ...TS.heading,
@@ -44,12 +44,12 @@ export class TitleScene extends Phaser.Scene {
       color: '#ff9933',
       stroke: '#050b1a',
       strokeThickness: 5,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(2);
 
     // サブタイトル
     this.add.text(w / 2, h * 0.38, 'いっしょに　ぼうけんしよう', {
       ...TS.sub,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(2);
 
     this.makeButton(w / 2, h * 0.58, 'はじめから', () => {
       this.scene.start('NameInputScene');
@@ -72,15 +72,15 @@ export class TitleScene extends Phaser.Scene {
     // コピーライト
     this.add.text(w - 10, h - 10, '© 2025', {
       ...TS.sub,
-    }).setOrigin(1, 1);
+    }).setOrigin(1, 1).setDepth(2);
   }
 
   private makeButton(x: number, y: number, label: string, cb: () => void): void {
-    const bg = makeBtn(this, x, y, 280, 60)
+    const bg = makeBtn(this, x, y, 280, 60, { depth: 2 })
       .setInteractive({ useHandCursor: true });
     this.add.text(x, y, label, {
       ...TS.btn,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(3);
 
     bg.on('pointerover', () => bg.setFillStyle(0x2a4090));
     bg.on('pointerout', () => bg.setFillStyle(T.panelMid));

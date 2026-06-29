@@ -15,13 +15,13 @@ export class MenuScene extends Phaser.Scene {
     const h = this.scale.height;
 
     // 半透明オーバーレイ
-    this.add.rectangle(w / 2, h / 2, w, h, 0x000011, 0.7);
+    this.add.rectangle(w / 2, h / 2, w, h, 0x000011, 0.7).setDepth(10);
 
-    drawPanel(this, w / 2 - 190, h / 2 - 260, 380, 520);
+    drawPanel(this, w / 2 - 190, h / 2 - 260, 380, 520, { depth: 11 });
 
     this.add.text(w / 2, h * 0.18, 'メニュー', {
       ...TS.heading,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(12);
 
     const items = [
       { label: 'モンスター　いちらん', action: () => { this.scene.launch('MonsterListScene'); this.close(); } },
@@ -33,21 +33,21 @@ export class MenuScene extends Phaser.Scene {
 
     items.forEach((item, i) => {
       const y = h * 0.33 + i * 72;
-      const bg = makeBtn(this, w / 2, y, 320, 60)
+      const bg = makeBtn(this, w / 2, y, 320, 60, { depth: 12 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', item.action)
         .on('pointerover', () => bg.setFillStyle(0x2a4090))
         .on('pointerout', () => bg.setFillStyle(T.panelMid));
       const text = this.add.text(w / 2, y, item.label, {
         ...TS.btn,
-      }).setOrigin(0.5);
+      }).setOrigin(0.5).setDepth(13);
       this.buttons.push(bg, text);
     });
 
     // コイン表示
     this.add.text(w / 2, h * 0.88, `コイン: ${getState().coins}まい`, {
       ...TS.coin,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(12);
   }
 
   private doSave(): void {
@@ -59,7 +59,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.text(w / 2, h / 2, 'セーブしたよ！', {
       ...TS.body,
       color: T.textGreen,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(13);
     this.time.delayedCall(1500, () => this.close());
   }
 
