@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { addCoins, addItem } from '../state/playerState';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
 
 // ミニゲーム：おちばあつめ
 // 画面に落ち葉が降ってくるのでタップして集める。10枚集めるとクリア
@@ -27,17 +29,17 @@ export class MinigameScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.add.rectangle(w / 2, h / 2, w, h, 0x334422);
+    this.add.rectangle(w / 2, h / 2, w, h, T.panelDark);
     this.add.text(w / 2, 36, 'おちばを　あつめよう！', {
-      fontSize: '30px', color: '#ffdd44', fontFamily: 'sans-serif',
+      ...TS.heading,
     }).setOrigin(0.5);
 
     this.countText = this.add.text(w / 2, 70, 'あつめた: 0 / 10', {
-      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
+      ...TS.body,
     }).setOrigin(0.5);
 
     this.timeText = this.add.text(w - 10, 36, 'のこり: 20', {
-      fontSize: '34px', color: '#ffaaaa', fontFamily: 'sans-serif',
+      ...TS.coin,
     }).setOrigin(1, 0.5);
 
     // 落ち葉を定期的に生成
@@ -108,19 +110,21 @@ export class MinigameScene extends Phaser.Scene {
       if (success) addItem('tabenoko', 1);
 
       this.add.text(w / 2, h / 2 - 40, success ? 'すごい！　ぜんぶ　あつめた！' : 'がんばった！', {
-        fontSize: '32px', color: '#ffff44', fontFamily: 'sans-serif',
+        ...TS.heading,
       }).setOrigin(0.5);
       this.add.text(w / 2, h / 2 + 10, `コイン　${coins}まい　ゲット！`, {
-        fontSize: '36px', color: '#88ff88', fontFamily: 'sans-serif',
+        ...TS.coin,
       }).setOrigin(0.5);
       if (success) {
         this.add.text(w / 2, h / 2 + 45, 'たべのこ　ゲット！', {
-          fontSize: '34px', color: '#aaffaa', fontFamily: 'sans-serif',
+          ...TS.body,
+          color: T.textGreen,
         }).setOrigin(0.5);
       }
     } else {
       this.add.text(w / 2, h / 2, 'ざんねん…\nまた　ちゃれんじ　してね！', {
-        fontSize: '30px', color: '#ffaaaa', fontFamily: 'sans-serif', align: 'center',
+        ...TS.body,
+        align: 'center',
       }).setOrigin(0.5);
     }
 

@@ -4,6 +4,9 @@ import { ITEMS } from '../data/items';
 import type { Item } from '../data/items';
 import { STORY_EVENTS } from '../data/story';
 import { getFlag, setFlag } from '../state/playerState';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
+import { drawPanel, makeBtn } from '../ui/Panel';
 
 const SHOP_ITEMS = ['tabenoko', 'honyakuki', 'kiracolla'];
 
@@ -17,15 +20,15 @@ export class ShopScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.add.rectangle(w / 2, h / 2, w, h, 0x221133, 0.96);
+    drawPanel(this, 0, 0, w, h, { depth: 5 });
 
     this.add.text(w / 2, 28, 'おみせ', {
-      fontSize: '32px', color: '#ffdd44', fontFamily: 'sans-serif',
-    }).setOrigin(0.5);
+      ...TS.heading,
+    }).setOrigin(0.5).setDepth(6);
 
     this.coinsText = this.add.text(w - 10, 28, `コイン: ${getState().coins}`, {
-      fontSize: '34px', color: '#ffdd44', fontFamily: 'sans-serif',
-    }).setOrigin(1, 0.5);
+      ...TS.coin,
+    }).setOrigin(1, 0.5).setDepth(6);
 
     // 初回メッセージ（フラグで1回だけ）
     if (!getFlag('shownShopIntro')) {
@@ -33,61 +36,61 @@ export class ShopScene extends Phaser.Scene {
       const dialogs = STORY_EVENTS.shopIntro.dialogs;
       // 簡易表示
       this.add.text(w / 2, 60, dialogs[0].text, {
-        fontSize: '36px', color: '#aaffaa', fontFamily: 'sans-serif',
-      }).setOrigin(0.5);
+        ...TS.sub,
+        color: T.textGreen,
+      }).setOrigin(0.5).setDepth(6);
     }
 
     SHOP_ITEMS.forEach((itemId, i) => {
       const item = ITEMS[itemId];
       if (!item) return;
       const y = 90 + i * 80;
-      this.add.rectangle(w / 2, y + 25, w - 20, 68, 0x334455)
-        .setStrokeStyle(1, 0x8888ff);
+      drawPanel(this, 10, y, w - 20, 70, { depth: 6 });
       this.add.text(20, y + 8, item.name, {
-        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
-      });
-      this.add.text(20, y + 30, this.describeItem(item), {
-        fontSize: '32px', color: '#aaaaaa', fontFamily: 'sans-serif',
-      });
-      this.add.text(w - 130, y + 18, `${item.price}まい`, {
-        fontSize: '36px', color: '#ffdd44', fontFamily: 'sans-serif',
-      });
+        ...TS.body,
+      }).setDepth(7);
+      this.add.text(20, y + 36, this.describeItem(item), {
+        ...TS.sub,
+      }).setDepth(7);
+      this.add.text(w - 130, y + 22, `${item.price}まい`, {
+        ...TS.coin,
+      }).setDepth(7);
 
-      const buyBtn = this.add.rectangle(w - 50, y + 18, 70, 40, 0x3355aa)
-        .setStrokeStyle(2, 0x8888ff)
+      const buyBtn = makeBtn(this, w - 50, y + 22, 80, 44, { depth: 7 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => this.buyItem(item))
-        .on('pointerover', () => buyBtn.setFillStyle(0x5577cc))
-        .on('pointerout', () => buyBtn.setFillStyle(0x3355aa));
-      this.add.text(w - 50, y + 18, 'かう', {
-        fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
-      }).setOrigin(0.5);
+        .on('pointerover', () => buyBtn.setFillStyle(0x2a4090))
+        .on('pointerout', () => buyBtn.setFillStyle(T.panelMid));
+      this.add.text(w - 50, y + 22, 'かう', {
+        ...TS.btn,
+      }).setOrigin(0.5).setDepth(8);
     });
 
     this.feedbackText = this.add.text(w / 2, h - 100, '', {
-      fontSize: '34px', color: '#88ff88', fontFamily: 'sans-serif',
-    }).setOrigin(0.5);
+      ...TS.body,
+    }).setOrigin(0.5).setDepth(6);
 
-    const closeBtn = this.add.rectangle(w / 2, h - 50, 200, 52, 0x554422)
-      .setStrokeStyle(2, 0xaa8844)
+    const closeBtn = makeBtn(this, w / 2, h - 50, 200, 52, { depth: 6 })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         this.scene.stop('ShopScene');
         this.scene.resume('MapScene');
-      });
+      })
+      .on('pointerover', () => closeBtn.setFillStyle(0x2a4090))
+      .on('pointerout', () => closeBtn.setFillStyle(T.panelMid));
     this.add.text(w / 2, h - 50, 'おみせを　でる', {
-      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
-    }).setOrigin(0.5);
+      ...TS.btn,
+    }).setOrigin(0.5).setDepth(7);
   }
 
   private buyItem(item: Item): void {
     const state = getState();
     if (!spendCoins(item.price)) {
-      this.feedbackText.setText('コインが　たりないよ！').setColor('#ff8888');
+      this.feedbackText.setText('コインが　たりないよ！').setColor(T.textRed);
     } else {
       addItem(item.id);
       this.coinsText.setText(`コイン: ${state.coins}`);
-      this.feedbackText.setText(`${item.name}を　かった！`).setColor('#88ff88');
+      this.feedbackText.setText(`${item.name}を　かった！`).setColor(T.textGreen);
     }
     this.time.delayedCall(1500, () => this.feedbackText.setText(''));
   }

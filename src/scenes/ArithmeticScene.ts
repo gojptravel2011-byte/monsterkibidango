@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { addCoins, addItem } from '../state/playerState';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
 
 // たしざん・ひきざんミニゲーム
 // 5問出題、正解数に応じてコインゲット
@@ -35,31 +37,32 @@ export class ArithmeticScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.add.rectangle(w / 2, h / 2, w, h, 0x112244);
+    this.add.rectangle(w / 2, h / 2, w, h, T.panelDark);
     this.add.text(w / 2, 36, 'たしざん・ひきざん', {
-      fontSize: '30px', color: '#ffdd44', fontFamily: 'sans-serif',
+      ...TS.heading,
     }).setOrigin(0.5);
 
     this.questionNoText = this.add.text(w / 2, 72, '', {
-      fontSize: '36px', color: '#aaaaff', fontFamily: 'sans-serif',
+      ...TS.sub,
     }).setOrigin(0.5);
 
     this.scoreText = this.add.text(10, 36, 'せいかい: 0', {
-      fontSize: '36px', color: '#88ffaa', fontFamily: 'sans-serif',
+      ...TS.hp,
     });
 
     this.timeText = this.add.text(w - 10, 36, 'のこり: 15', {
-      fontSize: '36px', color: '#ffaaaa', fontFamily: 'sans-serif',
+      ...TS.coin,
     }).setOrigin(1, 0.5);
 
     this.questionText = this.add.text(w / 2, h * 0.35, '', {
-      fontSize: '52px', color: '#ffffff', fontFamily: 'sans-serif',
-      stroke: '#000066', strokeThickness: 4,
+      fontSize: '52px', color: T.textLight, fontFamily: T.font,
+      stroke: '#050b1a', strokeThickness: 4,
     }).setOrigin(0.5);
 
     this.feedbackText = this.add.text(w / 2, h * 0.52, '', {
-      fontSize: '36px', color: '#ffff44', fontFamily: 'sans-serif',
-      stroke: '#333300', strokeThickness: 3,
+      ...TS.damage,
+      stroke: '#333300',
+      strokeThickness: 3,
     }).setOrigin(0.5).setDepth(10);
 
     this.nextQuestion();
@@ -137,15 +140,16 @@ export class ArithmeticScene extends Phaser.Scene {
     ];
     choices.forEach((val, i) => {
       const pos = positions[i];
-      const bg = this.add.rectangle(pos.x, pos.y, 150, 68, 0x334488)
-        .setStrokeStyle(3, 0x8888ff)
+      const bg = this.add.rectangle(pos.x, pos.y, 180, 76, T.panelMid, 0.92)
+        .setStrokeStyle(1.5, T.borderGold)
         .setInteractive({ useHandCursor: true });
       const txt = this.add.text(pos.x, pos.y, `${val}`, {
-        fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
+        fontSize: '40px', color: T.textLight, fontFamily: T.font,
+        stroke: '#050b1a', strokeThickness: 3,
       }).setOrigin(0.5);
 
-      bg.on('pointerover', () => bg.setFillStyle(0x5566cc));
-      bg.on('pointerout', () => bg.setFillStyle(0x334488));
+      bg.on('pointerover', () => bg.setFillStyle(0x2a4090));
+      bg.on('pointerout', () => bg.setFillStyle(T.panelMid));
       bg.on('pointerdown', () => this.onChoose(val, bg));
 
       this.choiceButtons.push(bg, txt);
@@ -161,10 +165,10 @@ export class ArithmeticScene extends Phaser.Scene {
       this.score++;
       this.scoreText.setText(`せいかい: ${this.score}`);
       btn.setFillStyle(0x226622).setStrokeStyle(3, 0x44ff44);
-      this.feedbackText.setText('せいかい！ ✓').setColor('#44ff44');
+      this.feedbackText.setText('せいかい！ ✓').setColor(T.textGreen);
     } else {
       btn.setFillStyle(0x662222).setStrokeStyle(3, 0xff4444);
-      this.feedbackText.setText(`ざんねん…\nこたえは　${this.currentProblem.answer}`).setColor('#ff6666');
+      this.feedbackText.setText(`ざんねん…\nこたえは　${this.currentProblem.answer}`).setColor(T.textRed);
     }
 
     this.time.delayedCall(1200, () => this.nextQuestion());
@@ -173,7 +177,7 @@ export class ArithmeticScene extends Phaser.Scene {
   private onTimeout(): void {
     if (this.done) return;
     this.clearChoicesInteraction();
-    this.feedbackText.setText(`じかんぎれ！\nこたえは　${this.currentProblem.answer}`).setColor('#ffaa44');
+    this.feedbackText.setText(`じかんぎれ！\nこたえは　${this.currentProblem.answer}`).setColor(T.textYellow);
     this.time.delayedCall(1200, () => this.nextQuestion());
   }
 
@@ -207,7 +211,7 @@ export class ArithmeticScene extends Phaser.Scene {
     addCoins(coins);
     if (this.score >= 4) addItem('tabenoko', 1);
 
-    const resultColor = this.score >= 4 ? '#ffff44' : this.score >= 2 ? '#88ffaa' : '#ffaaaa';
+    const resultColor = this.score >= 4 ? T.textGold : this.score >= 2 ? T.textGreen : T.textRed;
     const resultMsg = this.score === this.totalQuestions
       ? 'ぜんもん　せいかい！\nすごい！！'
       : this.score >= 4 ? 'とても　よくできました！'
@@ -215,20 +219,23 @@ export class ArithmeticScene extends Phaser.Scene {
       : 'またちゃれんじしてね！';
 
     this.add.text(w / 2, h * 0.28, `せいかい：${this.score} / ${this.totalQuestions}`, {
-      fontSize: '36px', color: '#ffffff', fontFamily: 'sans-serif',
+      ...TS.body,
     }).setOrigin(0.5);
 
     this.add.text(w / 2, h * 0.40, resultMsg, {
-      fontSize: '34px', color: resultColor, fontFamily: 'sans-serif', align: 'center',
+      ...TS.heading,
+      color: resultColor,
+      align: 'center',
     }).setOrigin(0.5);
 
     this.add.text(w / 2, h * 0.55, `コイン　${coins}まい　ゲット！`, {
-      fontSize: '30px', color: '#88ff88', fontFamily: 'sans-serif',
+      ...TS.coin,
     }).setOrigin(0.5);
 
     if (this.score >= 4) {
       this.add.text(w / 2, h * 0.63, 'たべのこ　ゲット！', {
-        fontSize: '36px', color: '#aaffaa', fontFamily: 'sans-serif',
+        ...TS.body,
+        color: T.textGreen,
       }).setOrigin(0.5);
     }
 

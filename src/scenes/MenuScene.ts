@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { getState } from '../state/playerState';
 import { saveGame } from '../systems/save';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
+import { drawPanel, makeBtn } from '../ui/Panel';
 
 export class MenuScene extends Phaser.Scene {
   private buttons: Phaser.GameObjects.GameObject[] = [];
@@ -12,13 +15,12 @@ export class MenuScene extends Phaser.Scene {
     const h = this.scale.height;
 
     // 半透明オーバーレイ
-    this.add.rectangle(w / 2, h / 2, w, h, 0x000000, 0.6);
+    this.add.rectangle(w / 2, h / 2, w, h, 0x000011, 0.7);
 
-    const panel = this.add.rectangle(w / 2, h / 2, 360, 500, 0x112244)
-      .setStrokeStyle(3, 0x8888ff);
+    drawPanel(this, w / 2 - 190, h / 2 - 260, 380, 520);
 
     this.add.text(w / 2, h * 0.18, 'メニュー', {
-      fontSize: '34px', color: '#ffff88', fontFamily: 'sans-serif',
+      ...TS.heading,
     }).setOrigin(0.5);
 
     const items = [
@@ -31,21 +33,20 @@ export class MenuScene extends Phaser.Scene {
 
     items.forEach((item, i) => {
       const y = h * 0.33 + i * 72;
-      const bg = this.add.rectangle(w / 2, y, 280, 56, 0x334488)
-        .setStrokeStyle(2, 0x8888ff)
+      const bg = makeBtn(this, w / 2, y, 320, 60)
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', item.action)
-        .on('pointerover', () => bg.setFillStyle(0x5566aa))
-        .on('pointerout', () => bg.setFillStyle(0x334488));
+        .on('pointerover', () => bg.setFillStyle(0x2a4090))
+        .on('pointerout', () => bg.setFillStyle(T.panelMid));
       const text = this.add.text(w / 2, y, item.label, {
-        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
+        ...TS.btn,
       }).setOrigin(0.5);
       this.buttons.push(bg, text);
     });
 
     // コイン表示
     this.add.text(w / 2, h * 0.88, `コイン: ${getState().coins}まい`, {
-      fontSize: '34px', color: '#ffdd44', fontFamily: 'sans-serif',
+      ...TS.coin,
     }).setOrigin(0.5);
   }
 
@@ -56,7 +57,8 @@ export class MenuScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
     this.add.text(w / 2, h / 2, 'セーブしたよ！', {
-      fontSize: '32px', color: '#88ff88', fontFamily: 'sans-serif',
+      ...TS.body,
+      color: T.textGreen,
     }).setOrigin(0.5);
     this.time.delayedCall(1500, () => this.close());
   }

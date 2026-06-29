@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { hasSaveData, loadGame } from '../systems/save';
 import { BGM } from '../systems/bgm';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
+import { makeBtn } from '../ui/Panel';
 
 export class TitleScene extends Phaser.Scene {
   constructor() { super('TitleScene'); }
@@ -10,7 +13,7 @@ export class TitleScene extends Phaser.Scene {
     const h = this.scale.height;
 
     // 夜空背景
-    this.add.rectangle(w / 2, h / 2, w, h, 0x000022);
+    this.add.rectangle(w / 2, h / 2, w, h, T.panelDark);
 
     // 星 ×60
     for (let i = 0; i < 60; i++) {
@@ -18,8 +21,8 @@ export class TitleScene extends Phaser.Scene {
         Math.random() * w,
         Math.random() * h * 0.75,
         Math.random() * 1.5 + 0.5,
-        0xffffff,
-        Math.random() * 0.8 + 0.2,
+        T.borderGold,
+        Math.random() * 0.5 + 0.1,
       );
     }
 
@@ -28,26 +31,24 @@ export class TitleScene extends Phaser.Scene {
 
     // タイトル
     this.add.text(w / 2, h * 0.22, 'モンスター', {
-      fontSize: '40px',
-      color: '#ffff44',
-      fontFamily: 'sans-serif',
-      stroke: '#000044',
+      ...TS.heading,
+      fontSize: '48px',
+      color: T.textGold,
+      stroke: '#050b1a',
       strokeThickness: 5,
     }).setOrigin(0.5);
 
     this.add.text(w / 2, h * 0.33, 'きびだんご', {
-      fontSize: '48px',
-      color: '#ff8800',
-      fontFamily: 'sans-serif',
-      stroke: '#440000',
+      ...TS.heading,
+      fontSize: '56px',
+      color: '#ff9933',
+      stroke: '#050b1a',
       strokeThickness: 5,
     }).setOrigin(0.5);
 
     // サブタイトル
     this.add.text(w / 2, h * 0.38, 'いっしょに　ぼうけんしよう', {
-      fontSize: '34px',
-      color: '#44ffff',
-      fontFamily: 'sans-serif',
+      ...TS.sub,
     }).setOrigin(0.5);
 
     this.makeButton(w / 2, h * 0.58, 'はじめから', () => {
@@ -70,24 +71,19 @@ export class TitleScene extends Phaser.Scene {
 
     // コピーライト
     this.add.text(w - 10, h - 10, '© 2025', {
-      fontSize: '36px',
-      color: '#888888',
-      fontFamily: 'sans-serif',
+      ...TS.sub,
     }).setOrigin(1, 1);
   }
 
   private makeButton(x: number, y: number, label: string, cb: () => void): void {
-    const bg = this.add.rectangle(x, y, 280, 60, 0x3355aa)
-      .setStrokeStyle(4, 0xaaaaff)
+    const bg = makeBtn(this, x, y, 280, 60)
       .setInteractive({ useHandCursor: true });
-    const text = this.add.text(x, y, label, {
-      fontSize: '32px',
-      color: '#ffffff',
-      fontFamily: 'sans-serif',
+    this.add.text(x, y, label, {
+      ...TS.btn,
     }).setOrigin(0.5);
 
-    bg.on('pointerover', () => bg.setFillStyle(0x6688ee));
-    bg.on('pointerout', () => bg.setFillStyle(0x3355aa));
+    bg.on('pointerover', () => bg.setFillStyle(0x2a4090));
+    bg.on('pointerout', () => bg.setFillStyle(T.panelMid));
     bg.on('pointerdown', cb);
   }
 }

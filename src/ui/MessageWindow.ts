@@ -1,91 +1,99 @@
 import Phaser from 'phaser';
+import { drawPanel, makeBtn } from './Panel';
+import { T } from './theme';
+import { TS } from './StyledText';
 
 export class MessageWindow {
   private scene: Phaser.Scene;
-  private bg: Phaser.GameObjects.Rectangle;
-  private speakerText: Phaser.GameObjects.Text;
-  private bodyText: Phaser.GameObjects.Text;
-  private continueIndicator: Phaser.GameObjects.Text;
+  private panel!: Phaser.GameObjects.Graphics;
+  private speakerText!: Phaser.GameObjects.Text;
+  private bodyText!: Phaser.GameObjects.Text;
+  private indicator!: Phaser.GameObjects.Text;
   private visible: boolean = false;
   private confirmMode: boolean = false;
   private onComplete?: () => void;
   private confirmButtons: Phaser.GameObjects.GameObject[] = [];
 
+  private readonly W: number;
+  private readonly H: number;
+  private readonly WIN_H = 190;
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    const w = scene.scale.width;
-    const h = scene.scale.height;
-    const winH = 160;
-    const y = h - winH - 10;
+    this.W = scene.scale.width;
+    this.H = scene.scale.height;
+    this.build();
+  }
 
-    this.bg = scene.add.rectangle(w / 2, y + winH / 2, w - 20, winH, 0x000033, 0.88)
-      .setStrokeStyle(3, 0x8888ff).setDepth(100).setScrollFactor(0).setVisible(false);
+  private get panelY(): number { return this.H - this.WIN_H - 12; }
 
-    this.speakerText = scene.add.text(20, y + 12, '', {
-      fontSize: '34px', color: '#aaffaa', fontFamily: 'sans-serif',
+  private build(): void {
+    const py = this.panelY;
+    const W = this.W;
+
+    this.panel = drawPanel(this.scene, 10, py, W - 20, this.WIN_H, {
+      depth: 100, scrollFactor: 0, cornerDeco: true,
+    }).setVisible(false);
+
+    this.speakerText = this.scene.add.text(26, py + 14, '', TS.speaker)
+      .setDepth(101).setScrollFactor(0).setVisible(false);
+
+    this.bodyText = this.scene.add.text(26, py + 46, '', {
+      ...TS.body,
+      wordWrap: { width: W - 52 },
     }).setDepth(101).setScrollFactor(0).setVisible(false);
 
-    this.bodyText = scene.add.text(20, y + 40, '', {
-      fontSize: '32px', color: '#ffffff', fontFamily: 'sans-serif',
-      wordWrap: { width: w - 50 },
+    this.indicator = this.scene.add.text(W - 36, py + this.WIN_H - 32, '▼', {
+      ...TS.label, fontSize: '22px',
     }).setDepth(101).setScrollFactor(0).setVisible(false);
 
-    this.continueIndicator = scene.add.text(w - 40, y + winH - 30, '▼', {
-      fontSize: '32px', color: '#ffff88',
-    }).setDepth(101).setScrollFactor(0).setVisible(false);
-
-    scene.tweens.add({
-      targets: this.continueIndicator,
-      alpha: 0, duration: 500, yoyo: true, repeat: -1,
+    this.scene.tweens.add({
+      targets: this.indicator, alpha: 0, duration: 600, yoyo: true, repeat: -1,
     });
   }
 
   show(speaker: string, text: string, onComplete?: () => void): void {
-    this.visible = true;
     this.confirmMode = false;
+    this.visible = true;
     this.onComplete = onComplete;
-    this.bg.setVisible(true);
-    this.speakerText.setText(speaker).setVisible(true);
-    this.bodyText.setText(text).setVisible(true);
-    this.continueIndicator.setVisible(true);
+    this.panel.setVisible(true);
+    this.speakerText.setText(speaker).setVisible(!!speaker);
+    this.bodyText
+      .setY(speaker ? this.panelY + 46 : this.panelY + 28)
+      .setText(text).setVisible(true);
+    this.indicator.setVisible(true);
   }
 
-  // はい／いいえ 確認ダイアログ
-  showConfirm(
-    speaker: string,
-    text: string,
-    onYes: () => void,
-    onNo: () => void = () => {},
-  ): void {
-    this.cleanupConfirmButtons();
-    this.visible = true;
+  showConfirm(speaker: string, text: string, onYes: () => void, onNo: () => void = () => {}): void {
+    this.cleanupConfirm();
     this.confirmMode = true;
-    this.bg.setVisible(true);
-    this.speakerText.setText(speaker).setVisible(true);
-    this.bodyText.setText(text).setVisible(true);
-    this.continueIndicator.setVisible(false);
+    this.visible = true;
+    this.panel.setVisible(true);
+    this.speakerText.setText(speaker).setVisible(!!speaker);
+    this.bodyText
+      .setY(speaker ? this.panelY + 46 : this.panelY + 28)
+      .setText(text).setVisible(true);
+    this.indicator.setVisible(false);
 
-    const scene = this.scene;
-    const w = scene.scale.width;
-    const h = scene.scale.height;
-    const btnY = h - 50;
+    const { W, H } = this;
+    const btnY = H - 36;
+    const bw = 160, bh = 50;
 
-    const yesBg = scene.add.rectangle(w * 0.30, btnY, 140, 48, 0x224422, 0.95)
-      .setStrokeStyle(2, 0x44ee44).setDepth(110).setScrollFactor(0)
-      .setInteractive({ useHandCursor: true });
-    const yesLbl = scene.add.text(w * 0.30, btnY, 'はい', {
-      fontSize: '34px', color: '#44ee44', fontFamily: 'sans-serif',
-    }).setOrigin(0.5).setDepth(111).setScrollFactor(0);
+    const yesBg = makeBtn(this.scene, W * 0.28, btnY, bw, bh, { depth: 110 });
+    const yesLbl = this.scene.add.text(W * 0.28, btnY, 'はい', TS.btn)
+      .setOrigin(0.5).setDepth(111).setScrollFactor(0);
+    yesBg.setInteractive({ useHandCursor: true })
+      .on('pointerover', () => yesBg.setFillStyle(0x2a4090))
+      .on('pointerout',  () => yesBg.setFillStyle(T.panelMid))
+      .on('pointerdown', () => { this.hide(); onYes(); });
 
-    const noBg = scene.add.rectangle(w * 0.70, btnY, 140, 48, 0x442222, 0.95)
-      .setStrokeStyle(2, 0xee4444).setDepth(110).setScrollFactor(0)
-      .setInteractive({ useHandCursor: true });
-    const noLbl = scene.add.text(w * 0.70, btnY, 'いいえ', {
-      fontSize: '34px', color: '#ee4444', fontFamily: 'sans-serif',
-    }).setOrigin(0.5).setDepth(111).setScrollFactor(0);
-
-    yesBg.on('pointerdown', () => { this.hide(); onYes(); });
-    noBg.on('pointerdown', () => { this.hide(); onNo(); });
+    const noBg = makeBtn(this.scene, W * 0.72, btnY, bw, bh, { depth: 110 });
+    const noLbl = this.scene.add.text(W * 0.72, btnY, 'いいえ', TS.btn)
+      .setOrigin(0.5).setDepth(111).setScrollFactor(0);
+    noBg.setInteractive({ useHandCursor: true })
+      .on('pointerover', () => noBg.setFillStyle(0x5c1f28))
+      .on('pointerout',  () => noBg.setFillStyle(T.panelMid))
+      .on('pointerdown', () => { this.hide(); onNo(); });
 
     this.confirmButtons = [yesBg, yesLbl, noBg, noLbl];
   }
@@ -93,11 +101,11 @@ export class MessageWindow {
   hide(): void {
     this.visible = false;
     this.confirmMode = false;
-    this.bg.setVisible(false);
+    this.panel.setVisible(false);
     this.speakerText.setVisible(false);
     this.bodyText.setVisible(false);
-    this.continueIndicator.setVisible(false);
-    this.cleanupConfirmButtons();
+    this.indicator.setVisible(false);
+    this.cleanupConfirm();
   }
 
   advance(): void {
@@ -108,20 +116,17 @@ export class MessageWindow {
 
   isVisible(): boolean { return this.visible; }
 
-  showSequence(
-    dialogs: { speaker: string; text: string }[],
-    onDone?: () => void,
-  ): void {
-    let index = 0;
+  showSequence(dialogs: { speaker: string; text: string }[], onDone?: () => void): void {
+    let i = 0;
     const next = () => {
-      if (index >= dialogs.length) { onDone?.(); return; }
-      const d = dialogs[index++];
+      if (i >= dialogs.length) { onDone?.(); return; }
+      const d = dialogs[i++];
       this.show(d.speaker, d.text, next);
     };
     next();
   }
 
-  private cleanupConfirmButtons(): void {
+  private cleanupConfirm(): void {
     this.confirmButtons.forEach(b => b.destroy());
     this.confirmButtons = [];
   }

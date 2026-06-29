@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { getState } from '../state/playerState';
 import { ITEMS } from '../data/items';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
+import { drawPanel, makeBtn } from '../ui/Panel';
 
 export class ItemListScene extends Phaser.Scene {
   constructor() { super({ key: 'ItemListScene', active: false }); }
@@ -9,43 +12,44 @@ export class ItemListScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.add.rectangle(w / 2, h / 2, w, h, 0x112233, 0.96);
+    drawPanel(this, 0, 0, w, h, { depth: 5 });
     this.add.text(w / 2, 30, 'もちもの', {
-      fontSize: '34px', color: '#ffff88', fontFamily: 'sans-serif',
-    }).setOrigin(0.5);
+      ...TS.heading,
+    }).setOrigin(0.5).setDepth(6);
 
     const state = getState();
     const held = state.inventory.filter(i => i.count > 0);
 
     if (held.length === 0) {
       this.add.text(w / 2, h / 2, 'なにも　もっていないよ！', {
-        fontSize: '30px', color: '#aaaaaa', fontFamily: 'sans-serif',
-      }).setOrigin(0.5);
+        ...TS.body,
+      }).setOrigin(0.5).setDepth(6);
     } else {
       held.forEach((entry, i) => {
         const item = ITEMS[entry.itemId];
         if (!item) return;
         const y = 72 + i * 86;
-        this.add.rectangle(w / 2, y + 32, w - 20, 76, 0x223366).setStrokeStyle(2, 0x5577bb);
+        drawPanel(this, 10, y, w - 20, 80, { depth: 6 });
         this.add.text(22, y + 10, item.name, {
-          fontSize: '30px', color: '#ffffff', fontFamily: 'sans-serif',
-        });
+          ...TS.body,
+        }).setDepth(7);
         this.add.text(22, y + 44, this.describe(item), {
-          fontSize: '24px', color: '#aaaaaa', fontFamily: 'sans-serif',
-        });
-        this.add.text(w - 20, y + 26, `× ${entry.count}`, {
-          fontSize: '30px', color: '#ffdd44', fontFamily: 'sans-serif',
-        }).setOrigin(1, 0.5);
+          ...TS.sub,
+        }).setDepth(7);
+        this.add.text(w - 20, y + 32, `× ${entry.count}`, {
+          ...TS.coin,
+        }).setOrigin(1, 0.5).setDepth(7);
       });
     }
 
-    this.add.rectangle(w / 2, h - 50, 240, 56, 0x554422)
-      .setStrokeStyle(2, 0xaa8844)
+    const closeBtn = makeBtn(this, w / 2, h - 50, 240, 56, { depth: 6 })
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.stop('ItemListScene'));
+      .on('pointerdown', () => this.scene.stop('ItemListScene'))
+      .on('pointerover', () => closeBtn.setFillStyle(0x2a4090))
+      .on('pointerout', () => closeBtn.setFillStyle(T.panelMid));
     this.add.text(w / 2, h - 50, 'もどる', {
-      fontSize: '30px', color: '#ffffff', fontFamily: 'sans-serif',
-    }).setOrigin(0.5);
+      ...TS.btn,
+    }).setOrigin(0.5).setDepth(7);
   }
 
   private describe(item: { type: string; affectionBonus?: number; healAmount?: number; expBonus?: number }): string {

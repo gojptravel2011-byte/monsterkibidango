@@ -7,6 +7,9 @@ import { STORY_EVENTS } from '../data/story';
 import { PLACEHOLDER_COLORS } from '../assets/assetKeys';
 import { saveGame } from '../systems/save';
 import { BGM } from '../systems/bgm';
+import { T } from '../ui/theme';
+import { TS } from '../ui/StyledText';
+import { drawPanel } from '../ui/Panel';
 
 const SPEED = 150;
 const PLAYER_SIZE = 28;
@@ -58,14 +61,13 @@ export class MapScene extends Phaser.Scene {
 
     // HUD
     const w = this.scale.width;
+    drawPanel(this, 0, 0, w, 58, { depth: 148, scrollFactor: 0 });
     this.fieldNameText = this.add.text(10, 10, '', {
-      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
-      stroke: '#000000', strokeThickness: 3,
+      ...TS.label,
     }).setDepth(150).setScrollFactor(0);
 
-    this.coinsText = this.add.text(10, 36, '', {
-      fontSize: '36px', color: '#ffdd44', fontFamily: 'sans-serif',
-      stroke: '#000000', strokeThickness: 3,
+    this.coinsText = this.add.text(10, 32, '', {
+      ...TS.coin,
     }).setDepth(150).setScrollFactor(0);
 
     this.updateHUD();
@@ -74,12 +76,12 @@ export class MapScene extends Phaser.Scene {
     // ハンバーガーメニュー（右上）
     const menuBtnX = w - 36;
     const menuBtnY = 36;
-    this.add.rectangle(menuBtnX, menuBtnY, 56, 56, 0x334466, 0.9)
-      .setStrokeStyle(2, 0x8888ff).setDepth(150).setScrollFactor(0)
+    this.add.rectangle(menuBtnX, menuBtnY, 56, 56, T.panelMid, 0.9)
+      .setStrokeStyle(2, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.launch('MenuScene').pause());
     for (let i = 0; i < 3; i++) {
-      this.add.rectangle(menuBtnX, menuBtnY - 10 + i * 10, 30, 3, 0xffffff)
+      this.add.rectangle(menuBtnX, menuBtnY - 10 + i * 10, 30, 3, T.borderGold)
         .setDepth(151).setScrollFactor(0);
     }
 
@@ -117,8 +119,8 @@ export class MapScene extends Phaser.Scene {
       const zone = this.add.rectangle(conn.x, conn.y, 60, 80, 0xffffff, 0.2)
         .setStrokeStyle(2, 0xffffff);
       const label = this.add.text(conn.x, conn.y - 50, conn.label, {
-        fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
-        stroke: '#000000', strokeThickness: 2,
+        ...TS.sub,
+        color: T.textSub,
       }).setOrigin(0.5);
       this.connections.push({ zone, toField: conn.toField });
       this.decorations.push(zone, label);
@@ -141,12 +143,7 @@ export class MapScene extends Phaser.Scene {
       targets: circle, scaleX: 1.15, scaleY: 1.15,
       duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
-    // ラベル
-    const txt = this.add.text(x, y - 46, label, {
-      fontSize: '32px', color: '#ffffff', fontFamily: 'sans-serif',
-      stroke: '#000000', strokeThickness: 3, align: 'center',
-    }).setOrigin(0.5).setDepth(5);
-    this.decorations.push(circle, txt);
+    this.decorations.push(circle);
     this.triggers.push({ x, y, action, confirmMsg, fired: false });
   }
 
