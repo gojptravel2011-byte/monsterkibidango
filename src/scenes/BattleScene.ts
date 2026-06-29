@@ -61,29 +61,32 @@ export class BattleScene extends Phaser.Scene {
 
     // 敵スプライト
     const eSpecies = MONSTER_SPECIES[this.enemy.speciesId];
-    this.enemySprite = this.add.image(w * 0.65, h * 0.26, eSpecies?.spriteKey ?? 'monster_kurosuke')
-      .setDisplaySize(96, 96).setFlipX(true);
+    this.enemySprite = this.add.image(w * 0.65, h * 0.24, eSpecies?.spriteKey ?? 'monster_kurosuke')
+      .setDisplaySize(110, 110).setFlipX(true).setDepth(5);
 
-    // 敵ステータスパネル
-    drawPanel(this, 10, 80, 340, 80, { depth: 10 });
-    this.enemyNameText = this.add.text(w * 0.35, h * 0.12, `${eSpecies?.name ?? this.enemy.speciesId} Lv.${this.enemy.level}`, {
+    // 敵ステータスパネル（左上）
+    const ePanelY = 60;
+    drawPanel(this, 8, ePanelY, 420, 100, { depth: 10 });
+    this.enemyNameText = this.add.text(18, ePanelY + 10, `${eSpecies?.name ?? this.enemy.speciesId} Lv.${this.enemy.level}`, {
       ...TS.subheading,
     }).setDepth(11);
-    this.enemyHpText = this.add.text(w * 0.35, h * 0.18, '', {
+    this.enemyHpText = this.add.text(18, ePanelY + 50, '', {
       ...TS.hp,
     }).setDepth(11);
 
     // 味方スプライト
     const aSpecies = MONSTER_SPECIES[this.ally?.speciesId];
-    this.allySprite = this.add.image(w * 0.25, h * 0.49, aSpecies?.spriteKey ?? 'player')
-      .setDisplaySize(96, 96);
+    this.allySprite = this.add.image(w * 0.28, h * 0.50, aSpecies?.spriteKey ?? 'player')
+      .setDisplaySize(110, 110).setDepth(5);
 
-    // 味方ステータスパネル
-    drawPanel(this, w - 350, 350, 340, 80, { depth: 10 });
-    this.allyNameText = this.add.text(w * 0.5, h * 0.37, `${aSpecies?.name ?? 'なかま'} Lv.${this.ally?.level ?? 1}`, {
+    // 味方ステータスパネル（右）
+    const aPanelX = w - 430;
+    const aPanelY = Math.round(h * 0.38);
+    drawPanel(this, aPanelX, aPanelY, 420, 100, { depth: 10 });
+    this.allyNameText = this.add.text(aPanelX + 10, aPanelY + 10, `${aSpecies?.name ?? 'なかま'} Lv.${this.ally?.level ?? 1}`, {
       ...TS.subheading,
     }).setDepth(11);
-    this.allyHpText = this.add.text(w * 0.5, h * 0.43, '', {
+    this.allyHpText = this.add.text(aPanelX + 10, aPanelY + 50, '', {
       ...TS.hp,
     }).setDepth(11);
 
@@ -140,14 +143,14 @@ export class BattleScene extends Phaser.Scene {
       const isLast = i === commands.length - 1;
       const x = isLast ? w * 0.5 : (i % 2 === 0 ? w * 0.3 : w * 0.72);
       const y = isLast ? h * 0.84 : h * 0.68 + Math.floor(i / 2) * 70;
-      const bg = makeBtn(this, x, y, isLast ? 340 : 180, 60)
+      const bg = makeBtn(this, x, y, isLast ? 340 : 180, 60, { depth: 20 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { this.clearButtons(); cmd.action(); })
         .on('pointerover', () => bg.setFillStyle(0x2a4090))
         .on('pointerout', () => bg.setFillStyle(T.panelMid));
       const text = this.add.text(x, y, cmd.label, {
         ...TS.btn,
-      }).setOrigin(0.5).setDepth(52);
+      }).setOrigin(0.5).setDepth(21);
       this.commandButtons.push(bg, text);
     });
   }
@@ -172,7 +175,7 @@ export class BattleScene extends Phaser.Scene {
     this.commandButtons.push(panel);
 
     // 戻るボタン
-    const backBg = makeBtn(this, w / 2, h * 0.58, 200, 44)
+    const backBg = makeBtn(this, w / 2, h * 0.58, 200, 44, { depth: 50 })
       .setFillStyle(T.accent1)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.showCommandMenu())
@@ -180,7 +183,7 @@ export class BattleScene extends Phaser.Scene {
       .on('pointerout', () => backBg.setFillStyle(T.accent1));
     const backTxt = this.add.text(w / 2, h * 0.58, 'もどる', {
       ...TS.btn,
-    }).setOrigin(0.5).setDepth(52);
+    }).setOrigin(0.5).setDepth(51);
     this.commandButtons.push(backBg, backTxt);
 
     candidates.forEach((m, i) => {
@@ -188,7 +191,7 @@ export class BattleScene extends Phaser.Scene {
       const y = h * 0.64 + i * 80;
       const hpRatio = m.hp / m.maxHp;
       const hpColor = hpRatio > 0.5 ? T.textGreen : hpRatio > 0.2 ? T.textYellow : T.textRed;
-      const btn = makeBtn(this, w / 2, y, w - 40, 66)
+      const btn = makeBtn(this, w / 2, y, w - 40, 66, { depth: 50 })
         .setInteractive({ useHandCursor: true })
         .on('pointerover', () => btn.setFillStyle(0x2a4090))
         .on('pointerout', () => btn.setFillStyle(T.panelMid))
@@ -198,12 +201,12 @@ export class BattleScene extends Phaser.Scene {
         });
       const nameTxt = this.add.text(60, y - 10, `${species?.name ?? m.speciesId}  Lv.${m.level}`, {
         ...TS.subheading,
-      }).setOrigin(0, 0.5).setDepth(52);
+      }).setOrigin(0, 0.5).setDepth(51);
       const hpTxt = this.add.text(60, y + 16, `HP: ${m.hp} / ${m.maxHp}`, {
         ...TS.hp,
         color: hpColor,
-      }).setOrigin(0, 0.5).setDepth(52);
-      const icon = this.add.image(36, y, species?.spriteKey ?? 'player').setDisplaySize(44, 44).setDepth(52);
+      }).setOrigin(0, 0.5).setDepth(51);
+      const icon = this.add.image(36, y, species?.spriteKey ?? 'player').setDisplaySize(44, 44).setDepth(51);
       this.commandButtons.push(btn, nameTxt, hpTxt, icon);
     });
   }
@@ -231,7 +234,7 @@ export class BattleScene extends Phaser.Scene {
       if (!skill) return;
       const x = i < 2 ? w * 0.3 : w * 0.72;
       const y = h * 0.63 + (i % 2) * 70;
-      const bg = makeBtn(this, x, y, 180, 60)
+      const bg = makeBtn(this, x, y, 180, 60, { depth: 50 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { this.clearButtons(); this.playerAttack(skillId); })
         .on('pointerover', () => bg.setFillStyle(0x2a4090))
@@ -239,16 +242,16 @@ export class BattleScene extends Phaser.Scene {
       const text = this.add.text(x, y, `${skill.name}\nいりょく:${skill.power}`, {
         ...TS.btn,
         align: 'center',
-      }).setOrigin(0.5).setDepth(52);
+      }).setOrigin(0.5).setDepth(51);
       this.commandButtons.push(bg, text);
     });
 
-    const cancelBg = makeBtn(this, w / 2, h * 0.85, 140, 48)
+    const cancelBg = makeBtn(this, w / 2, h * 0.85, 140, 48, { depth: 50 })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     const cancelText = this.add.text(w / 2, h * 0.85, 'もどる', {
       ...TS.btn,
-    }).setOrigin(0.5).setDepth(52);
+    }).setOrigin(0.5).setDepth(51);
     this.commandButtons.push(cancelBg, cancelText);
   }
 
@@ -271,7 +274,7 @@ export class BattleScene extends Phaser.Scene {
       const item = ITEMS[inv.itemId];
       const x = w / 2;
       const y = h * 0.63 + i * 65;
-      const bg = makeBtn(this, x, y, 260, 52)
+      const bg = makeBtn(this, x, y, 260, 52, { depth: 20 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
           removeItem(inv.itemId);
@@ -283,16 +286,16 @@ export class BattleScene extends Phaser.Scene {
         });
       const text = this.add.text(x, y, `${item.name}（${inv.count}こ）`, {
         ...TS.btn,
-      }).setOrigin(0.5).setDepth(52);
+      }).setOrigin(0.5).setDepth(21);
       this.commandButtons.push(bg, text);
     });
 
-    const cancelBg = makeBtn(this, w / 2, h * 0.85, 140, 48)
+    const cancelBg = makeBtn(this, w / 2, h * 0.85, 140, 48, { depth: 20 })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     this.commandButtons.push(cancelBg, this.add.text(w / 2, h * 0.85, 'もどる', {
       ...TS.btn,
-    }).setOrigin(0.5).setDepth(52));
+    }).setOrigin(0.5).setDepth(21));
   }
 
   private showBallMenu(): void {
@@ -315,7 +318,7 @@ export class BattleScene extends Phaser.Scene {
       const item = ITEMS[inv.itemId];
       const x = w / 2;
       const y = h * 0.63 + i * 65;
-      const bg = makeBtn(this, x, y, 260, 52)
+      const bg = makeBtn(this, x, y, 260, 52, { depth: 20 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
           removeItem(inv.itemId);
@@ -331,16 +334,16 @@ export class BattleScene extends Phaser.Scene {
         });
       const ballText = this.add.text(x, y, `${item.name}（${inv.count}こ）`, {
         ...TS.btn,
-      }).setOrigin(0.5).setDepth(52);
+      }).setOrigin(0.5).setDepth(21);
       this.commandButtons.push(bg, ballText);
     });
 
-    const cancelBg = makeBtn(this, w / 2, h * 0.85, 140, 48)
+    const cancelBg = makeBtn(this, w / 2, h * 0.85, 140, 48, { depth: 20 })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     this.commandButtons.push(cancelBg, this.add.text(w / 2, h * 0.85, 'もどる', {
       ...TS.btn,
-    }).setOrigin(0.5).setDepth(52));
+    }).setOrigin(0.5).setDepth(21));
   }
 
   private playerAttack(skillId: string): void {
