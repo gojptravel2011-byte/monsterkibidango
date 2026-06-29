@@ -28,6 +28,7 @@ export class MapScene extends Phaser.Scene {
   private decorations: Phaser.GameObjects.GameObject[] = [];
   private bgRect: Phaser.GameObjects.Rectangle | null = null;
   private moveTimer: number = 0;
+  private dungeonWalls: { x: number; y: number; w: number; h: number }[] = [];
 
   constructor() { super('MapScene'); }
 
@@ -102,6 +103,7 @@ export class MapScene extends Phaser.Scene {
     this.decorations = [];
     this.connections = [];
     this.triggers = [];
+    this.dungeonWalls = [];
     this.bgRect?.destroy();
 
     const w = this.scale.width;
@@ -371,53 +373,123 @@ export class MapScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(5),
       );
     } else if (fieldId === 'dungeon') {
-      // 暗い地下迷路
-      const wallColor = 0x332244;
-      const glowColor = 0x6633aa;
+      // ─── 地下迷路 ────────────────────────────────────────────
+      // 5枚の横壁（ギャップが左右交互）+ 縦の仕切り壁（ギャップあり）で複雑な迷路を形成
+      // 正解ルート: 下中央→左→上→右→上→左→上→右→上→中央→ボス
+      const WC  = 0x2a1040;
+      const GC  = 0x8844cc;
+      const WC2 = 0x1a0830;
 
-      // 天井・床
       this.decorations.push(
-        this.add.rectangle(w / 2, h / 2, w, h, 0x110011).setDepth(0),
+        this.add.rectangle(w / 2, h / 2, w, h, 0x0d0018).setDepth(0),
       );
 
-      // 迷路の壁（横・縦の壁ブロック）
-      const walls: [number, number, number, number][] = [
-        // [x, y, width, height]
-        [150, 200, 180, 30],
-        [550, 200, 180, 30],
-        [w/2, 380, 220, 30],
-        [100, 560, 200, 30],
-        [600, 560, 200, 30],
-        [300, 740, 150, 30],
-        [500, 740, 150, 30],
-        [w/2, 900, 280, 30],
+      // 横壁バリア + 追加の行き止まり壁 [cx, cy, width, height]
+      const floorWalls: [number, number, number, number][] = [
+        // F1 @ y=960: ギャップ左(x=0→160)
+        [455, 960, 590, 36],
+        // F2 @ y=750: ギャップ右(x=580→750)
+        [290, 750, 580, 36],
+        // F3 @ y=560: ギャップ左(x=0→160)
+        [455, 560, 590, 36],
+        // F4 @ y=360: ギャップ右(x=580→750)
+        [290, 360, 580, 36],
+        // F5 @ y=180: ギャップ中央のみ(x=310→440)
+        [155, 180, 310, 36],
+        [595, 180, 320, 36],
+        // 行き止まり・偽の道
+        [600, 1070, 36, 200],   // 右端の行き止まり縦壁(Z1)
+        [375, 850, 36, 200],    // 中央の行き止まり縦壁(Z1内)
+        [290, 1100, 200, 32],   // 入口付近の偽バリア
+        [80, 870, 120, 32],     // 左レーンZ2の行き止まり
+        [375, 655, 220, 32],    // Z3中央の偽道
+        [520, 640, 32, 160],    // Z3内の縦バリア（偽の分断）
+        [80, 460, 120, 32],     // 左レーンZ4の行き止まり
+        [230, 440, 32, 140],    // Z4の縦バリア
+        [695, 270, 32, 140],    // 右端Z5行き止まり縦壁
+        [460, 250, 32, 140],    // Z5の縦バリア
       ];
-      walls.forEach(([wx, wy, ww, wh]) => {
+
+      // 縦の仕切り壁（各ゾーンでレーンを区切る・ギャップあり）
+      // V1: x=160, Z2(y=760→960), ギャップ y=860→930
+      // V2: x=580, Z3(y=570→740), ギャップ y=640→710
+      // V3: x=160, Z4(y=370→555), ギャップ y=450→525
+      // V4: x=580, Z5(y=190→355), ギャップ y=255→330
+      const laneWalls: [number, number, number, number][] = [
+        [160, 810, 36, 100], [160, 945, 36, 30],
+        [580, 602, 36,  64], [580, 727, 36,  34],
+        [160, 410, 36,  80], [160, 540, 36,  30],
+        [580, 222, 36,  64], [580, 347, 36,  26],
+      ];
+
+      const allWalls = [...floorWalls, ...laneWalls];
+
+      // 当たり判定登録
+      allWalls.forEach(([cx, cy, ww, wh]) => {
+        this.dungeonWalls.push({ x: cx, y: cy, w: ww, h: wh });
+      });
+
+      // 描画
+      allWalls.forEach(([cx, cy, ww, wh]) => {
         this.decorations.push(
-          this.add.rectangle(wx, wy, ww, wh, wallColor).setStrokeStyle(2, glowColor).setDepth(3),
+          this.add.rectangle(cx, cy, ww, wh, WC).setStrokeStyle(2, GC).setDepth(3),
+          this.add.rectangle(cx, cy, Math.max(ww - 8, 4), Math.max(wh - 8, 4), WC2).setDepth(3),
         );
       });
 
-      // 松明（光の演出）
-      [[100, 300], [650, 300], [200, 650], [550, 650], [375, 500]].forEach(([tx, ty]) => {
+      // 床グリッド（薄線）
+      for (let ty = 100; ty < h; ty += 80) {
         this.decorations.push(
-          this.add.circle(tx, ty, 12, 0xff8800, 0.8).setDepth(4),
-          this.add.circle(tx, ty, 22, 0xff4400, 0.25).setDepth(4),
+          this.add.rectangle(w / 2, ty, w, 1, 0x3a1a5a, 0.25).setDepth(1),
         );
+      }
+      for (let tx = 60; tx < w; tx += 80) {
+        this.decorations.push(
+          this.add.rectangle(tx, h / 2, 1, h, 0x3a1a5a, 0.25).setDepth(1),
+        );
+      }
+
+      // 松明（炎アニメーション）
+      const torches: [number, number][] = [
+        [80, 780], [80, 580], [80, 400],
+        [670, 680], [670, 460], [670, 270],
+        [375, 830], [200, 630], [560, 450],
+      ];
+      torches.forEach(([tx, ty]) => {
+        this.decorations.push(
+          this.add.circle(tx, ty, 18, 0xff6600, 0.85).setDepth(4),
+          this.add.circle(tx, ty, 34, 0xff3300, 0.18).setDepth(4),
+          this.add.circle(tx, ty,  8, 0xffee88, 0.9).setDepth(5),
+        );
+        const flicker = this.add.circle(tx, ty, 22, 0xff8800, 0.35).setDepth(4);
+        this.decorations.push(flicker);
+        this.tweens.add({
+          targets: flicker, scaleX: 1.3, scaleY: 0.8, alpha: 0.15,
+          duration: 600 + Math.random() * 400,
+          yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        });
       });
 
-      // ボスへの扉（上部）
+      // ヒントテキスト
       this.decorations.push(
-        this.add.rectangle(w / 2, 80, 100, 70, 0x440022).setStrokeStyle(3, 0xff0000).setDepth(4),
-        this.add.text(w / 2, 80, '⚠ ボスの\nへや', {
-          fontSize: '22px', color: '#ff4444', fontFamily: 'sans-serif', align: 'center',
+        this.add.text(375, 1035, 'さきにすすめ', {
+          fontSize: '22px', color: '#9966cc', fontFamily: 'sans-serif',
+          stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(5),
+      );
+
+      // ボスの扉
+      this.decorations.push(
+        this.add.rectangle(w / 2, 80, 120, 80, 0x440022).setStrokeStyle(3, 0xff2200).setDepth(4),
+        this.add.rectangle(w / 2, 80, 104, 64, 0x220011).setStrokeStyle(1, 0xff6644).setDepth(4),
+        this.add.text(w / 2, 80, 'ボスの\nへや', {
+          fontSize: '22px', color: '#ff5555', fontFamily: 'sans-serif', align: 'center',
           stroke: '#000000', strokeThickness: 3,
         }).setOrigin(0.5).setDepth(5),
       );
 
-      // ボストリガー（扉の前）
-      this.addTriggerZone(w / 2, 140, 'とびら', 0x880000,
-        'くらやみのあるじが\niてをよんでいる…\nいどみますか？',
+      this.addTriggerZone(w / 2, 148, 'とびら', 0x880000,
+        'くらやみのあるじが\nよんでいる…\nいどみますか？',
         () => this.triggerRasuboss(),
       );
     }
@@ -462,8 +534,11 @@ export class MapScene extends Phaser.Scene {
 
       const dt = delta / 1000;
       const w = this.scale.width, h = this.scale.height;
-      this.player.x = Phaser.Math.Clamp(this.player.x + vx * dt, 20, w - 20);
-      this.player.y = Phaser.Math.Clamp(this.player.y + vy * dt, 20, h - 20);
+      const nx = Phaser.Math.Clamp(this.player.x + vx * dt, 20, w - 20);
+      const ny = Phaser.Math.Clamp(this.player.y + vy * dt, 20, h - 20);
+      const [rx, ry] = this.resolveWalls(nx, ny);
+      this.player.x = rx;
+      this.player.y = ry;
       this.playerLabel.x = this.player.x;
       this.playerLabel.y = this.player.y - 30;
 
@@ -511,6 +586,29 @@ export class MapScene extends Phaser.Scene {
       this.moveTimer = 0;
       if (this.player.anims.currentAnim?.key !== 'player_idle') this.player.play('player_idle');
     }
+  }
+
+  /** ダンジョン壁との衝突解決（X軸・Y軸を独立に処理してスライド移動を実現） */
+  private resolveWalls(nextX: number, nextY: number): [number, number] {
+    if (this.dungeonWalls.length === 0) return [nextX, nextY];
+    const r = 18; // プレイヤーの当たり判定半径
+    const cx = this.player.x, cy = this.player.y;
+
+    // X軸: 現在のY位置で判定
+    let rx = nextX;
+    for (const wall of this.dungeonWalls) {
+      const wl = wall.x - wall.w / 2 - r, wr = wall.x + wall.w / 2 + r;
+      const wt = wall.y - wall.h / 2 - r, wb = wall.y + wall.h / 2 + r;
+      if (rx > wl && rx < wr && cy > wt && cy < wb) { rx = cx; break; }
+    }
+    // Y軸: 解決後のX位置で判定
+    let ry = nextY;
+    for (const wall of this.dungeonWalls) {
+      const wl = wall.x - wall.w / 2 - r, wr = wall.x + wall.w / 2 + r;
+      const wt = wall.y - wall.h / 2 - r, wb = wall.y + wall.h / 2 + r;
+      if (rx > wl && rx < wr && ry > wt && ry < wb) { ry = cy; break; }
+    }
+    return [rx, ry];
   }
 
   private changeField(toField: string): void {
