@@ -9,9 +9,7 @@ export interface MonsterSpecies {
   placeholderColor: number;
   learnset: { level: number; skill: string }[];
   catchable: boolean;
-  // 将来の進化・属性システム用（MVPでは未使用）
-  // evolveAt?: number;
-  // elementType?: string;
+  expRate?: number; // 必要経験値の倍率（低いほど速く育つ）。省略時は1.0
 }
 
 const BASE_MONSTER_SPECIES: Record<string, MonsterSpecies> = {
@@ -22,6 +20,7 @@ const BASE_MONSTER_SPECIES: Record<string, MonsterSpecies> = {
     spriteKey: ASSET_KEYS.MONSTERS.KUROSUKE,
     placeholderColor: 0x333333,
     catchable: false, // イベントで仲間になる
+    expRate: 0.2,     // 必要経験値が通常の20%→5倍速で育つ
     learnset: [
       { level: 1, skill: 'taiatarikko' },
       { level: 3, skill: 'hikkaku' },

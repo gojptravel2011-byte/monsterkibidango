@@ -130,10 +130,11 @@ export function getFlag(key: string): boolean {
 export function gainExp(monster: MonsterInstance, amount: number): string[] {
   monster.exp += amount;
   const newSkills: string[] = [];
-  while (monster.exp >= calcExpToNextLevel(monster.level)) {
-    monster.exp -= calcExpToNextLevel(monster.level);
+  const species = MONSTER_SPECIES[monster.speciesId];
+  const expRate = species?.expRate ?? 1.0;
+  while (monster.exp >= calcExpToNextLevel(monster.level) * expRate) {
+    monster.exp -= Math.ceil(calcExpToNextLevel(monster.level) * expRate);
     monster.level += 1;
-    const species = MONSTER_SPECIES[monster.speciesId];
     const newMaxHp = calcMaxHp(species, monster.level);
     monster.hp = Math.min(monster.hp + (newMaxHp - monster.maxHp), newMaxHp);
     monster.maxHp = newMaxHp;
