@@ -6,7 +6,7 @@ import { TS } from '../ui/StyledText';
 // たしざん・ひきざんミニゲーム
 // 5問出題、正解数に応じてコインゲット（hard モードは10問・かけ算あり）
 
-type Problem = { a: number; op: '+' | '-' | '×'; b: number; answer: number };
+type Problem = { a: number; op: '+' | '-'; b: number; answer: number };
 
 export class ArithmeticScene extends Phaser.Scene {
   private score: number = 0;
@@ -17,7 +17,7 @@ export class ArithmeticScene extends Phaser.Scene {
   private timer!: Phaser.Time.TimerEvent;
 
   private get totalQuestions(): number { return this.difficulty === 'hard' ? 10 : 5; }
-  private get timePerQuestion(): number { return this.difficulty === 'hard' ? 8 : 15; }
+  private get timePerQuestion(): number { return this.difficulty === 'hard' ? 20 : 20; }
 
   private questionText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
@@ -42,7 +42,7 @@ export class ArithmeticScene extends Phaser.Scene {
     const h = this.scale.height;
 
     this.add.rectangle(w / 2, h / 2, w, h, T.panelDark);
-    this.add.text(w / 2, 36, this.difficulty === 'hard' ? 'とくべつけいさん（むずかしい）' : 'たしざん・ひきざん', {
+    this.add.text(w / 2, 36, this.difficulty === 'hard' ? 'とくべつけいさん' : 'たしざん・ひきざん', {
       ...TS.heading,
     }).setOrigin(0.5);
 
@@ -73,38 +73,30 @@ export class ArithmeticScene extends Phaser.Scene {
   }
 
   private makeProblem(): Problem {
-    if (this.difficulty === 'hard') {
-      const r = Math.random();
-      let a: number, b: number, answer: number;
-      let op: '+' | '-' | '×';
-      if (r < 0.4) {
-        op = '×';
-        a = 2 + Math.floor(Math.random() * 9);  // 2〜10
-        b = 2 + Math.floor(Math.random() * 9);
-        answer = a * b;
-      } else if (r < 0.7) {
-        op = '+';
-        a = 10 + Math.floor(Math.random() * 81); // 10〜90
-        b = 10 + Math.floor(Math.random() * 81);
-        answer = a + b;
-      } else {
-        op = '-';
-        a = 20 + Math.floor(Math.random() * 81); // 20〜100
-        b = 10 + Math.floor(Math.random() * (a - 10));
-        answer = a - b;
-      }
-      return { a, op, b, answer };
-    }
     const op = Math.random() < 0.5 ? '+' : '-' as '+' | '-';
     let a: number, b: number, answer: number;
-    if (op === '+') {
-      a = 1 + Math.floor(Math.random() * 9);
-      b = 1 + Math.floor(Math.random() * 9);
-      answer = a + b;
+    if (this.difficulty === 'hard') {
+      // 2〜3桁の足し算・引き算
+      if (op === '+') {
+        a = 10 + Math.floor(Math.random() * 891); // 10〜900
+        b = 10 + Math.floor(Math.random() * 891);
+        answer = a + b;
+      } else {
+        a = 100 + Math.floor(Math.random() * 901); // 100〜1000
+        b = 10  + Math.floor(Math.random() * (a - 10));
+        answer = a - b;
+      }
     } else {
-      a = 2 + Math.floor(Math.random() * 18);
-      b = 1 + Math.floor(Math.random() * (a));
-      answer = a - b;
+      // 通常：2〜3桁の足し算・引き算
+      if (op === '+') {
+        a = 10 + Math.floor(Math.random() * 891);
+        b = 10 + Math.floor(Math.random() * 891);
+        answer = a + b;
+      } else {
+        a = 100 + Math.floor(Math.random() * 901);
+        b = 10  + Math.floor(Math.random() * (a - 10));
+        answer = a - b;
+      }
     }
     return { a, op, b, answer };
   }
@@ -112,7 +104,8 @@ export class ArithmeticScene extends Phaser.Scene {
   private makeChoices(correct: number): number[] {
     const choices = new Set<number>([correct]);
     while (choices.size < 4) {
-      const offset = Math.floor(Math.random() * 7) - 3;
+      const spread = correct > 100 ? 50 : 10;
+      const offset = (Math.floor(Math.random() * (spread * 2 + 1)) - spread) || spread;
       const wrong = correct + offset;
       if (wrong >= 0 && wrong !== correct) choices.add(wrong);
     }
