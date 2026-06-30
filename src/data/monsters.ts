@@ -1,4 +1,5 @@
 import { ASSET_KEYS } from '../assets/assetKeys';
+import { ANOTHER_WORLD_SPECIES } from './monsters_anotherworld';
 
 export interface MonsterSpecies {
   id: string;
@@ -13,7 +14,7 @@ export interface MonsterSpecies {
   // elementType?: string;
 }
 
-export const MONSTER_SPECIES: Record<string, MonsterSpecies> = {
+const BASE_MONSTER_SPECIES: Record<string, MonsterSpecies> = {
   kurosuke: {
     id: 'kurosuke',
     name: 'クロスケ',
@@ -149,4 +150,9 @@ export const MONSTER_SPECIES: Record<string, MonsterSpecies> = {
       { level: 14, skill: 'denkogeki' },
     ],
   },
+};
+
+export const MONSTER_SPECIES: Record<string, MonsterSpecies> = {
+  ...BASE_MONSTER_SPECIES,
+  ...ANOTHER_WORLD_SPECIES,
 };

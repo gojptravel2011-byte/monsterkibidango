@@ -4,17 +4,20 @@ import { T } from '../ui/theme';
 import { TS } from '../ui/StyledText';
 
 // たしざん・ひきざんミニゲーム
-// 5問出題、正解数に応じてコインゲット
+// 5問出題、正解数に応じてコインゲット（hard モードは10問・かけ算あり）
 
-type Problem = { a: number; op: '+' | '-'; b: number; answer: number };
+type Problem = { a: number; op: '+' | '-' | '×'; b: number; answer: number };
 
 export class ArithmeticScene extends Phaser.Scene {
   private score: number = 0;
   private question: number = 0;
-  private readonly totalQuestions = 5;
   private done: boolean = false;
   private timeLeft: number = 15;
+  private difficulty: 'normal' | 'hard' = 'normal';
   private timer!: Phaser.Time.TimerEvent;
+
+  private get totalQuestions(): number { return this.difficulty === 'hard' ? 10 : 5; }
+  private get timePerQuestion(): number { return this.difficulty === 'hard' ? 8 : 15; }
 
   private questionText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
@@ -26,11 +29,12 @@ export class ArithmeticScene extends Phaser.Scene {
 
   constructor() { super({ key: 'ArithmeticScene' }); }
 
-  init(): void {
+  init(data?: { difficulty?: 'normal' | 'hard' }): void {
     this.score = 0;
     this.question = 0;
     this.done = false;
-    this.timeLeft = 15;
+    this.difficulty = data?.difficulty ?? 'normal';
+    this.timeLeft = this.timePerQuestion;
   }
 
   create(): void {
@@ -38,7 +42,7 @@ export class ArithmeticScene extends Phaser.Scene {
     const h = this.scale.height;
 
     this.add.rectangle(w / 2, h / 2, w, h, T.panelDark);
-    this.add.text(w / 2, 36, 'たしざん・ひきざん', {
+    this.add.text(w / 2, 36, this.difficulty === 'hard' ? 'とくべつけいさん（むずかしい）' : 'たしざん・ひきざん', {
       ...TS.heading,
     }).setOrigin(0.5);
 
@@ -50,7 +54,7 @@ export class ArithmeticScene extends Phaser.Scene {
       ...TS.hp,
     });
 
-    this.timeText = this.add.text(w - 10, 36, 'のこり: 15', {
+    this.timeText = this.add.text(w - 10, 36, `のこり: ${this.timePerQuestion}`, {
       ...TS.coin,
     }).setOrigin(1, 0.5);
 
@@ -69,6 +73,28 @@ export class ArithmeticScene extends Phaser.Scene {
   }
 
   private makeProblem(): Problem {
+    if (this.difficulty === 'hard') {
+      const r = Math.random();
+      let a: number, b: number, answer: number;
+      let op: '+' | '-' | '×';
+      if (r < 0.4) {
+        op = '×';
+        a = 2 + Math.floor(Math.random() * 9);  // 2〜10
+        b = 2 + Math.floor(Math.random() * 9);
+        answer = a * b;
+      } else if (r < 0.7) {
+        op = '+';
+        a = 10 + Math.floor(Math.random() * 81); // 10〜90
+        b = 10 + Math.floor(Math.random() * 81);
+        answer = a + b;
+      } else {
+        op = '-';
+        a = 20 + Math.floor(Math.random() * 81); // 20〜100
+        b = 10 + Math.floor(Math.random() * (a - 10));
+        answer = a - b;
+      }
+      return { a, op, b, answer };
+    }
     const op = Math.random() < 0.5 ? '+' : '-' as '+' | '-';
     let a: number, b: number, answer: number;
     if (op === '+') {
@@ -76,7 +102,6 @@ export class ArithmeticScene extends Phaser.Scene {
       b = 1 + Math.floor(Math.random() * 9);
       answer = a + b;
     } else {
-      // ひきざん：a >= b, 結果 >= 0
       a = 2 + Math.floor(Math.random() * 18);
       b = 1 + Math.floor(Math.random() * (a));
       answer = a - b;
@@ -104,7 +129,7 @@ export class ArithmeticScene extends Phaser.Scene {
     this.feedbackText.setText('');
 
     this.question++;
-    this.timeLeft = 15;
+    this.timeLeft = this.timePerQuestion;
     this.questionNoText.setText(`もんだい ${this.question} / ${this.totalQuestions}`);
 
     this.currentProblem = this.makeProblem();
@@ -207,15 +232,18 @@ export class ArithmeticScene extends Phaser.Scene {
     this.questionNoText.setText('');
     this.timeText.setText('');
 
-    const coins = this.score * 15;
+    const isHard = this.difficulty === 'hard';
+    const coinPerCorrect = isHard ? 30 : 15;
+    const coins = this.score * coinPerCorrect;
     addCoins(coins);
-    if (this.score >= 4) addItem('tabenoko', 1);
+    const passScore = isHard ? 8 : 4;
+    if (this.score >= passScore) addItem('tabenoko', isHard ? 3 : 1);
 
-    const resultColor = this.score >= 4 ? T.textGold : this.score >= 2 ? T.textGreen : T.textRed;
+    const resultColor = this.score >= passScore ? T.textGold : this.score >= Math.floor(this.totalQuestions / 2) ? T.textGreen : T.textRed;
     const resultMsg = this.score === this.totalQuestions
-      ? 'ぜんもん　せいかい！\nすごい！！'
-      : this.score >= 4 ? 'とても　よくできました！'
-      : this.score >= 2 ? 'がんばりました！'
+      ? 'ぜんもん　せいかい！\nかんぺき！！'
+      : this.score >= passScore ? 'すばらしい！'
+      : this.score >= Math.floor(this.totalQuestions / 2) ? 'がんばりました！'
       : 'またちゃれんじしてね！';
 
     this.add.text(w / 2, h * 0.28, `せいかい：${this.score} / ${this.totalQuestions}`, {

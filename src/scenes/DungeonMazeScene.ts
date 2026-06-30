@@ -215,14 +215,15 @@ export class DungeonMazeScene extends Phaser.Scene {
     this.add.rectangle(menuX, menuY, 52, 46, T.panelMid, 0.9)
       .setStrokeStyle(1, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.launch('MenuScene').pause());
+      .on('pointerdown', () => {
+        // pause/resume のキュー問題を避けるため、DungeonMazeScene は止めずに
+        // MenuScene をオーバーレイ表示する。update() 内でメニュー開閉を確認する。
+        this.scene.run('MenuScene');
+      });
     for (let i = 0; i < 3; i++) {
       this.add.rectangle(menuX, menuY - 8 + i * 8, 26, 3, T.borderGold)
         .setDepth(151).setScrollFactor(0);
     }
-
-    // MenuScene から戻ったとき resume する
-    this.events.on('resume', () => { /* BGMなどは維持 */ });
   }
 
   // ── 仮想十字ボタン（タッチ操作用）─────────────
@@ -290,6 +291,7 @@ export class DungeonMazeScene extends Phaser.Scene {
   // ── update ───────────────────────────────────
   update(_time: number, delta: number): void {
     if (this.msgWin.isVisible()) return;
+    if (this.scene.isActive('MenuScene')) return;
 
     const left  = this.padState.left  || this.cursors.left.isDown  || this.wasd.left.isDown;
     const right = this.padState.right || this.cursors.right.isDown || this.wasd.right.isDown;

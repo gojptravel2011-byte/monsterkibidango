@@ -436,9 +436,12 @@ export class BattleScene extends Phaser.Scene {
     }
     const dialogs = messages.map(m => ({ speaker: '', text: m }));
     this.msgWin.showSequence(dialogs, () => {
-      if (this.isBoss) {
+      if (this.isBoss && this.enemy.speciesId === 'yami_no_teiou') {
+        setFlag('yamiTeiouDefeated');
+        this.scene.start('EndingScene', { chapter: 2 });
+      } else if (this.isBoss) {
         setFlag('rasubossDefeated');
-        this.scene.start('EndingScene');
+        this.scene.start('EndingScene', { chapter: 1 });
       } else {
         this.endBattle(false);
       }
@@ -504,9 +507,8 @@ export class BattleScene extends Phaser.Scene {
 
   private endBattle(_escaped: boolean): void {
     const field = getState().position.field;
-    const darkFields = ['jinja', 'shogakko', 'dungeon'];
+    const darkFields = ['jinja', 'shogakko', 'dungeon', 'kaminari_world', 'yami_world', 'mizu_world', 'koori_world'];
     BGM.play(darkFields.includes(field) ? 'field_dark' : 'field');
-    // ダンジョン迷路から来た場合は DungeonMazeScene に戻る
     if (field === 'dungeon') {
       this.scene.start('DungeonMazeScene');
     } else {

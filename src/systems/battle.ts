@@ -1,5 +1,6 @@
 import type { MonsterInstance } from '../state/playerState';
 import { SKILLS } from '../data/skills';
+import { AW_MONSTER_REWARDS } from '../data/monsters_anotherworld';
 
 export interface BattleResult {
   damage: number;
@@ -33,9 +34,13 @@ export function isFainted(monster: MonsterInstance): boolean {
 }
 
 export function calcExpGain(enemy: MonsterInstance): number {
+  const aw = AW_MONSTER_REWARDS[enemy.speciesId];
+  if (aw) return aw.exp;
   return enemy.level * 10 + enemy.level * enemy.level;
 }
 
 export function calcCoinGain(enemy: MonsterInstance): number {
+  const aw = AW_MONSTER_REWARDS[enemy.speciesId];
+  if (aw) return aw.coins;
   return enemy.level * 5 + Math.floor(Math.random() * 10);
 }

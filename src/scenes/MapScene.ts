@@ -85,7 +85,7 @@ export class MapScene extends Phaser.Scene {
     this.add.rectangle(menuBtnX, menuBtnY, 56, 56, T.panelMid, 0.9)
       .setStrokeStyle(2, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.launch('MenuScene').pause());
+      .on('pointerdown', () => this.scene.run('MenuScene'));
     for (let i = 0; i < 3; i++) {
       this.add.rectangle(menuBtnX, menuBtnY - 10 + i * 10, 30, 3, T.borderGold)
         .setDepth(151).setScrollFactor(0);
@@ -94,13 +94,14 @@ export class MapScene extends Phaser.Scene {
     this.events.on('resume', () => {
       this.updateHUD();
       const f = getState().position.field;
-      BGM.play(['jinja', 'shogakko', 'dungeon'].includes(f) ? 'field_dark' : 'field');
+      const darkF = ['jinja', 'shogakko', 'dungeon', 'kaminari_world', 'yami_world', 'mizu_world', 'koori_world'];
+      BGM.play(darkF.includes(f) ? 'field_dark' : 'field');
     });
 
     // BGM開始（フィールドに応じて）
     const startField = getState().position.field;
-    const darkFields = ['jinja', 'shogakko', 'dungeon'];
-    BGM.play(darkFields.includes(startField) ? 'field_dark' : 'field');
+    const darkFieldsStart = ['jinja', 'shogakko', 'dungeon', 'kaminari_world', 'yami_world', 'mizu_world', 'koori_world'];
+    BGM.play(darkFieldsStart.includes(startField) ? 'field_dark' : 'field');
   }
 
   private buildField(fieldId: string): void {
@@ -370,13 +371,48 @@ export class MapScene extends Phaser.Scene {
           stroke: '#000000', strokeThickness: 2,
         }).setOrigin(0.5).setDepth(5),
       );
-      // 警告テキスト
-      this.decorations.push(
-        this.add.text(w / 2, h * 0.45, 'あやしい　けはいが\nする…', {
-          fontSize: '28px', color: '#aaaaff', fontFamily: 'sans-serif', align: 'center',
-          stroke: '#000000', strokeThickness: 3,
-        }).setOrigin(0.5).setDepth(5),
-      );
+      // 警告テキスト（撃破前のみ）
+      if (!getFlag('rasubossDefeated')) {
+        this.decorations.push(
+          this.add.text(w / 2, h * 0.45, 'あやしい　けはいが\nする…', {
+            fontSize: '28px', color: '#aaaaff', fontFamily: 'sans-serif', align: 'center',
+            stroke: '#000000', strokeThickness: 3,
+          }).setOrigin(0.5).setDepth(5),
+        );
+      }
+
+      // ── 別世界ワープポータル（校庭中央）────────────────────────
+      const warpX = w / 2, warpY = h * 0.60;
+      const portalColor = getFlag('rasubossDefeated') ? 0xaa44ff : 0x554477;
+      const outerCircle = this.add.circle(warpX, warpY, 44, portalColor, 0.22).setDepth(4)
+        .setStrokeStyle(3, portalColor, 0.9);
+      const innerCircle = this.add.circle(warpX, warpY, 28, portalColor, 0.35).setDepth(4);
+      this.decorations.push(outerCircle, innerCircle);
+      this.tweens.add({
+        targets: [outerCircle, innerCircle],
+        angle: 360, duration: 3000, repeat: -1, ease: 'Linear',
+      });
+      this.tweens.add({
+        targets: outerCircle, scaleX: 1.15, scaleY: 1.15, alpha: 0.5,
+        duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      });
+      const warpLabel = this.add.text(warpX, warpY + 60, getFlag('rasubossDefeated') ? 'べつのせかいへ' : 'なにかの\nけはいがする…', {
+        fontSize: '20px', color: '#cc88ff', fontFamily: 'sans-serif', align: 'center',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(5);
+      this.decorations.push(warpLabel);
+
+      if (getFlag('rasubossDefeated')) {
+        this.addTriggerZone(warpX, warpY, 'ワープ', portalColor,
+          'べつのせかいへの\nとびらへ　いきますか？',
+          () => this.changeField('angel_hoikuen'),
+        );
+      } else {
+        this.addTriggerZone(warpX, warpY, 'けはい', 0x554477,
+          'なにかが　いる…\nでも　まだ　ひらかない。',
+          () => { /* 封印中 - ダイアログのみ */ },
+        );
+      }
     } else if (fieldId === 'dungeon') {
       // ─── 地下迷路 ────────────────────────────────────────────
       // 正解ルート: 入口(375,1020)→右→上→左→上→右→上→左→上→中央→ボス
@@ -566,12 +602,205 @@ export class MapScene extends Phaser.Scene {
         'くらやみのあるじが\nよんでいる…\nいどみますか？',
         () => this.triggerRasuboss(),
       );
+
+    // ── 別世界フィールド ────────────────────────────────────────
+    } else if (fieldId === 'angel_hoikuen') {
+      this.buildAngelHoikuen(w, h);
+    } else if (fieldId === 'honoo_world') {
+      this.buildAnotherWorld(w, h, 'ほのおのせかい', 0xff3300, [0xcc2200, 0xff6600], [
+        '🔥', '🌋', '🔥', '🔥',
+      ]);
+    } else if (fieldId === 'koori_world') {
+      this.buildAnotherWorld(w, h, 'こおりのせかい', 0x88ddff, [0x336699, 0x66aacc], [
+        '❄', '🧊', '❄', '❄',
+      ]);
+    } else if (fieldId === 'kaminari_world') {
+      this.buildAnotherWorld(w, h, 'かみなりのせかい', 0xffff00, [0x330055, 0x660099], [
+        '⚡', '⚡', '⚡', '⚡',
+      ]);
+    } else if (fieldId === 'mizu_world') {
+      this.buildAnotherWorld(w, h, 'みずのせかい', 0x4488ff, [0x003366, 0x336699], [
+        '🌊', '💧', '🌊', '🐟',
+      ]);
+    } else if (fieldId === 'sora_world') {
+      this.buildAnotherWorld(w, h, 'そらのせかい', 0xaaddff, [0x4488cc, 0x88bbee], [
+        '☁', '✨', '☁', '🕊',
+      ]);
+    } else if (fieldId === 'angel_school') {
+      this.buildAngelSchool(w, h);
+    } else if (fieldId === 'yami_world') {
+      this.buildYamiWorld(w, h);
+    }
+  }
+
+  private buildAngelHoikuen(w: number, h: number): void {
+    // 金色のほいくえん
+    this.decorations.push(
+      this.add.rectangle(w / 2, h / 2, w, h, 0xfff8e0),
+      this.add.rectangle(w / 2, 120, w * 0.9, 160, 0xffeeaa).setStrokeStyle(3, 0xddaa44).setDepth(1),
+      this.add.text(w / 2, 80, 'えんじぇるほいくえん', {
+        fontSize: '28px', color: '#886600', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#ffffff', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    // 光のエフェクト
+    for (let i = 0; i < 12; i++) {
+      const star = this.add.circle(
+        30 + Math.random() * (w - 60), 200 + Math.random() * (h - 400),
+        3 + Math.random() * 4, 0xffee88, 0.4 + Math.random() * 0.4,
+      ).setDepth(2);
+      this.decorations.push(star);
+      this.tweens.add({ targets: star, alpha: 0, scaleX: 2, scaleY: 2, duration: 1500 + Math.random() * 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+
+    // 回復NPC
+    this.decorations.push(
+      this.add.text(w / 2 - 160, h * 0.24, 'せんせい', {
+        fontSize: '22px', color: '#886622', fontFamily: 'sans-serif', stroke: '#ffffff', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    this.addTriggerZone(w / 2 - 160, h * 0.28, 'はなす', 0xffcc44,
+      'ここは えんじぇるほいくえん。\nせんせいが かいふくしてあげるよ！',
+      () => {
+        const state = getState();
+        state.party.forEach(m => { m.hp = m.maxHp; });
+        this.updateHUD();
+        this.showMessage('パーティのHPが\nすべてかいふくした！');
+      },
+    );
+
+    // 7つのとびら
+    const doors: { label: string; field: string; color: number; x: number; y: number; locked: boolean }[] = [
+      { label: 'ほのおのとびら', field: 'honoo_world',    color: 0xff4400, x: w * 0.20, y: h * 0.38, locked: false },
+      { label: 'こおりのとびら', field: 'koori_world',    color: 0x44aaff, x: w * 0.50, y: h * 0.38, locked: false },
+      { label: 'かみなりのとびら', field: 'kaminari_world', color: 0xffee00, x: w * 0.80, y: h * 0.38, locked: false },
+      { label: 'みずのとびら',   field: 'mizu_world',    color: 0x2266ff, x: w * 0.20, y: h * 0.56, locked: false },
+      { label: 'そらのとびら',   field: 'sora_world',    color: 0x88ccff, x: w * 0.80, y: h * 0.56, locked: false },
+      { label: 'えんじぇるのとびら', field: 'angel_school', color: 0xffdd44, x: w * 0.50, y: h * 0.70, locked: false },
+      { label: 'やみのとびら',   field: 'yami_world',    color: 0x440066, x: w * 0.50, y: h * 0.86, locked: false },
+    ];
+
+    for (const door of doors) {
+      const bg = this.add.rectangle(door.x, door.y, 90, 130, door.color, 0.8)
+        .setStrokeStyle(3, 0xffffff, 0.9).setDepth(3);
+      const top = this.add.rectangle(door.x, door.y - 65, 90, 20, door.color, 1)
+        .setStrokeStyle(2, 0xffffff, 0.8).setDepth(3);
+      const label = this.add.text(door.x, door.y + 80, door.label, {
+        fontSize: '16px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4);
+      this.decorations.push(bg, top, label);
+      this.tweens.add({ targets: bg, alpha: 0.6, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+      const d = door;
+      this.addTriggerZone(d.x, d.y, 'とびら', d.color,
+        `${d.label}を\nくぐりますか？`,
+        () => this.changeField(d.field),
+      );
+    }
+  }
+
+  private buildAnotherWorld(w: number, h: number, name: string, accentColor: number, bgColors: number[], decorEmoji: string[]): void {
+    // グラデーション風の背景（2層の長方形）
+    this.decorations.push(
+      this.add.rectangle(w / 2, h * 0.3, w, h * 0.6, bgColors[0]).setDepth(0),
+      this.add.rectangle(w / 2, h * 0.8, w, h * 0.4, bgColors[1]).setDepth(0),
+    );
+    this.decorations.push(
+      this.add.text(w / 2, 36, name, {
+        fontSize: '30px', color: '#ffffff', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    // 装飾エフェクト
+    for (let i = 0; i < 8; i++) {
+      const emo = this.add.text(
+        40 + Math.random() * (w - 80), 200 + Math.random() * (h - 400),
+        decorEmoji[i % decorEmoji.length], { fontSize: '28px' },
+      ).setDepth(2).setAlpha(0.7);
+      this.decorations.push(emo);
+      this.tweens.add({ targets: emo, y: emo.y - 20, alpha: 0.3, duration: 2000 + i * 200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    // 発光床（エネルギーライン）
+    for (let i = 0; i < 4; i++) {
+      this.decorations.push(
+        this.add.rectangle(w / 2, 300 + i * 220, w, 3, accentColor, 0.15).setDepth(1),
+      );
+    }
+  }
+
+  private buildAngelSchool(w: number, h: number): void {
+    this.buildAnotherWorld(w, h, 'エンジェルしょうがっこう', 0xffdd44, [0xfff0cc, 0xffeeaa], ['✨', '⭐', '✨', '📚']);
+    // 学校の建物
+    this.decorations.push(
+      this.add.rectangle(w / 2, 130, w * 0.7, 140, 0xffffee).setStrokeStyle(3, 0xddaa44).setDepth(1),
+      this.add.text(w / 2, 80, 'とくべつきょうしつ', {
+        fontSize: '22px', color: '#886600', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#ffffff', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    // 先生NPC（計算ゲームトリガー）
+    this.decorations.push(
+      this.add.text(w / 2, h * 0.40, '⭐せんせい⭐', {
+        fontSize: '24px', color: '#886600', fontFamily: 'sans-serif', stroke: '#ffffff', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    this.addTriggerZone(w / 2, h * 0.48, 'とくべつ\nけいさん', 0xffcc44,
+      'とくべつけいさんゲームに\nちょうせんしますか？\n（むずかしいよ！）',
+      () => this.scene.start('ArithmeticScene', { difficulty: 'hard' }),
+    );
+  }
+
+  private buildYamiWorld(w: number, h: number): void {
+    // 暗い世界
+    this.decorations.push(
+      this.add.rectangle(w / 2, h / 2, w, h, 0x050008),
+      this.add.rectangle(w / 2, h / 2, w, h, 0x0a000f, 0.5).setDepth(0),
+    );
+    // 紫の霧
+    for (let i = 0; i < 6; i++) {
+      const fog = this.add.circle(
+        60 + i * 120, 300 + (i % 2) * 200, 80, 0x330044, 0.2,
+      ).setDepth(1);
+      this.decorations.push(fog);
+      this.tweens.add({ targets: fog, scaleX: 1.5, scaleY: 1.5, alpha: 0.05, duration: 2500 + i * 300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+    // やみのていおうのしろ（上部）
+    this.decorations.push(
+      this.add.rectangle(w / 2, 100, 180, 140, 0x220033).setStrokeStyle(3, 0x9900ff, 0.8).setDepth(2),
+      this.add.rectangle(w / 2, 100, 160, 120, 0x110022).setDepth(2),
+      this.add.text(w / 2, 70, 'やみのていおうの\nしろ', {
+        fontSize: '20px', color: '#cc00ff', fontFamily: 'sans-serif', align: 'center',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    for (let i = 0; i < 3; i++) {
+      this.decorations.push(
+        this.add.rectangle(w / 2 - 60 + i * 60, 30, 20, 40, 0x330044).setDepth(2),
+      );
+    }
+    // ボストリガー
+    this.addTriggerZone(w / 2, 148, 'しろへ', 0x9900ff,
+      'やみのていおうが\nよんでいる…\nいどみますか？',
+      () => this.triggerYamiTeiou(),
+    );
+    this.decorations.push(
+      this.add.text(w / 2, 36, 'やみのせかい', {
+        fontSize: '28px', color: '#cc00ff', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    // 浮島
+    for (let i = 0; i < 4; i++) {
+      this.decorations.push(
+        this.add.rectangle(80 + i * 180, 250 + (i % 2) * 150, 100, 30, 0x220033).setStrokeStyle(2, 0x660099, 0.6).setDepth(1),
+      );
     }
   }
 
   update(time: number, delta: number): void {
     if (this.msgWin.isVisible()) return;
-    if (this.scene.isPaused()) return;
+    if (this.scene.isActive('MenuScene')) return;
 
     const state = getState();
     // タッチ：プレイヤーから見た方向で移動
@@ -701,8 +930,7 @@ export class MapScene extends Phaser.Scene {
       return;
     }
 
-    // しょうがっこうは特殊
-    if (toField === 'shogakko' && getFlag('rasubossDefeated')) return;
+    // （しょうがっこうの制限は撤廃：撃破後は別世界ワープポイントが開く）
 
     // 入ってきた方向の出口付近にスポーン（戻り口を探す）
     const fromField = state.position.field;
@@ -732,7 +960,7 @@ export class MapScene extends Phaser.Scene {
     this.updateHUD();
     this.showFieldEvent(toField);
     // BGM切り替え
-    const darkFields = ['jinja', 'shogakko', 'dungeon'];
+    const darkFields = ['jinja', 'shogakko', 'dungeon', 'kaminari_world', 'yami_world', 'mizu_world', 'koori_world'];
     BGM.play(darkFields.includes(toField) ? 'field_dark' : 'field');
   }
 
@@ -746,6 +974,30 @@ export class MapScene extends Phaser.Scene {
       }));
       this.msgWin.showSequence(dialogs);
     }
+  }
+
+  private triggerYamiTeiou(): void {
+    if (getFlag('yamiTeiouDefeated')) {
+      this.msgWin.show('', 'やみのていおうは　すでに　たおれた。\nへいわは　もどった…');
+      return;
+    }
+    const state = getState();
+    if (state.party.length === 0) {
+      this.msgWin.show('', 'なかまが　いないと\nたたかえないよ！');
+      return;
+    }
+    const dialogs = [
+      { speaker: '', text: 'しろの　おくから　やみのていおうが\nあらわれた！' },
+      { speaker: 'やみのていおう', text: 'フフフ…　ようやく\nここまで　きたか。' },
+      { speaker: 'やみのていおう', text: 'だが　ここで　おまえの\nたびは　おわりだ！' },
+    ];
+    this.msgWin.showSequence(dialogs, () => {
+      const enemy = createMonsterInstance('yami_no_teiou', 30);
+      enemy.uid = 'yami_teiou_boss';
+      state.position.x = this.player.x;
+      state.position.y = this.player.y;
+      this.scene.start('BattleScene', { enemy, isBoss: true });
+    });
   }
 
   private triggerRasuboss(): void {

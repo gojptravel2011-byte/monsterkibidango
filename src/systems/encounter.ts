@@ -32,11 +32,33 @@ const RARE_TABLE: Record<string, { speciesId: string; minL: number; maxL: number
   dungeon:  [{ speciesId: 'dragon', minL: 12, maxL: 16 }],
 };
 
+// 別世界フィールド一覧
+const ANOTHER_WORLD_FIELDS = new Set([
+  'honoo_world','koori_world','kaminari_world','mizu_world',
+  'sora_world','angel_school','yami_world',
+]);
+
 export function generateEncounter(fieldId: string, _playerLevel: number): MonsterInstance | null {
   const field = FIELDS[fieldId];
   if (!field || field.isSafeZone || field.encounters.length === 0) return null;
 
-  // ── レアエンカウント判定（5%）──────────────────────────────────
+  // ── 別世界レアエンカウント（5%黒ドラゴン / 10%ゴールドスライム / 10%経験値ゆうれい）
+  if (ANOTHER_WORLD_FIELDS.has(fieldId)) {
+    const roll = Math.random();
+    if (roll < 0.05) {
+      const inst = createMonsterInstance('black_dragon', 25 + Math.floor(Math.random() * 4));
+      inst.isRare = true;
+      return inst;
+    }
+    if (roll < 0.15) {
+      return createMonsterInstance('coin_slime', 15 + Math.floor(Math.random() * 5));
+    }
+    if (roll < 0.25) {
+      return createMonsterInstance('exp_ghost', 15 + Math.floor(Math.random() * 5));
+    }
+  }
+
+  // ── 現実世界レアエンカウント判定（5%）─────────────────────────
   if (RARE_ENCOUNTER_FIELDS.has(fieldId) && Math.random() < RARE_RATE) {
     const rares = RARE_TABLE[fieldId];
     if (rares && rares.length > 0) {

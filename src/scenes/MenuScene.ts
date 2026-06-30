@@ -70,19 +70,8 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private close(): void {
-    // resume 対象を stop より先に特定しておく
-    const gameScenes = ['DungeonMazeScene', 'MapScene'];
-    const toResume = gameScenes.find(key => this.scene.isPaused(key));
-
+    // DungeonMazeScene / MapScene は pause していないのでそのまま stop するだけでよい。
+    // 呼び元シーンは MenuScene が stop された後も継続して動いている。
     this.scene.stop('MenuScene');
-
-    if (toResume) {
-      // queueOp を経由せず sys.resume() を直接呼ぶことで
-      // stop キューの処理順に左右されずに即時 resume する
-      const target = this.scene.get(toResume);
-      if (target) target.sys.resume();
-    } else {
-      this.scene.start('MapScene');
-    }
   }
 }

@@ -125,4 +125,132 @@ export const FIELDS: Record<string, FieldDef> = {
       { toField: 'shogakko', label: 'もどる', x: 375, y: 1140 },
     ],
   },
+
+  // ── 別世界 ──────────────────────────────────────────────────
+  angel_hoikuen: {
+    id: 'angel_hoikuen',
+    name: 'えんじぇるほいくえん',
+    bgColor: 0xfff8e0,
+    skyColor: 0xffeecc,
+    encounters: [],
+    encounterLevelMin: 1,
+    encounterLevelMax: 1,
+    isSafeZone: true,
+    hasShop: true,
+    connections: [
+      { toField: 'shogakko', label: 'もとのせかいへ', x: 375, y: 1140 },
+    ],
+  },
+  honoo_world: {
+    id: 'honoo_world',
+    name: 'ほのおのせかい',
+    bgColor: 0x330800,
+    skyColor: 0x661100,
+    encounters: [
+      { speciesId: 'inferno_golem', weight: 35 },
+      { speciesId: 'flame_dragon',  weight: 30 },
+      { speciesId: 'vulcan_phoenix',weight: 35 },
+    ],
+    encounterLevelMin: 15,
+    encounterLevelMax: 22,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
+  koori_world: {
+    id: 'koori_world',
+    name: 'こおりのせかい',
+    bgColor: 0x001133,
+    skyColor: 0x003366,
+    encounters: [
+      { speciesId: 'blizzard_wolf', weight: 35 },
+      { speciesId: 'frost_giant',   weight: 30 },
+      { speciesId: 'ice_specter',   weight: 35 },
+    ],
+    encounterLevelMin: 15,
+    encounterLevelMax: 22,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
+  kaminari_world: {
+    id: 'kaminari_world',
+    name: 'かみなりのせかい',
+    bgColor: 0x110022,
+    skyColor: 0x220044,
+    encounters: [
+      { speciesId: 'thunder_beast', weight: 35 },
+      { speciesId: 'storm_lord',    weight: 30 },
+      { speciesId: 'volt_hydra',    weight: 35 },
+    ],
+    encounterLevelMin: 15,
+    encounterLevelMax: 22,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
+  mizu_world: {
+    id: 'mizu_world',
+    name: 'みずのせかい',
+    bgColor: 0x001122,
+    skyColor: 0x002244,
+    encounters: [
+      { speciesId: 'abyss_kraken',   weight: 35 },
+      { speciesId: 'tide_leviathan', weight: 30 },
+      { speciesId: 'coral_golem',    weight: 35 },
+    ],
+    encounterLevelMin: 15,
+    encounterLevelMax: 22,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
+  sora_world: {
+    id: 'sora_world',
+    name: 'そらのせかい',
+    bgColor: 0x4488cc,
+    skyColor: 0x66aadd,
+    encounters: [
+      { speciesId: 'heaven_knight', weight: 35 },
+      { speciesId: 'sky_titan',     weight: 30 },
+      { speciesId: 'wind_serpent',  weight: 35 },
+    ],
+    encounterLevelMin: 15,
+    encounterLevelMax: 22,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
+  angel_school: {
+    id: 'angel_school',
+    name: 'エンジェルしょうがっこう',
+    bgColor: 0xfff5cc,
+    skyColor: 0xffeeaa,
+    encounters: [
+      { speciesId: 'dark_angel',     weight: 35 },
+      { speciesId: 'golem_teacher',  weight: 30 },
+      { speciesId: 'shadow_student', weight: 35 },
+    ],
+    encounterLevelMin: 15,
+    encounterLevelMax: 22,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
+  yami_world: {
+    id: 'yami_world',
+    name: 'やみのせかい',
+    bgColor: 0x050008,
+    skyColor: 0x0a000f,
+    encounters: [
+      { speciesId: 'void_reaper',     weight: 35 },
+      { speciesId: 'nightmare_wolf',  weight: 30 },
+      { speciesId: 'shadow_colossus', weight: 35 },
+    ],
+    encounterLevelMin: 20,
+    encounterLevelMax: 26,
+    connections: [
+      { toField: 'angel_hoikuen', label: 'もどる', x: 375, y: 1140 },
+    ],
+  },
 };
