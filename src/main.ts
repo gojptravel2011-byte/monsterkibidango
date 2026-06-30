@@ -15,6 +15,7 @@ import { MinigameScene } from './scenes/MinigameScene';
 import { ArithmeticScene } from './scenes/ArithmeticScene';
 import { BallShopScene } from './scenes/BallShopScene';
 import { ItemListScene } from './scenes/ItemListScene';
+import { DungeonMazeScene } from './scenes/DungeonMazeScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -38,6 +39,7 @@ const config: Phaser.Types.Core.GameConfig = {
     ArithmeticScene,
     BallShopScene,
     ItemListScene,
+    DungeonMazeScene,
   ],
   scale: {
     mode: Phaser.Scale.FIT,

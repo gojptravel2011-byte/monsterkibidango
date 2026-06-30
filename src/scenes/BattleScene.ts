@@ -505,8 +505,13 @@ export class BattleScene extends Phaser.Scene {
 
   private endBattle(_escaped: boolean): void {
     const field = getState().position.field;
-    const darkFields = ['jinja', 'shogakko'];
+    const darkFields = ['jinja', 'shogakko', 'dungeon'];
     BGM.play(darkFields.includes(field) ? 'field_dark' : 'field');
-    this.scene.start('MapScene');
+    // ダンジョン迷路から来た場合は DungeonMazeScene に戻る
+    if (field === 'dungeon') {
+      this.scene.start('DungeonMazeScene');
+    } else {
+      this.scene.start('MapScene');
+    }
   }
 }

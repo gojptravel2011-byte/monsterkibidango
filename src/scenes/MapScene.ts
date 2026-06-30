@@ -689,6 +689,13 @@ export class MapScene extends Phaser.Scene {
     const field = FIELDS[toField];
     if (!field) return;
 
+    // ちかめいろ → グリッド迷路シーンへ切り替え
+    if (toField === 'dungeon') {
+      state.position = { field: 'dungeon', x: 0, y: 0 }; // x=0 で新規入場扱い
+      this.scene.start('DungeonMazeScene');
+      return;
+    }
+
     // しょうがっこうは特殊
     if (toField === 'shogakko' && getFlag('rasubossDefeated')) return;
 
