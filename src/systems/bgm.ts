@@ -328,22 +328,39 @@ class BgmManager {
   private oscs: OscillatorNode[] = [];
   private muted = false;
 
+  // ユーザー操作のタイミングで呼ぶ。AudioContext を生成／resume する
   init(): void {
-    if (this.ctx) {
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-      return;
+    if (!this.ctx) {
+      this.ctx = new AudioContext();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 1.0;
+      this.masterGain.connect(this.ctx.destination);
     }
-    this.ctx = new AudioContext();
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.value = 1.0;
-    this.masterGain.connect(this.ctx.destination);
+    // suspended のまま scheduleLoop に入らないよう、resume して running にする
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {/* resume に失敗しても続行 */});
+    }
   }
 
   play(track: TrackId): void {
     if (this.currentTrack === track) return;
     this.stopInternal();
     this.currentTrack = track;
-    if (!this.muted) this.scheduleLoop();
+    if (this.muted) return;
+    this.playWhenReady(track);
+  }
+
+  // AudioContext が running になってから scheduleLoop を呼ぶ
+  private playWhenReady(track: TrackId): void {
+    if (!this.ctx) return;
+    if (this.ctx.state === 'running') {
+      this.scheduleLoop();
+    } else {
+      // suspended: resume() の完了を待ってから再生
+      this.ctx.resume().then(() => {
+        if (this.currentTrack === track && !this.muted) this.scheduleLoop();
+      }).catch(() => {/* resume 失敗時は無音のまま続行 */});
+    }
   }
 
   stop(): void {
@@ -401,6 +418,7 @@ class BgmManager {
 
   private scheduleLoop(): void {
     if (!this.ctx || !this.masterGain || !this.currentTrack) return;
+    if (this.ctx.state !== 'running') return; // suspended なら無音のまま待つ
     const track = TRACKS[this.currentTrack];
 
     const melodyDur = this.scheduleLayer(

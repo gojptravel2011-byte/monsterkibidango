@@ -38,23 +38,26 @@ export class TitleScene extends Phaser.Scene {
       ...TS.sub,
     }).setOrigin(0.5).setDepth(2);
 
+    // タイトルBGM：ボタン押下時にユーザー操作として init → play
+    // （ブラウザの Autoplay 制限は「ユーザー操作のイベントハンドラ内」でのみ解除できる）
+    const startBgm = () => {
+      BGM.init();   // AudioContext 生成 or resume（ユーザー操作内なので running になる）
+      BGM.play('title');
+    };
+
     this.makeButton(w / 2, h * 0.60, 'はじめから', () => {
+      startBgm();
       this.scene.start('NameInputScene');
     });
 
     if (hasSaveData()) {
       this.makeButton(w / 2, h * 0.75, 'つづきから', () => {
+        startBgm();
         if (loadGame()) {
           this.scene.start('MapScene');
         }
       });
     }
-
-    // タップ時にBGM初期化（ブラウザのAutoplay制限対応）
-    this.input.once('pointerdown', () => {
-      BGM.init();
-      BGM.play('title');
-    });
 
     this.add.text(w - 10, h - 10, '© 2025', {
       ...TS.sub,
