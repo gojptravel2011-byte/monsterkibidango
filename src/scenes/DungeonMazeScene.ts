@@ -37,6 +37,7 @@ export class DungeonMazeScene extends Phaser.Scene {
   private lastVx = 1;
   private moveTimer = 0;
   private currentCell = '';   // 直前にいたグリッドセル "row_col"（重複起動防止）
+  private padState = { up: false, down: false, left: false, right: false };
 
   constructor() { super('DungeonMazeScene'); }
 
@@ -103,6 +104,7 @@ export class DungeonMazeScene extends Phaser.Scene {
 
     // ── HUD ──────────────────────────────────────
     this.buildHUD();
+    this.buildDPad();
 
     // 初回入場メッセージ
     if (!getFlag('shownDungeonMsg')) {
@@ -181,32 +183,57 @@ export class DungeonMazeScene extends Phaser.Scene {
       .setOrigin(0.5).setDepth(151).setScrollFactor(0);
   }
 
+  // ── 仮想十字ボタン（タッチ操作用）─────────────
+  // ドラッグ方向判定だと迷路の画面外まで指を動かす必要があり下方向などが
+  // 押せなくなるため、画面に固定された4方向ボタンに変更する
+  private buildDPad(): void {
+    const sh = this.scale.height;
+    const cx = 96;                 // パッド中心X（左下）
+    const cy = sh - 120;           // パッド中心Y
+    const btnR = 38;
+    const gap = 46;
+
+    const makeDir = (dx: number, dy: number, label: string, key: 'up' | 'down' | 'left' | 'right') => {
+      const bx = cx + dx * gap;
+      const by = cy + dy * gap;
+      const circle = this.add.circle(bx, by, btnR, 0x110022, 0.55)
+        .setStrokeStyle(2, 0x9955dd, 0.9)
+        .setDepth(150).setScrollFactor(0)
+        .setInteractive({ useHandCursor: true });
+      this.add.text(bx, by, label, {
+        fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(151).setScrollFactor(0);
+
+      const setOn = () => { this.padState[key] = true; circle.setFillStyle(0x6633aa, 0.8); };
+      const setOff = () => { this.padState[key] = false; circle.setFillStyle(0x110022, 0.55); };
+
+      circle.on('pointerdown', setOn);
+      circle.on('pointerup', setOff);
+      circle.on('pointerout', setOff);
+      circle.on('pointerupoutside', setOff);
+    };
+
+    makeDir(0, -1, '▲', 'up');
+    makeDir(0,  1, '▼', 'down');
+    makeDir(-1, 0, '◀', 'left');
+    makeDir(1,  0, '▶', 'right');
+
+    // ボタン以外の場所でポインターを離した場合も確実に解除する
+    this.input.on('pointerup', () => {
+      this.padState.up = false; this.padState.down = false;
+      this.padState.left = false; this.padState.right = false;
+    });
+  }
+
   // ── update ───────────────────────────────────
   update(_time: number, delta: number): void {
     if (this.msgWin.isVisible()) return;
 
-    // タッチ入力（ワールド座標で方向判定）
-    let touchL = false, touchR = false, touchU = false, touchD = false;
-    const ptr = this.input.activePointer;
-    const HUD_H = 54; // HUDの高さ（画面座標）
-    if (ptr.isDown && ptr.y > HUD_H) {
-      // ptr.worldX/Y はカメラを考慮したワールド座標
-      const dx = ptr.worldX - this.player.x;
-      const dy = ptr.worldY - this.player.y;
-      const DEAD = 32;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx >  DEAD) touchR = true;
-        if (dx < -DEAD) touchL = true;
-      } else {
-        if (dy >  DEAD) touchD = true;
-        if (dy < -DEAD) touchU = true;
-      }
-    }
-
-    const left  = touchL || this.cursors.left.isDown  || this.wasd.left.isDown;
-    const right = touchR || this.cursors.right.isDown || this.wasd.right.isDown;
-    const up    = touchU || this.cursors.up.isDown    || this.wasd.up.isDown;
-    const down  = touchD || this.cursors.down.isDown  || this.wasd.down.isDown;
+    const left  = this.padState.left  || this.cursors.left.isDown  || this.wasd.left.isDown;
+    const right = this.padState.right || this.cursors.right.isDown || this.wasd.right.isDown;
+    const up    = this.padState.up    || this.cursors.up.isDown    || this.wasd.up.isDown;
+    const down  = this.padState.down  || this.cursors.down.isDown  || this.wasd.down.isDown;
 
     let vx = 0, vy = 0;
     if (left)  vx = -SPEED;

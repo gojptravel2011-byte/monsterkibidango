@@ -9,15 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        touch-action: none;
+        overscroll-behavior: none;
+      }
       body {
         background: #0d1225;
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 100vw;
+        /* URLバーの出現/消失でも実際に見える高さに追従させる（100vhは古いiOS/Androidで誤差が出る） */
         height: 100vh;
-        overflow: hidden;
-        touch-action: none;
+        height: 100dvh;
       }
       canvas { display: block; }
     </style>

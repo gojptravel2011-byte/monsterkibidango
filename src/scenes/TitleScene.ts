@@ -64,9 +64,10 @@ export class TitleScene extends Phaser.Scene {
     }).setOrigin(1, 1).setDepth(2);
   }
 
+  private bgVideoResizeHandler: (() => void) | null = null;
+
   private startBgVideo(): void {
     const canvas = this.game.canvas;
-    const rect = canvas.getBoundingClientRect();
 
     const vid = document.createElement('video');
     vid.src = 'opening/shot07.mp4';
@@ -76,10 +77,6 @@ export class TitleScene extends Phaser.Scene {
     vid.setAttribute('playsinline', '');
     vid.style.cssText = `
       position: fixed;
-      left: ${rect.left}px;
-      top: ${rect.top}px;
-      width: ${rect.width}px;
-      height: ${rect.height}px;
       object-fit: contain;
       background: #000011;
       z-index: -1;
@@ -93,9 +90,32 @@ export class TitleScene extends Phaser.Scene {
     document.body.appendChild(vid);
     vid.play().catch(() => {/* autoplay blocked: 背景なしで続行 */});
     this.bgVideoEl = vid;
+
+    // canvas は Scale.FIT のレイアウト確定が create() 直後にまだ済んでいないことがあるため、
+    // 都度 canvas の実際の表示矩形に追従させる（リサイズ・URLバー開閉・初回レイアウト確定）
+    const sync = () => {
+      if (!this.bgVideoEl) return;
+      const rect = canvas.getBoundingClientRect();
+      this.bgVideoEl.style.left = `${rect.left}px`;
+      this.bgVideoEl.style.top = `${rect.top}px`;
+      this.bgVideoEl.style.width = `${rect.width}px`;
+      this.bgVideoEl.style.height = `${rect.height}px`;
+    };
+    sync();
+    requestAnimationFrame(sync);
+    this.scale.on('resize', sync);
+    window.addEventListener('resize', sync);
+    window.addEventListener('orientationchange', sync);
+    this.bgVideoResizeHandler = sync;
   }
 
   private removeBgVideo(): void {
+    if (this.bgVideoResizeHandler) {
+      this.scale.off('resize', this.bgVideoResizeHandler);
+      window.removeEventListener('resize', this.bgVideoResizeHandler);
+      window.removeEventListener('orientationchange', this.bgVideoResizeHandler);
+      this.bgVideoResizeHandler = null;
+    }
     if (this.bgVideoEl) {
       this.bgVideoEl.pause();
       this.bgVideoEl.parentNode?.removeChild(this.bgVideoEl);
