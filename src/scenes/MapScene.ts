@@ -383,19 +383,49 @@ export class MapScene extends Phaser.Scene {
 
       // ── 別世界ワープポータル（校庭中央）────────────────────────
       const warpX = w / 2, warpY = h * 0.60;
-      const portalColor = getFlag('rasubossDefeated') ? 0xaa44ff : 0x554477;
-      const outerCircle = this.add.circle(warpX, warpY, 44, portalColor, 0.22).setDepth(4)
-        .setStrokeStyle(3, portalColor, 0.9);
-      const innerCircle = this.add.circle(warpX, warpY, 28, portalColor, 0.35).setDepth(4);
-      this.decorations.push(outerCircle, innerCircle);
-      this.tweens.add({
-        targets: [outerCircle, innerCircle],
-        angle: 360, duration: 3000, repeat: -1, ease: 'Linear',
-      });
-      this.tweens.add({
-        targets: outerCircle, scaleX: 1.15, scaleY: 1.15, alpha: 0.5,
-        duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-      });
+      const defeated = getFlag('rasubossDefeated');
+      const portalColor = defeated ? 0xaa44ff : 0x554477;
+      const portalAlpha = defeated ? 1.0 : 0.5;
+
+      // 背景グロー
+      const glow = this.add.circle(warpX, warpY, 54, portalColor, 0.12).setDepth(3);
+      this.tweens.add({ targets: glow, scaleX: 1.35, scaleY: 1.35, alpha: 0.04,
+        duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.decorations.push(glow);
+
+      // 外リング：3つの弧セグメントで隙間ありリング → angleツイーンで回転が見える
+      const gOuter = this.add.graphics({ x: warpX, y: warpY }).setDepth(4);
+      for (let i = 0; i < 3; i++) {
+        const s = (i * Math.PI * 2 / 3) + 0.2;
+        const e = (i * Math.PI * 2 / 3) + Math.PI * 2 / 3 - 0.2;
+        gOuter.lineStyle(6, portalColor, portalAlpha);
+        gOuter.beginPath();
+        gOuter.arc(0, 0, 42, s, e, false);
+        gOuter.strokePath();
+      }
+      this.tweens.add({ targets: gOuter, angle: 360, duration: 2400, repeat: -1, ease: 'Linear' });
+      this.decorations.push(gOuter);
+
+      // 内リング：4つの弧、逆回転
+      const gInner = this.add.graphics({ x: warpX, y: warpY }).setDepth(4);
+      for (let i = 0; i < 4; i++) {
+        const s = (i * Math.PI * 2 / 4) + 0.25;
+        const e = (i * Math.PI * 2 / 4) + Math.PI * 2 / 4 - 0.25;
+        gInner.lineStyle(4, portalColor, portalAlpha * 0.75);
+        gInner.beginPath();
+        gInner.arc(0, 0, 24, s, e, false);
+        gInner.strokePath();
+      }
+      this.tweens.add({ targets: gInner, angle: -360, duration: 1600, repeat: -1, ease: 'Linear' });
+      this.decorations.push(gInner);
+
+      // 中央の光点
+      const gCenter = this.add.graphics({ x: warpX, y: warpY }).setDepth(4);
+      gCenter.fillStyle(portalColor, portalAlpha * 0.6);
+      gCenter.fillCircle(0, 0, 10);
+      this.tweens.add({ targets: gCenter, scaleX: 1.5, scaleY: 1.5, alpha: 0.2,
+        duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.decorations.push(gCenter);
       const warpLabel = this.add.text(warpX, warpY + 60, getFlag('rasubossDefeated') ? 'べつのせかいへ' : 'なにかの\nけはいがする…', {
         fontSize: '20px', color: '#cc88ff', fontFamily: 'sans-serif', align: 'center',
         stroke: '#000000', strokeThickness: 2,
