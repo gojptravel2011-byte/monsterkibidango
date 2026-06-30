@@ -133,4 +133,20 @@ export const MONSTER_SPECIES: Record<string, MonsterSpecies> = {
       { level: 1, skill: 'hikari' },
     ],
   },
+  // ── レアモンスター ──────────────────────────────
+  dragon: {
+    id: 'dragon',
+    name: 'ドラゴン',
+    baseMaxHp: 70,
+    spriteKey: ASSET_KEYS.MONSTERS.DRAGON,
+    placeholderColor: 0xcc2200,
+    catchable: true,
+    learnset: [
+      { level:  1, skill: 'honoo' },
+      { level:  4, skill: 'taiatarikko' },
+      { level:  7, skill: 'kamitsuku' },
+      { level: 10, skill: 'kurayami' },
+      { level: 14, skill: 'denkogeki' },
+    ],
+  },
 };

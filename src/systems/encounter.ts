@@ -23,11 +23,32 @@ export function resetStepCount(): void {
   stepCount = 0;
 }
 
+// 神社・小学校・迷路でのみ出現するレアモンスター（5%）
+const RARE_ENCOUNTER_FIELDS = new Set(['jinja', 'shogakko', 'dungeon']);
+const RARE_RATE = 0.05;
+const RARE_TABLE: Record<string, { speciesId: string; minL: number; maxL: number }[]> = {
+  jinja:    [{ speciesId: 'dragon', minL: 10, maxL: 14 }],
+  shogakko: [{ speciesId: 'dragon', minL: 10, maxL: 14 }],
+  dungeon:  [{ speciesId: 'dragon', minL: 12, maxL: 16 }],
+};
+
 export function generateEncounter(fieldId: string, _playerLevel: number): MonsterInstance | null {
   const field = FIELDS[fieldId];
   if (!field || field.isSafeZone || field.encounters.length === 0) return null;
 
-  // 重みつきランダム選択
+  // ── レアエンカウント判定（5%）──────────────────────────────────
+  if (RARE_ENCOUNTER_FIELDS.has(fieldId) && Math.random() < RARE_RATE) {
+    const rares = RARE_TABLE[fieldId];
+    if (rares && rares.length > 0) {
+      const r = rares[Math.floor(Math.random() * rares.length)];
+      const level = r.minL + Math.floor(Math.random() * (r.maxL - r.minL + 1));
+      const inst = createMonsterInstance(r.speciesId, level);
+      inst.isRare = true;
+      return inst;
+    }
+  }
+
+  // ── 通常エンカウント（重みつきランダム選択）────────────────────
   const total = field.encounters.reduce((s, e) => s + e.weight, 0);
   let rand = Math.random() * total;
   let chosen: string | null = null;
@@ -37,7 +58,6 @@ export function generateEncounter(fieldId: string, _playerLevel: number): Monste
   }
   if (!chosen) chosen = field.encounters[0].speciesId;
 
-  // プレイヤーレベルではなくフィールド固定レベルで出現（難易度調整しやすい）
   const minL = field.encounterLevelMin;
   const maxL = field.encounterLevelMax;
   const level = minL + Math.floor(Math.random() * (maxL - minL + 1));

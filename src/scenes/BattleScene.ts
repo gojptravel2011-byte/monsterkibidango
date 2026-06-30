@@ -102,12 +102,11 @@ export class BattleScene extends Phaser.Scene {
     this.updateHpDisplay();
     this.showCommandMenu();
 
-    // バトル開始メッセージ
-    this.msgWin.show(
-      '',
-      `${eSpecies?.name ?? 'モンスター'}が　あらわれた！`,
-      () => this.showCommandMenu(),
-    );
+    // バトル開始メッセージ（レアエンカウント時は特別演出）
+    const appearMsg = this.enemy.isRare
+      ? `✨ レアモンスター！\n${eSpecies?.name ?? 'モンスター'}が　あらわれた！`
+      : `${eSpecies?.name ?? 'モンスター'}が　あらわれた！`;
+    this.msgWin.show('', appearMsg, () => this.showCommandMenu());
   }
 
   private updateHpDisplay(): void {

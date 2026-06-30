@@ -21,6 +21,7 @@ export function generateAllSprites(scene: Phaser.Scene): void {
   genKazepon(scene);
   genDenkon(scene);
   genRasuboss(scene);
+  genDragon(scene);
   genTree(scene);
   genHouse(scene);
   genLamp(scene);
@@ -846,4 +847,128 @@ function genRasuboss(scene: Phaser.Scene): void {
   g.fillStyle(0xffffff, 0.04); g.fillCircle(cx - 8, cy - 24, 14);
 
   fin(g, 'monster_rasuboss', 80, 96);
+}
+
+// ════════════════════════════════════════════════════════════
+//  ドラゴン（レアモンスター 80×80）
+//  赤鱗・大きな翼・炎の息・金色の目
+// ════════════════════════════════════════════════════════════
+function genDragon(scene: Phaser.Scene): void {
+  const g = make(scene);
+  const cx = 40, cy = 44;
+
+  // 影
+  g.fillStyle(0x000000, 0.18); g.fillEllipse(cx + 3, cy + 30, 58, 13);
+
+  // 翼（後ろ側・大きく広げる）
+  g.fillStyle(0x880022);
+  g.fillTriangle(cx - 10, cy - 10, cx - 44, cy - 52, cx - 2, cy - 28);
+  g.fillTriangle(cx + 10, cy - 10, cx + 44, cy - 52, cx + 2, cy - 28);
+  // 翼膜（半透明の赤）
+  g.fillStyle(0xcc1100, 0.5);
+  g.fillTriangle(cx - 10, cy - 10, cx - 46, cy - 46, cx - 20, cy + 4);
+  g.fillTriangle(cx + 10, cy - 10, cx + 46, cy - 46, cx + 20, cy + 4);
+  // 翼の骨
+  g.fillStyle(0xaa2200);
+  g.fillRect(cx - 26, cy - 30, 3, 24); g.fillRect(cx + 23, cy - 30, 3, 24);
+  g.fillRect(cx - 36, cy - 40, 3, 20); g.fillRect(cx + 33, cy - 40, 3, 20);
+
+  // 尻尾（長くとがった）
+  g.fillStyle(0xcc2200);
+  g.fillTriangle(cx + 14, cy + 18, cx + 30, cy + 44, cx + 20, cy + 18);
+  g.fillTriangle(cx + 24, cy + 38, cx + 38, cy + 52, cx + 28, cy + 38);
+  // 尻尾の棘
+  g.fillStyle(0xff4400);
+  g.fillTriangle(cx + 32, cy + 46, cx + 38, cy + 42, cx + 36, cy + 54);
+
+  // 体（太くてがっしり）
+  g.fillStyle(0xaa2200); g.fillEllipse(cx, cy + 6, 46, 42);
+  g.fillStyle(0xcc2200); g.fillEllipse(cx, cy, 42, 36);
+  // お腹（淡いオレンジ）
+  g.fillStyle(0xff8844, 0.7); g.fillEllipse(cx, cy + 6, 26, 26);
+  g.fillStyle(0xffaa66, 0.4); g.fillEllipse(cx, cy + 2, 18, 18);
+
+  // 足（後ろ足）
+  g.fillStyle(0xaa2200);
+  g.fillEllipse(cx - 18, cy + 26, 16, 20); g.fillEllipse(cx + 18, cy + 26, 16, 20);
+  // 爪
+  g.fillStyle(0xddddaa);
+  g.fillTriangle(cx - 24, cy + 34, cx - 20, cy + 40, cx - 16, cy + 34);
+  g.fillTriangle(cx - 18, cy + 36, cx - 14, cy + 42, cx - 10, cy + 36);
+  g.fillTriangle(cx + 16, cy + 34, cx + 20, cy + 40, cx + 24, cy + 34);
+  g.fillTriangle(cx + 10, cy + 36, cx + 14, cy + 42, cx + 18, cy + 36);
+
+  // 前足（腕）
+  g.fillStyle(0xcc2200);
+  g.fillEllipse(cx - 28, cy + 4, 14, 18);
+  g.fillEllipse(cx + 28, cy + 4, 14, 18);
+  // 前足の爪
+  g.fillStyle(0xddddaa);
+  g.fillTriangle(cx - 34, cy + 12, cx - 30, cy + 18, cx - 24, cy + 12);
+  g.fillTriangle(cx + 24, cy + 12, cx + 30, cy + 18, cx + 34, cy + 12);
+
+  // 首
+  g.fillStyle(0xbb2200); g.fillEllipse(cx, cy - 16, 24, 22);
+  // 首の鱗模様
+  g.fillStyle(0x991100, 0.5);
+  for (let i = 0; i < 3; i++) {
+    g.fillEllipse(cx - 6 + i * 6, cy - 10 - i * 4, 8, 5);
+  }
+
+  // 頭（大きくて迫力）
+  g.fillStyle(0xcc2200); g.fillEllipse(cx, cy - 30, 30, 24);
+  g.fillStyle(0xdd2200); g.fillEllipse(cx - 2, cy - 32, 26, 20);
+
+  // 頭の角（2本・鋭い）
+  g.fillStyle(0xddbb44);
+  g.fillTriangle(cx - 10, cy - 38, cx - 16, cy - 60, cx - 4, cy - 38);
+  g.fillTriangle(cx + 10, cy - 38, cx + 16, cy - 60, cx + 4, cy - 38);
+  // 角の縞
+  g.fillStyle(0xbbaa22, 0.6);
+  g.fillRect(cx - 14, cy - 54, 5, 6); g.fillRect(cx + 9, cy - 54, 5, 6);
+  g.fillRect(cx - 13, cy - 46, 5, 4); g.fillRect(cx + 8, cy - 46, 5, 4);
+
+  // 目（金色・縦スリット・迫力）
+  g.fillStyle(0xffcc00); g.fillEllipse(cx - 10, cy - 30, 12, 10);
+  g.fillStyle(0xffcc00); g.fillEllipse(cx + 10, cy - 30, 12, 10);
+  g.fillStyle(0x1a0800); g.fillRect(cx - 11, cy - 35, 3, 10);
+  g.fillStyle(0x1a0800); g.fillRect(cx + 9,  cy - 35, 3, 10);
+  g.fillStyle(0xffffff, 0.7); g.fillCircle(cx - 13, cy - 32, 2);
+  g.fillStyle(0xffffff, 0.7); g.fillCircle(cx + 7,  cy - 32, 2);
+
+  // 眉（太くて険しい）
+  g.fillStyle(0x880000);
+  g.fillRect(cx - 18, cy - 38, 12, 4);
+  g.fillRect(cx + 6,  cy - 38, 12, 4);
+  g.fillTriangle(cx - 18, cy - 34, cx - 18, cy - 38, cx - 6,  cy - 38);
+  g.fillTriangle(cx + 18, cy - 34, cx + 18, cy - 38, cx + 6,  cy - 38);
+
+  // 口・鼻先（とがっていてワイルド）
+  g.fillStyle(0xaa1800); g.fillEllipse(cx, cy - 20, 22, 14);
+  // 歯
+  g.fillStyle(0xffffff);
+  g.fillTriangle(cx - 8, cy - 15, cx - 6, cy - 22, cx - 2, cy - 15);
+  g.fillTriangle(cx + 2, cy - 15, cx + 6, cy - 22, cx + 8, cy - 15);
+  // 炎のブレス（口から）
+  g.fillStyle(0xff6600, 0.55);
+  g.fillTriangle(cx - 4, cy - 15, cx + 4, cy - 15, cx + 22, cy - 6);
+  g.fillStyle(0xffaa00, 0.4);
+  g.fillTriangle(cx - 2, cy - 15, cx + 2, cy - 15, cx + 26, cy - 4);
+  g.fillStyle(0xffee44, 0.25);
+  g.fillTriangle(cx, cy - 14, cx + 2, cy - 14, cx + 30, cy - 2);
+
+  // 鱗のキラキラ（体の各所に）
+  g.fillStyle(0xff5544, 0.6);
+  g.fillEllipse(cx - 10, cy + 2, 8, 5);
+  g.fillEllipse(cx + 8,  cy - 2, 8, 5);
+  g.fillEllipse(cx - 4,  cy + 10, 8, 5);
+  g.fillStyle(0xff7755, 0.4);
+  g.fillEllipse(cx + 12, cy + 8, 7, 4);
+  g.fillEllipse(cx - 14, cy + 12, 7, 4);
+
+  // 体ハイライト
+  g.fillStyle(0xffffff, 0.12); g.fillCircle(cx - 10, cy - 6, 14);
+  g.fillStyle(0xffffff, 0.07); g.fillCircle(cx - 6, cy - 2, 8);
+
+  fin(g, 'monster_dragon', 80, 80);
 }

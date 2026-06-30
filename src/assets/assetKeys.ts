@@ -16,6 +16,7 @@ export const ASSET_KEYS = {
     KAZEPON: 'monster_kazepon',
     DENKON: 'monster_denkon',
     RASBOSS: 'monster_rasuboss',
+    DRAGON: 'monster_dragon',
   },
 
   // マップタイル

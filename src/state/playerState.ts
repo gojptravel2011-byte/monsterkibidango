@@ -10,6 +10,7 @@ export interface MonsterInstance {
   maxHp: number;
   skills: string[];
   affection: number;
+  isRare?: boolean; // レアエンカウントフラグ（encounter.ts がセット）
   // 将来の進化・アクセサリー用（MVPでは未使用）
   // equippedAccessory?: string;
 }
