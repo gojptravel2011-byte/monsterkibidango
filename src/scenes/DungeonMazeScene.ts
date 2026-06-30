@@ -38,6 +38,8 @@ export class DungeonMazeScene extends Phaser.Scene {
   private moveTimer = 0;
   private currentCell = '';   // 直前にいたグリッドセル "row_col"（重複起動防止）
   private padState = { up: false, down: false, left: false, right: false };
+  // 宝箱ビジュアル（取得後に空箱に切り替えるため参照を保持）
+  private chestObjs = new Map<string, Phaser.GameObjects.GameObject[]>();
 
   constructor() { super('DungeonMazeScene'); }
 
@@ -152,17 +154,40 @@ export class DungeonMazeScene extends Phaser.Scene {
   // ── 宝箱マーカー ─────────────────────────────
   private drawTreasureMarkers(): void {
     for (const t of MAZE_TREASURES) {
-      if (getFlag(`dungeon_t_${t.row}_${t.col}`)) continue;
+      const key = `${t.row}_${t.col}`;
+      const alreadyTaken = getFlag(`dungeon_t_${key}`);
       const { x, y } = tileCenter(t.row, t.col);
-      this.add.rectangle(x, y, TILE - 10, TILE / 2, 0xaa6600)
-        .setStrokeStyle(2, 0xffdd44).setDepth(3);
-      this.add.rectangle(x, y - TILE / 8, TILE - 10, TILE / 6, 0xcc8800)
-        .setStrokeStyle(1, 0xffee88).setDepth(4);
-      this.add.text(x, y + TILE * 0.32, 'たからばこ', {
-        fontSize: '13px', color: '#ffdd44', fontFamily: 'sans-serif',
-        stroke: '#000', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(4);
+      if (alreadyTaken) {
+        this.drawEmptyChest(x, y);
+      } else {
+        this.drawFullChest(x, y, key);
+      }
     }
+  }
+
+  private drawFullChest(x: number, y: number, key: string): void {
+    const base = this.add.rectangle(x, y, TILE - 10, TILE / 2, 0xaa6600)
+      .setStrokeStyle(2, 0xffdd44).setDepth(3);
+    const lid  = this.add.rectangle(x, y - TILE / 8, TILE - 10, TILE / 6, 0xcc8800)
+      .setStrokeStyle(1, 0xffee88).setDepth(4);
+    const lbl  = this.add.text(x, y + TILE * 0.32, 'たからばこ', {
+      fontSize: '13px', color: '#ffdd44', fontFamily: 'sans-serif',
+      stroke: '#000', strokeThickness: 2,
+    }).setOrigin(0.5).setDepth(4);
+    this.chestObjs.set(key, [base, lid, lbl]);
+  }
+
+  private drawEmptyChest(x: number, y: number): void {
+    // 色をグレー系に落とし蓋が開いた見た目
+    this.add.rectangle(x, y + 4, TILE - 10, TILE / 2 - 4, 0x554433)
+      .setStrokeStyle(1, 0x887766).setDepth(3);
+    // 開いた蓋（上に跳ね上げ）
+    this.add.rectangle(x, y - TILE / 2 + 2, TILE - 10, TILE / 6, 0x665544)
+      .setStrokeStyle(1, 0x998877).setDepth(4);
+    this.add.text(x, y + TILE * 0.38, 'からっぽ', {
+      fontSize: '13px', color: '#887766', fontFamily: 'sans-serif',
+      stroke: '#000', strokeThickness: 2,
+    }).setOrigin(0.5).setDepth(4);
   }
 
   // ── HUD（カメラ固定）──────────────────────────
@@ -187,26 +212,26 @@ export class DungeonMazeScene extends Phaser.Scene {
   // ドラッグ方向判定だと迷路の画面外まで指を動かす必要があり下方向などが
   // 押せなくなるため、画面に固定された4方向ボタンに変更する
   private buildDPad(): void {
-    const sh = this.scale.height;
-    const cx = 96;                 // パッド中心X（左下）
-    const cy = sh - 120;           // パッド中心Y
-    const btnR = 38;
-    const gap = 46;
+    // HUD（高さ54）のすぐ下・左上に配置
+    // メッセージウィンドウ（画面下200px）に被らないよう上部に固定
+    const cx = 74;   // パッド中心X
+    const cy = 150;  // パッド中心Y（HUD下 + 余白）
+    const btnR = 26; // ボタン半径（小さめ・目立たせすぎない）
+    const gap  = 34;
 
     const makeDir = (dx: number, dy: number, label: string, key: 'up' | 'down' | 'left' | 'right') => {
       const bx = cx + dx * gap;
       const by = cy + dy * gap;
-      const circle = this.add.circle(bx, by, btnR, 0x110022, 0.55)
-        .setStrokeStyle(2, 0x9955dd, 0.9)
+      const circle = this.add.circle(bx, by, btnR, 0x000000, 0.28)
+        .setStrokeStyle(1, 0x9955dd, 0.5)
         .setDepth(150).setScrollFactor(0)
         .setInteractive({ useHandCursor: true });
       this.add.text(bx, by, label, {
-        fontSize: '26px', color: '#ffffff', fontFamily: 'sans-serif',
-        stroke: '#000000', strokeThickness: 3,
-      }).setOrigin(0.5).setDepth(151).setScrollFactor(0);
+        fontSize: '18px', color: '#ccaaff', fontFamily: 'sans-serif',
+      }).setOrigin(0.5).setDepth(151).setScrollFactor(0).setAlpha(0.7);
 
-      const setOn = () => { this.padState[key] = true; circle.setFillStyle(0x6633aa, 0.8); };
-      const setOff = () => { this.padState[key] = false; circle.setFillStyle(0x110022, 0.55); };
+      const setOn = () => { this.padState[key] = true; circle.setFillStyle(0x6633aa, 0.65); };
+      const setOff = () => { this.padState[key] = false; circle.setFillStyle(0x000000, 0.28); };
 
       circle.on('pointerdown', setOn);
       circle.on('pointerup', setOff);
@@ -383,12 +408,21 @@ export class DungeonMazeScene extends Phaser.Scene {
     const t = MAZE_TREASURES.find(t => t.row === row && t.col === col);
     if (!t) return;
 
+    const chestKey = `${row}_${col}`;
     this.msgWin.showConfirm(
       '',
       `たからばこがある！\nあけますか？`,
       () => {
         addItem(t.itemId, t.count);
         setFlag(flagKey);
+        // 宝箱ビジュアルを「からっぽ」に差し替え
+        const objs = this.chestObjs.get(chestKey);
+        if (objs) {
+          objs.forEach(o => o.destroy());
+          this.chestObjs.delete(chestKey);
+          const { x, y } = tileCenter(row, col);
+          this.drawEmptyChest(x, y);
+        }
         this.msgWin.show('', `たからばこをあけた！\n${t.label}\nてにいれた！`);
       },
     );
