@@ -8,13 +8,8 @@ import { drawPanel, makeBtn } from '../ui/Panel';
 
 export class MenuScene extends Phaser.Scene {
   private buttons: Phaser.GameObjects.GameObject[] = [];
-  private callerKey = 'MapScene'; // launch 元シーンのキー
 
   constructor() { super({ key: 'MenuScene', active: false }) ; }
-
-  init(data: { callerKey?: string }): void {
-    this.callerKey = data?.callerKey ?? 'MapScene';
-  }
 
   create(): void {
     const w = this.scale.width;
@@ -76,6 +71,15 @@ export class MenuScene extends Phaser.Scene {
 
   private close(): void {
     this.scene.stop('MenuScene');
-    this.scene.resume(this.callerKey);
+    // pause 中のゲームシーンを探して resume（callerKey データ渡しに頼らない）
+    const gameScenes = ['DungeonMazeScene', 'MapScene'];
+    for (const key of gameScenes) {
+      if (this.scene.isPaused(key)) {
+        this.scene.resume(key);
+        return;
+      }
+    }
+    // フォールバック：アクティブなシーンが見当たらない場合は MapScene を起動
+    this.scene.start('MapScene');
   }
 }

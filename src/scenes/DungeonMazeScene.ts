@@ -216,8 +216,8 @@ export class DungeonMazeScene extends Phaser.Scene {
       .setStrokeStyle(1, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.scene.launch('MenuScene', { callerKey: 'DungeonMazeScene' });
-        this.scene.pause('DungeonMazeScene');
+        this.scene.pause();           // 自シーンを先に pause
+        this.scene.launch('MenuScene');
       });
     for (let i = 0; i < 3; i++) {
       this.add.rectangle(menuX, menuY - 8 + i * 8, 26, 3, T.borderGold)
