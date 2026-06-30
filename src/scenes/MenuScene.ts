@@ -8,8 +8,13 @@ import { drawPanel, makeBtn } from '../ui/Panel';
 
 export class MenuScene extends Phaser.Scene {
   private buttons: Phaser.GameObjects.GameObject[] = [];
+  private callerKey = 'MapScene'; // launch 元シーンのキー
 
   constructor() { super({ key: 'MenuScene', active: false }) ; }
+
+  init(data: { callerKey?: string }): void {
+    this.callerKey = data?.callerKey ?? 'MapScene';
+  }
 
   create(): void {
     const w = this.scale.width;
@@ -71,7 +76,6 @@ export class MenuScene extends Phaser.Scene {
 
   private close(): void {
     this.scene.stop('MenuScene');
-    const mapScene = this.scene.get('MapScene');
-    if (mapScene) this.scene.resume('MapScene');
+    this.scene.resume(this.callerKey);
   }
 }

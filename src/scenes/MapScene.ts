@@ -34,6 +34,11 @@ export class MapScene extends Phaser.Scene {
 
   create(): void {
     const pos = getState().position;
+    // セーブデータがダンジョン内の場合は DungeonMazeScene で再開
+    if (pos.field === 'dungeon') {
+      this.scene.start('DungeonMazeScene');
+      return;
+    }
     this.buildField(pos.field);
 
     // プレイヤーは create() で必ず生成（shutdown で破棄された参照を再利用しないよう）
@@ -80,7 +85,10 @@ export class MapScene extends Phaser.Scene {
     this.add.rectangle(menuBtnX, menuBtnY, 56, 56, T.panelMid, 0.9)
       .setStrokeStyle(2, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.launch('MenuScene').pause());
+      .on('pointerdown', () => {
+        this.scene.launch('MenuScene', { callerKey: 'MapScene' });
+        this.scene.pause('MapScene');
+      });
     for (let i = 0; i < 3; i++) {
       this.add.rectangle(menuBtnX, menuBtnY - 10 + i * 10, 30, 3, T.borderGold)
         .setDepth(151).setScrollFactor(0);
