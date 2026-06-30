@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>モンスターきびだんご</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,9 +21,17 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        /* URLバーの出現/消失でも実際に見える高さに追従させる（100vhは古いiOS/Androidで誤差が出る） */
+        /*
+         * URLバー（上）とブラウザナビゲーション（下）の両方に対応。
+         * dvh = dynamic viewport height で上下バーの出現/消失に追従。
+         * safe-area-inset で iOS ホームインジケーター・Android ナビバーを除外。
+         */
         height: 100vh;
-        height: 100dvh;
+        height: calc(100dvh - env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px));
+        padding-top:    env(safe-area-inset-top,    0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left:   env(safe-area-inset-left,   0px);
+        padding-right:  env(safe-area-inset-right,  0px);
       }
       canvas { display: block; }
     </style>
