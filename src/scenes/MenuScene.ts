@@ -70,16 +70,19 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private close(): void {
-    this.scene.stop('MenuScene');
-    // pause 中のゲームシーンを探して resume（callerKey データ渡しに頼らない）
+    // resume 対象を stop より先に特定しておく
     const gameScenes = ['DungeonMazeScene', 'MapScene'];
-    for (const key of gameScenes) {
-      if (this.scene.isPaused(key)) {
-        this.scene.resume(key);
-        return;
-      }
+    const toResume = gameScenes.find(key => this.scene.isPaused(key));
+
+    this.scene.stop('MenuScene');
+
+    if (toResume) {
+      // queueOp を経由せず sys.resume() を直接呼ぶことで
+      // stop キューの処理順に左右されずに即時 resume する
+      const target = this.scene.get(toResume);
+      if (target) target.sys.resume();
+    } else {
+      this.scene.start('MapScene');
     }
-    // フォールバック：アクティブなシーンが見当たらない場合は MapScene を起動
-    this.scene.start('MapScene');
   }
 }

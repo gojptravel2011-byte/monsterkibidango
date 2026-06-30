@@ -85,10 +85,7 @@ export class MapScene extends Phaser.Scene {
     this.add.rectangle(menuBtnX, menuBtnY, 56, 56, T.panelMid, 0.9)
       .setStrokeStyle(2, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        this.scene.pause();
-        this.scene.launch('MenuScene');
-      });
+      .on('pointerdown', () => this.scene.launch('MenuScene').pause());
     for (let i = 0; i < 3; i++) {
       this.add.rectangle(menuBtnX, menuBtnY - 10 + i * 10, 30, 3, T.borderGold)
         .setDepth(151).setScrollFactor(0);
