@@ -229,39 +229,58 @@ export class DungeonMazeScene extends Phaser.Scene {
   // ドラッグ方向判定だと迷路の画面外まで指を動かす必要があり下方向などが
   // 押せなくなるため、画面に固定された4方向ボタンに変更する
   private buildDPad(): void {
-    // HUD（高さ54）のすぐ下・左上に配置
-    // メッセージウィンドウ（画面下200px）に被らないよう上部に固定
-    const cx = 74;   // パッド中心X
-    const cy = 150;  // パッド中心Y（HUD下 + 余白）
-    const btnR = 26; // ボタン半径（小さめ・目立たせすぎない）
-    const gap  = 34;
+    // HUD（高さ54）直下・左上に配置。メッセージウィンドウ（画面下202px）に被らない上部固定
+    const cx  = 100;   // パッド中心X
+    const cy  = 175;   // パッド中心Y
+    const SZ  = 58;    // ボタン1辺サイズ
+    const GAP = 60;    // 中心間距離（ボタンがぴったり隣接）
 
-    const makeDir = (dx: number, dy: number, label: string, key: 'up' | 'down' | 'left' | 'right') => {
-      const bx = cx + dx * gap;
-      const by = cy + dy * gap;
-      const circle = this.add.circle(bx, by, btnR, 0x000000, 0.28)
-        .setStrokeStyle(1, 0x9955dd, 0.5)
-        .setDepth(150).setScrollFactor(0)
+    const dirs: { dx: number; dy: number; label: string; key: 'up' | 'down' | 'left' | 'right' }[] = [
+      { dx:  0, dy: -1, label: '▲', key: 'up'    },
+      { dx:  0, dy:  1, label: '▼', key: 'down'  },
+      { dx: -1, dy:  0, label: '◀', key: 'left'  },
+      { dx:  1, dy:  0, label: '▶', key: 'right' },
+    ];
+
+    for (const d of dirs) {
+      const bx = cx + d.dx * GAP;
+      const by = cy + d.dy * GAP;
+
+      // 四角ボタン（Graphics で角丸）
+      const bg = this.add.graphics().setDepth(150).setScrollFactor(0);
+      const drawBg = (pressed: boolean) => {
+        bg.clear();
+        bg.fillStyle(pressed ? 0x6633aa : 0x110022, pressed ? 0.75 : 0.38);
+        bg.fillRoundedRect(bx - SZ / 2, by - SZ / 2, SZ, SZ, 10);
+        bg.lineStyle(2, 0x9955dd, pressed ? 1.0 : 0.55);
+        bg.strokeRoundedRect(bx - SZ / 2, by - SZ / 2, SZ, SZ, 10);
+      };
+      drawBg(false);
+
+      // 当たり判定用の透明矩形
+      const hit = this.add.rectangle(bx, by, SZ, SZ, 0x000000, 0)
+        .setDepth(151).setScrollFactor(0)
         .setInteractive({ useHandCursor: true });
-      this.add.text(bx, by, label, {
-        fontSize: '18px', color: '#ccaaff', fontFamily: 'sans-serif',
-      }).setOrigin(0.5).setDepth(151).setScrollFactor(0).setAlpha(0.7);
 
-      const setOn = () => { this.padState[key] = true; circle.setFillStyle(0x6633aa, 0.65); };
-      const setOff = () => { this.padState[key] = false; circle.setFillStyle(0x000000, 0.28); };
+      // 矢印テキスト（統一フォント・大きめ）
+      this.add.text(bx, by + 1, d.label, {
+        fontSize: '30px',
+        color: '#ddbbff',
+        fontFamily: 'sans-serif',
+        stroke: '#110022',
+        strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(152).setScrollFactor(0).setAlpha(0.85);
 
-      circle.on('pointerdown', setOn);
-      circle.on('pointerup', setOff);
-      circle.on('pointerout', setOff);
-      circle.on('pointerupoutside', setOff);
-    };
+      const setOn  = () => { this.padState[d.key] = true;  drawBg(true);  };
+      const setOff = () => { this.padState[d.key] = false; drawBg(false); };
 
-    makeDir(0, -1, '▲', 'up');
-    makeDir(0,  1, '▼', 'down');
-    makeDir(-1, 0, '◀', 'left');
-    makeDir(1,  0, '▶', 'right');
+      hit.on('pointerdown',    setOn);
+      hit.on('pointerup',      setOff);
+      hit.on('pointerout',     setOff);
+      hit.on('pointerupoutside', setOff);
+    }
 
-    // ボタン以外の場所でポインターを離した場合も確実に解除する
+    // どこでポインターを離しても確実に解除
     this.input.on('pointerup', () => {
       this.padState.up = false; this.padState.down = false;
       this.padState.left = false; this.padState.right = false;
