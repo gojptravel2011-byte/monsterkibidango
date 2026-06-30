@@ -195,17 +195,34 @@ export class DungeonMazeScene extends Phaser.Scene {
     const sw = this.scale.width;
 
     drawPanel(this, 0, 0, sw, 54, { depth: 148, scrollFactor: 0 });
-    this.add.text(14, 16, 'ちかめいろ', { ...TS.label })
-      .setDepth(150).setScrollFactor(0);
+    this.add.text(sw / 2, 27, 'ちかめいろ', { ...TS.label })
+      .setOrigin(0.5).setDepth(150).setScrollFactor(0);
 
-    const backBtn = makeBtn(this, sw - 64, 27, 110, 40, { depth: 150 })
+    // もどるボタン（確認あり）
+    const backBtn = makeBtn(this, sw - 70, 27, 120, 40, { depth: 150 })
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.goBack())
+      .on('pointerdown', () => {
+        this.msgWin.showConfirm('', 'ちかめいろを　でますか？', () => this.goBack());
+      })
       .on('pointerover', () => backBtn.setFillStyle(T.accent1))
       .on('pointerout',  () => backBtn.setFillStyle(T.panelMid));
-    this.add.text(sw - 64, 27, 'もどる', { ...TS.btn, fontSize: '20px' })
+    this.add.text(sw - 70, 27, 'もどる', { ...TS.btn, fontSize: '20px' })
       .setOrigin(0.5).setDepth(151).setScrollFactor(0);
+
+    // メニューボタン（ハンバーガー）
+    const menuX = 34, menuY = 27;
+    this.add.rectangle(menuX, menuY, 52, 46, T.panelMid, 0.9)
+      .setStrokeStyle(1, T.borderGold).setDepth(150).setScrollFactor(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.scene.launch('MenuScene').pause());
+    for (let i = 0; i < 3; i++) {
+      this.add.rectangle(menuX, menuY - 8 + i * 8, 26, 3, T.borderGold)
+        .setDepth(151).setScrollFactor(0);
+    }
+
+    // MenuScene から戻ったとき resume する
+    this.events.on('resume', () => { /* BGMなどは維持 */ });
   }
 
   // ── 仮想十字ボタン（タッチ操作用）─────────────
