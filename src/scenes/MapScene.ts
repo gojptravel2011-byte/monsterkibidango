@@ -43,6 +43,10 @@ export class MapScene extends Phaser.Scene {
       this.scene.start('DungeonMazeScene', { mode: 'yami' });
       return;
     }
+    if (pos.field === 'tower_dungeon') {
+      this.scene.start('TowerDungeonScene', { floor: pos.x || 1 });
+      return;
+    }
     this.buildField(pos.field);
 
     // プレイヤーは create() で必ず生成（shutdown で破棄された参照を再利用しないよう）
@@ -673,33 +677,38 @@ export class MapScene extends Phaser.Scene {
   }
 
   private buildAngelHoikuen(w: number, h: number): void {
-    // 金色のほいくえん
+    // 金色の背景
     this.decorations.push(
       this.add.rectangle(w / 2, h / 2, w, h, 0xfff8e0),
-      this.add.rectangle(w / 2, 120, w * 0.9, 160, 0xffeeaa).setStrokeStyle(3, 0xddaa44).setDepth(1),
-      this.add.text(w / 2, 80, 'えんじぇるほいくえん', {
+      this.add.rectangle(w / 2, 120, w * 0.9, 140, 0xffeeaa).setStrokeStyle(3, 0xddaa44).setDepth(1),
+      this.add.text(w / 2, 82, 'えんじぇるほいくえん', {
         fontSize: '28px', color: '#886600', fontFamily: 'sans-serif', fontStyle: 'bold',
         stroke: '#ffffff', strokeThickness: 3,
       }).setOrigin(0.5).setDepth(3),
     );
-    // 光のエフェクト
-    for (let i = 0; i < 12; i++) {
+    // 光の星エフェクト
+    for (let i = 0; i < 14; i++) {
       const star = this.add.circle(
-        30 + Math.random() * (w - 60), 200 + Math.random() * (h - 400),
-        3 + Math.random() * 4, 0xffee88, 0.4 + Math.random() * 0.4,
+        30 + Math.random() * (w - 60), 260 + Math.random() * (h - 500),
+        2 + Math.random() * 3, 0xffee88, 0.4 + Math.random() * 0.4,
       ).setDepth(2);
       this.decorations.push(star);
-      this.tweens.add({ targets: star, alpha: 0, scaleX: 2, scaleY: 2, duration: 1500 + Math.random() * 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.tweens.add({ targets: star, alpha: 0, scaleX: 2, scaleY: 2,
+        duration: 1400 + Math.random() * 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
-    // 回復NPC
+    // ── 回復せんせい（左上、スプライトで表示）──────────────────
+    const senseiX = 110, senseiY = 200;
     this.decorations.push(
-      this.add.text(w / 2 - 160, h * 0.24, 'せんせい', {
-        fontSize: '22px', color: '#886622', fontFamily: 'sans-serif', stroke: '#ffffff', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(3),
+      this.add.image(senseiX, senseiY, 'npc_sensei')
+        .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(3),
+      this.add.text(senseiX, senseiY + 36, 'せんせい', {
+        fontSize: '20px', color: '#886622', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#ffffff', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4),
     );
-    this.addTriggerZone(w / 2 - 160, h * 0.28, 'はなす', 0xffcc44,
-      'ここは えんじぇるほいくえん。\nせんせいが かいふくしてあげるよ！',
+    this.addTriggerZone(senseiX, senseiY + 68, 'はなす', 0xffcc44,
+      'せんせい：「ここは えんじぇるほいくえん！\nかいふくしてあげるよ！」',
       () => {
         const state = getState();
         state.party.forEach(m => { m.hp = m.maxHp; });
@@ -708,59 +717,98 @@ export class MapScene extends Phaser.Scene {
       },
     );
 
-    // 7つのとびら
-    const doors: { label: string; field: string; color: number; x: number; y: number; locked: boolean }[] = [
-      { label: 'ほのおのとびら', field: 'honoo_world',    color: 0xff4400, x: w * 0.20, y: h * 0.38, locked: false },
-      { label: 'こおりのとびら', field: 'koori_world',    color: 0x44aaff, x: w * 0.50, y: h * 0.38, locked: false },
-      { label: 'かみなりのとびら', field: 'kaminari_world', color: 0xffee00, x: w * 0.80, y: h * 0.38, locked: false },
-      { label: 'みずのとびら',   field: 'mizu_world',    color: 0x2266ff, x: w * 0.20, y: h * 0.56, locked: false },
-      { label: 'そらのとびら',   field: 'sora_world',    color: 0x88ccff, x: w * 0.80, y: h * 0.56, locked: false },
-      { label: 'えんじぇるのとびら', field: 'angel_school', color: 0xffdd44, x: w * 0.50, y: h * 0.70, locked: false },
-      { label: 'やみのとびら',   field: 'yami_world',    color: 0x440066, x: w * 0.50, y: h * 0.86, locked: false },
-    ];
-
-    for (const door of doors) {
-      const bg = this.add.rectangle(door.x, door.y, 90, 130, door.color, 0.8)
-        .setStrokeStyle(3, 0xffffff, 0.9).setDepth(3);
-      const top = this.add.rectangle(door.x, door.y - 65, 90, 20, door.color, 1)
-        .setStrokeStyle(2, 0xffffff, 0.8).setDepth(3);
-      const label = this.add.text(door.x, door.y + 80, door.label, {
-        fontSize: '16px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
-        stroke: '#000000', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(4);
-      this.decorations.push(bg, top, label);
-      this.tweens.add({ targets: bg, alpha: 0.6, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-
-      const d = door;
-      if (d.field === 'yami_world') {
-        this.addTriggerZone(d.x, d.y, 'とびら', d.color,
-          `${d.label}を\nくぐりますか？`,
-          () => this.tryEnterYamiWorld(),
-        );
-      } else {
-        this.addTriggerZone(d.x, d.y, 'とびら', d.color,
-          `${d.label}を\nくぐりますか？`,
-          () => this.changeField(d.field),
-        );
-      }
-    }
-
-    // えんちょう先生（別世界版）- 銅・銀のきびだんご販売
-    const awEnchoX = w * 0.82, awEnchoY = h * 0.20;
+    // ── えんちょう先生（右上、スプライトで表示）── きびだんごやさん
+    const enchoX = w - 110, enchoY = 200;
     this.decorations.push(
-      this.add.image(awEnchoX, awEnchoY + 80, 'npc_encho').setDisplaySize(44, 56).setDepth(3),
-      this.add.text(awEnchoX, awEnchoY + 114, 'えんちょう', {
-        fontSize: '18px', color: '#886622', fontFamily: 'sans-serif', fontStyle: 'bold',
+      this.add.image(enchoX, enchoY, 'npc_encho')
+        .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(3),
+      this.add.text(enchoX, enchoY + 36, 'えんちょう', {
+        fontSize: '20px', color: '#886622', fontFamily: 'sans-serif', fontStyle: 'bold',
         stroke: '#ffffff', strokeThickness: 2,
       }).setOrigin(0.5).setDepth(4),
     );
-    this.addTriggerZone(awEnchoX, awEnchoY + 148, 'きびだんご\nやさん', 0xddaa22,
-      'べつのせかいの\nきびだんごやさんに\nはいりますか？',
+    this.addTriggerZone(enchoX, enchoY + 68, 'おみせ', 0xddaa22,
+      'えんちょうせんせい：\n「どうのきびだんごと\nぎんのきびだんごを うってるよ！」\nおみせに　はいりますか？',
       () => {
         this.scene.launch('BallShopScene', {
           items: ['douball', 'ginball'],
           title: 'えんちょうせんせいの\nべつせかいきびだんご',
         }).pause();
+      },
+    );
+
+    // ── とびら（7種＋タワー入り口）────────────────────────────
+    // Row 1 (y≈370): ほのお、こおり、かみなり
+    // Tower entrance (y≈490): 中央
+    // [中央スポーン y=630]
+    // Row 2 (y≈750): みず、そら
+    // Row 3 (y≈880): えんじぇるがっこう
+    // Row 4 (y≈1010): やみ
+
+    const doors: { label: string; field: string; color: number; x: number; y: number }[] = [
+      { label: 'ほのおのとびら',   field: 'honoo_world',    color: 0xff4400, x: w * 0.18, y: 370 },
+      { label: 'こおりのとびら',   field: 'koori_world',    color: 0x44aaff, x: w * 0.50, y: 370 },
+      { label: 'かみなりのとびら', field: 'kaminari_world', color: 0xffee00, x: w * 0.82, y: 370 },
+      { label: 'みずのとびら',     field: 'mizu_world',     color: 0x2266ff, x: w * 0.18, y: 750 },
+      { label: 'そらのとびら',     field: 'sora_world',     color: 0x88ccff, x: w * 0.82, y: 750 },
+      { label: 'えんじぇるのとびら', field: 'angel_school', color: 0xffdd44, x: w * 0.50, y: 880 },
+      { label: 'やみのとびら',     field: 'yami_world',     color: 0x440066, x: w * 0.50, y: 1010 },
+    ];
+
+    for (const door of doors) {
+      const bg = this.add.rectangle(door.x, door.y, 90, 120, door.color, 0.8)
+        .setStrokeStyle(3, 0xffffff, 0.9).setDepth(3);
+      const top = this.add.rectangle(door.x, door.y - 60, 90, 18, door.color, 1)
+        .setStrokeStyle(2, 0xffffff, 0.8).setDepth(3);
+      const lbl = this.add.text(door.x, door.y + 72, door.label, {
+        fontSize: '15px', color: '#ffffff', fontFamily: 'sans-serif', align: 'center',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4);
+      this.decorations.push(bg, top, lbl);
+      this.tweens.add({ targets: bg, alpha: 0.6, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+      const d = door;
+      if (d.field === 'yami_world') {
+        this.addTriggerZone(d.x, d.y, 'とびら', d.color,
+          `${d.label}を\nくぐりますか？`, () => this.tryEnterYamiWorld());
+      } else {
+        this.addTriggerZone(d.x, d.y, 'とびら', d.color,
+          `${d.label}を\nくぐりますか？`, () => this.changeField(d.field));
+      }
+    }
+
+    // ── タワーダンジョン入り口（中央 y=490）──────────────────
+    const towerX = w / 2, towerY = 490;
+    const towerG = this.add.graphics().setDepth(3);
+    // 塔の外形
+    towerG.fillStyle(0x3d1a6e);
+    towerG.fillRect(towerX - 38, towerY - 50, 76, 90);
+    // 塔のとんがり屋根
+    towerG.fillStyle(0x7722bb);
+    towerG.fillTriangle(towerX - 42, towerY - 50, towerX + 42, towerY - 50, towerX, towerY - 90);
+    // 扉
+    towerG.fillStyle(0x220011);
+    towerG.fillRect(towerX - 14, towerY + 10, 28, 30);
+    // 窓
+    towerG.fillStyle(0xffee44, 0.7);
+    towerG.fillCircle(towerX, towerY - 20, 8);
+    // 光の縁取り
+    towerG.lineStyle(2, 0xcc44ff, 0.9);
+    towerG.strokeRect(towerX - 38, towerY - 50, 76, 90);
+    // 輝きアニメ
+    const towerGlow = this.add.circle(towerX, towerY, 50, 0xaa44ff, 0.08).setDepth(2);
+    this.tweens.add({ targets: towerGlow, scaleX: 1.4, scaleY: 1.4, alpha: 0.02,
+      duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const towerLabel = this.add.text(towerX, towerY + 58, 'とうのダンジョン\n（100かいそう）', {
+      fontSize: '16px', color: '#cc88ff', fontFamily: 'sans-serif', align: 'center',
+      stroke: '#000000', strokeThickness: 2,
+    }).setOrigin(0.5).setDepth(4);
+    this.decorations.push(towerG, towerGlow, towerLabel);
+    this.addTriggerZone(towerX, towerY, 'とうへ', 0x9900ff,
+      'とうのダンジョンへ\nはいりますか？\n（100かいまで　あるよ！）',
+      () => {
+        getState().position = { field: 'tower_dungeon', x: 1, y: 0 };
+        this.scene.start('TowerDungeonScene', { floor: 1 });
       },
     );
   }
@@ -1076,7 +1124,11 @@ export class MapScene extends Phaser.Scene {
     const reverseConn = field.connections.find(c => c.toField === fromField);
     let spawnX = 375;
     let spawnY = 600;
-    if (reverseConn) {
+    if (toField === 'angel_hoikuen') {
+      // ど真ん中にスポーン（どのドアとも重ならない位置）
+      spawnX = 375;
+      spawnY = 630;
+    } else if (reverseConn) {
       const cx = reverseConn.x;
       const cy = reverseConn.y;
       // 端にある出口から内側へ100px寄せる
