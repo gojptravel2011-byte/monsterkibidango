@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { getState, setFlag, getFlag, addItem, createMonsterInstance } from '../state/playerState';
+import { getState, setFlag, getFlag, addItem, addCoins, createMonsterInstance } from '../state/playerState';
 import { MessageWindow } from '../ui/MessageWindow';
 import { drawPanel } from '../ui/Panel';
 import { TS } from '../ui/StyledText';
@@ -43,14 +43,48 @@ const POOLS: { max: number; species: string[]; lv: number }[] = [
 ];
 
 // Treasure table by floor range
-interface TreasureDef { itemId: string; count: number; label: string }
+interface TreasureDef {
+  itemId?: string; count?: number;
+  healId?: string; healCount?: number;
+  coins?: number;
+  label: string;
+}
+
 function getTreasureItem(floor: number): TreasureDef {
-  if (floor >= 26) return { itemId: 'kinball',    count: 1, label: 'きんのきびだんご ×1' };
-  if (floor >= 21) return { itemId: 'ginball',    count: 2, label: 'ぎんのきびだんご ×2' };
-  if (floor >= 16) return { itemId: 'ginball',    count: 1, label: 'ぎんのきびだんご ×1' };
-  if (floor >= 11) return { itemId: 'douball',    count: 2, label: 'どうのきびだんご ×2' };
-  if (floor >= 6)  return { itemId: 'daikyuball', count: 2, label: 'きびだんご ×2' };
-  return              { itemId: 'okyuball',    count: 2, label: 'かるいきびだんご ×2' };
+  const r = Math.random();
+  const coins = Math.floor((floor * 25 + Math.random() * 80) / 10) * 10; // 10刻みコイン
+
+  // 26F以上：金きびだんごまたはぎん+コイン
+  if (floor >= 26) {
+    if (r < 0.5) return { itemId: 'kinball', count: 1, coins, label: `きんのきびだんご＋${coins}コイン` };
+    return { itemId: 'ginball', count: 2, healId: 'honyakuki', healCount: 2, label: 'ぎんだんご×2＋かいふくすい×2' };
+  }
+  // 21-25F
+  if (floor >= 21) {
+    if (r < 0.35) return { itemId: 'ginball', count: 2, coins, label: `ぎんだんご×2＋${coins}コイン` };
+    if (r < 0.65) return { coins: coins + 200, healId: 'honyakuki', healCount: 3, label: `${coins + 200}コイン＋かいふくすい×3` };
+    return { itemId: 'ginball', count: 1, healId: 'honyakuki', healCount: 2, label: 'ぎんだんご×1＋かいふくすい×2' };
+  }
+  // 16-20F
+  if (floor >= 16) {
+    if (r < 0.4) return { itemId: 'ginball', count: 1, coins, label: `ぎんだんご×1＋${coins}コイン` };
+    if (r < 0.7) return { itemId: 'douball', count: 2, healId: 'honyakuki', healCount: 2, label: 'どうだんご×2＋かいふくすい×2' };
+    return { coins: coins + 150, healId: 'honyakuki', healCount: 2, label: `${coins + 150}コイン＋かいふくすい×2` };
+  }
+  // 11-15F
+  if (floor >= 11) {
+    if (r < 0.4) return { itemId: 'douball', count: 2, coins, label: `どうだんご×2＋${coins}コイン` };
+    if (r < 0.7) return { coins: coins + 100, healId: 'honyakuki', healCount: 1, label: `${coins + 100}コイン＋かいふくすい` };
+    return { itemId: 'daikyuball', count: 2, healId: 'honyakuki', healCount: 1, label: 'きびだんご×2＋かいふくすい' };
+  }
+  // 6-10F
+  if (floor >= 6) {
+    if (r < 0.5) return { itemId: 'daikyuball', count: 2, coins, label: `きびだんご×2＋${coins}コイン` };
+    return { coins, healId: 'honyakuki', healCount: 1, label: `${coins}コイン＋かいふくすい` };
+  }
+  // 1-5F
+  if (r < 0.5) return { itemId: 'okyuball', count: 2, coins, label: `かるいきびだんご×2＋${coins}コイン` };
+  return { coins, healId: 'honyakuki', healCount: 1, label: `${coins}コイン＋かいふくすい` };
 }
 
 export class TowerDungeonScene extends Phaser.Scene {
@@ -415,33 +449,21 @@ export class TowerDungeonScene extends Phaser.Scene {
       { label: '▶', key: 'right', dx:  78, dy:   0 },
     ];
     const dp = this.dpadState;
-    const COLOR_IDLE = 0x1a2d88;
-    const COLOR_DOWN = 0x4466ff;
     for (const d of dirs) {
       const bx = cx + d.dx, by = cy + d.dy;
-      // 円ボタン（グラフィクス）
-      const circle = this.add.graphics().setDepth(20).setScrollFactor(0);
-      const drawCircle = (col: number) => {
-        circle.clear();
-        circle.fillStyle(col, 1);
-        circle.fillCircle(bx, by, 30);
-        circle.lineStyle(3, 0x7799ff, 0.9);
-        circle.strokeCircle(bx, by, 30);
-      };
-      drawCircle(COLOR_IDLE);
-      // 透明インタラクションレイヤー
-      const hit = this.add.rectangle(bx, by, 60, 60, 0xffffff, 0)
+      const btn = this.add.circle(bx, by, 32, 0x1a2d88, 0.95)
+        .setStrokeStyle(3, 0x7799ff, 1)
         .setDepth(20).setScrollFactor(0)
         .setInteractive({ useHandCursor: true });
       const lbl = this.add.text(bx, by - 2, d.label, {
-        fontSize: '28px', color: '#eeeeff', fontFamily: 'sans-serif', fontStyle: 'bold',
+        fontSize: '30px', color: '#eeeeff', fontFamily: 'sans-serif', fontStyle: 'bold',
         stroke: '#001166', strokeThickness: 3,
       }).setOrigin(0.5).setDepth(21).setScrollFactor(0);
       const k = d.key;
-      hit.on('pointerdown',  () => { dp[k] = true;  drawCircle(COLOR_DOWN); });
-      hit.on('pointerup',    () => { dp[k] = false; drawCircle(COLOR_IDLE); });
-      hit.on('pointerout',   () => { dp[k] = false; drawCircle(COLOR_IDLE); });
-      this.dpadObjs.push(circle, hit, lbl);
+      btn.on('pointerdown',  () => { dp[k] = true;  btn.setFillStyle(0x4466ff, 1); });
+      btn.on('pointerup',    () => { dp[k] = false; btn.setFillStyle(0x1a2d88, 0.95); });
+      btn.on('pointerout',   () => { dp[k] = false; btn.setFillStyle(0x1a2d88, 0.95); });
+      this.dpadObjs.push(btn, lbl);
     }
   }
 
@@ -563,14 +585,16 @@ export class TowerDungeonScene extends Phaser.Scene {
 
   private onTreasure(t: TreasureCell): void {
     t.taken = true;
-    addItem(t.def.itemId, t.def.count);
+    const def = t.def;
+    if (def.itemId && def.count) addItem(def.itemId, def.count);
+    if (def.healId && def.healCount) addItem(def.healId, def.healCount);
+    if (def.coins) addCoins(def.coins);
     this.coinsTxt.setText(`コイン: ${getState().coins}`);
-    // Redraw tiles to remove treasure chest icon
     this.drawTiles();
     const [px, py] = this.cell2px(this.playerC, this.playerR);
     this.playerSpr.x = px; this.playerSpr.y = py;
     this.playerLbl.x = px; this.playerLbl.y = py - 22;
-    this.msgWin.show('', `たからばこを　あけた！\n${t.def.label}を　てにいれた！`);
+    this.msgWin.show('', `たからばこを　あけた！\n${def.label}を\nてにいれた！`);
   }
 
   private maybeEncounter(): void {

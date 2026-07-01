@@ -29,6 +29,7 @@ export class BattleScene extends Phaser.Scene {
   private allyNameText!: Phaser.GameObjects.Text;
   private enemyNameText!: Phaser.GameObjects.Text;
   private commandButtons: Phaser.GameObjects.GameObject[] = [];
+  private _clearSwitchScroll: () => void = () => {};
 
   constructor() { super('BattleScene'); }
 
@@ -121,6 +122,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private clearButtons(): void {
+    this._clearSwitchScroll();
+    this._clearSwitchScroll = () => {};
     this.commandButtons.forEach(b => b.destroy());
     this.commandButtons = [];
   }
@@ -169,47 +172,78 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    // リスト背景
-    const panelH = candidates.length * 80 + 20;
-    const panelY = h * 0.62;
-    const panel = drawPanel(this, 10, panelY, w - 20, panelH, { depth: 49 });
+    // リスト背景（スクロール対応）
+    const ITEM_H = 56;
+    const viewY = Math.round(h * 0.55);
+    const viewH = h - viewY - 10;
+    const contentH = candidates.length * ITEM_H + 10;
+    const maxScroll = Math.max(0, contentH - viewH);
+
+    const panel = drawPanel(this, 10, viewY, w - 20, viewH, { depth: 49 });
     this.commandButtons.push(panel);
 
-    // 戻るボタン
-    const backBg = makeBtn(this, w / 2, h * 0.58, 200, 44, { depth: 50 })
+    // 戻るボタン（上部）
+    const backBg = makeBtn(this, w / 2, viewY - 28, 200, 44, { depth: 50 })
       .setFillStyle(T.accent1)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.showCommandMenu())
+      .on('pointerdown', () => { this._clearSwitchScroll(); this.showCommandMenu(); })
       .on('pointerover', () => backBg.setFillStyle(0x5c1f28))
       .on('pointerout', () => backBg.setFillStyle(T.accent1));
-    const backTxt = this.add.text(w / 2, h * 0.58, 'もどる', {
-      ...TS.btn,
-    }).setOrigin(0.5).setDepth(51);
+    const backTxt = this.add.text(w / 2, viewY - 28, 'もどる', { ...TS.btn }).setOrigin(0.5).setDepth(51);
     this.commandButtons.push(backBg, backTxt);
 
+    // スクロールコンテナ
+    const container = this.add.container(0, viewY + 4).setDepth(50);
+    this.commandButtons.push(container);
+
+    let scrollMoved = false;
     candidates.forEach((m, i) => {
       const species = MONSTER_SPECIES[m.speciesId];
-      const y = h * 0.64 + i * 80;
+      const y = i * ITEM_H + ITEM_H / 2 + 4;
       const hpRatio = m.hp / m.maxHp;
       const hpColor = hpRatio > 0.5 ? T.textGreen : hpRatio > 0.2 ? T.textYellow : T.textRed;
-      const btn = makeBtn(this, w / 2, y, w - 40, 66, { depth: 50 })
+      const btn = makeBtn(this, w / 2, y, w - 40, ITEM_H - 6, { depth: 50 })
         .setInteractive({ useHandCursor: true })
         .on('pointerover', () => btn.setFillStyle(0x2a4090))
         .on('pointerout', () => btn.setFillStyle(T.panelMid))
-        .on('pointerdown', () => {
-          this.clearButtons();
-          this.switchAlly(m);
+        .on('pointerup', () => {
+          if (!scrollMoved) { this._clearSwitchScroll(); this.clearButtons(); this.switchAlly(m); }
         });
-      const nameTxt = this.add.text(60, y - 10, `${species?.name ?? m.speciesId}  Lv.${m.level}`, {
-        ...TS.subheading,
-      }).setOrigin(0, 0.5).setDepth(51);
-      const hpTxt = this.add.text(60, y + 16, `HP: ${m.hp} / ${m.maxHp}`, {
-        ...TS.hp,
-        color: hpColor,
-      }).setOrigin(0, 0.5).setDepth(51);
-      const icon = this.add.image(36, y, species?.spriteKey ?? 'player').setDisplaySize(44, 44).setDepth(51);
-      this.commandButtons.push(btn, nameTxt, hpTxt, icon);
+      const nameTxt = this.add.text(56, y - 10, `${species?.name ?? m.speciesId}  Lv.${m.level}`, { ...TS.subheading }).setOrigin(0, 0.5).setDepth(51);
+      const hpTxt  = this.add.text(56, y + 12, `HP: ${m.hp} / ${m.maxHp}`, { ...TS.hp, color: hpColor }).setOrigin(0, 0.5).setDepth(51);
+      const icon   = this.add.image(28, y, species?.spriteKey ?? 'player').setDisplaySize(38, 38).setDepth(51);
+      container.add([btn, nameTxt, hpTxt, icon]);
     });
+
+    // マスク
+    const maskGfx = this.add.graphics().fillRect(10, viewY, w - 20, viewH);
+    container.setMask(maskGfx.createGeometryMask());
+    this.commandButtons.push(maskGfx);
+
+    // ドラッグスクロール
+    if (maxScroll > 0) {
+      let scrollY = 0, startPtrY = 0, dragging = false;
+      scrollMoved = false;
+
+      const onDown = (p: Phaser.Input.Pointer) => { startPtrY = p.y; dragging = true; scrollMoved = false; };
+      const onMove = (p: Phaser.Input.Pointer) => {
+        if (!dragging) return;
+        if (Math.abs(p.y - startPtrY) > 8) scrollMoved = true;
+        if (!scrollMoved) return;
+        scrollY = Math.max(0, Math.min(maxScroll, scrollY - (p.y - startPtrY)));
+        startPtrY = p.y;
+        container.y = viewY + 4 - scrollY;
+      };
+      const onUp = () => { dragging = false; };
+      this.input.on('pointerdown', onDown);
+      this.input.on('pointermove', onMove);
+      this.input.on('pointerup', onUp);
+      this._clearSwitchScroll = () => {
+        this.input.off('pointerdown', onDown);
+        this.input.off('pointermove', onMove);
+        this.input.off('pointerup', onUp);
+      };
+    }
   }
 
   private switchAlly(next: MonsterInstance): void {
@@ -300,7 +334,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private showBallMenu(): void {
-    if (this.isBoss || !MONSTER_SPECIES[this.enemy.speciesId]?.catchable) {
+    if (!MONSTER_SPECIES[this.enemy.speciesId]?.catchable) {
       this.msgWin.show('', 'このモンスターには\nきびだんごが　きかないよ！', () => this.showCommandMenu());
       return;
     }
