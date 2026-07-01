@@ -88,6 +88,8 @@ export const SKILLS: Record<string, Skill> = {
   goldsplash:   { id: 'goldsplash',   name: 'ゴールドスプラッシュ',  power: 40,  flavorType: 'water' },
   jishibari:    { id: 'jishibari',    name: 'じしばり',              power: 30,  flavorType: 'normal' },
   nigeruS:      { id: 'nigeruS',      name: 'にげる',                power: 0,   flavorType: 'normal' },
+  // いにしえのドラゴン専用
+  dragonbreath: { id: 'dragonbreath', name: 'ドラゴンブレス', power: 110, flavorType: 'fire' },
   // ラスボス第2形態専用
   yamiteiouikari:  { id: 'yamiteiouikari',  name: 'やみのていおうのいかり', power: 160, flavorType: 'dark' },
   sekaikowasu:     { id: 'sekaikowasu',     name: 'せかいをこわすちから',   power: 180, flavorType: 'dark' },

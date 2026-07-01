@@ -259,6 +259,22 @@ export class MapScene extends Phaser.Scene {
         () => { this.scene.launch('BallShopScene').pause(); },
       );
 
+      // エルモレース場（左下エリア）
+      const raceX = 120, raceY = h * 0.72;
+      this.decorations.push(
+        this.add.ellipse(raceX, raceY, 120, 70, 0x8b6914).setDepth(2),
+        this.add.ellipse(raceX, raceY, 78, 40, 0x228822).setDepth(2),
+        this.add.text(raceX, raceY, '🏇', { fontSize: '28px' }).setOrigin(0.5).setDepth(3),
+        this.add.text(raceX, raceY + 46, 'エルモレース', {
+          fontSize: '16px', color: '#ffdd22', fontFamily: 'sans-serif', fontStyle: 'bold',
+          stroke: '#442200', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(3),
+      );
+      this.addTriggerZone(raceX, raceY + 75, 'レース場', 0xffaa00,
+        'エルモレース場に\nはいりますか？',
+        () => { this.scene.start('ElmoRaceScene'); },
+      );
+
       // 花
       for (let i = 0; i < 8; i++) {
         this.decorations.push(this.add.image(60 + i * 80, h * 0.7, 'deco_flower').setDepth(2));
@@ -799,13 +815,30 @@ export class MapScene extends Phaser.Scene {
     const towerGlow = this.add.circle(towerX, towerY, 50, 0xaa44ff, 0.08).setDepth(2);
     this.tweens.add({ targets: towerGlow, scaleX: 1.4, scaleY: 1.4, alpha: 0.02,
       duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    const towerLabel = this.add.text(towerX, towerY + 58, 'とうのダンジョン\n（100かいそう）', {
+    const towerLabel = this.add.text(towerX, towerY + 58, 'とうのダンジョン\n（30かいそう）', {
       fontSize: '16px', color: '#cc88ff', fontFamily: 'sans-serif', align: 'center',
       stroke: '#000000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(4);
     this.decorations.push(towerG, towerGlow, towerLabel);
+
+    // ── エルモレース場（別世界版、右下）──────────────────────────
+    const araceX = w * 0.82, araceY = 630;
+    this.decorations.push(
+      this.add.ellipse(araceX, araceY, 110, 64, 0x8b6914).setDepth(2),
+      this.add.ellipse(araceX, araceY, 72, 36, 0x228822).setDepth(2),
+      this.add.text(araceX, araceY, '🏇', { fontSize: '24px' }).setOrigin(0.5).setDepth(3),
+      this.add.text(araceX, araceY + 42, 'エルモレース', {
+        fontSize: '15px', color: '#ffdd22', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#442200', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(3),
+    );
+    this.addTriggerZone(araceX, araceY + 68, 'レース場', 0xffaa00,
+      'エルモレース場に\nはいりますか？',
+      () => { this.scene.start('ElmoRaceScene'); },
+    );
+
     this.addTriggerZone(towerX, towerY, 'とうへ', 0x9900ff,
-      'とうのダンジョンへ\nはいりますか？\n（100かいまで　あるよ！）',
+      'とうのダンジョンへ\nはいりますか？\n（30かいまで　あるよ！）',
       () => {
         getState().position = { field: 'tower_dungeon', x: 1, y: 0 };
         this.scene.start('TowerDungeonScene', { floor: 1 });

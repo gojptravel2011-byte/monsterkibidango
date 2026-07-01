@@ -7,17 +7,22 @@ import { T } from '../ui/theme';
 import { BGM } from '../systems/bgm';
 import { activateRepel, isRepelActive, getRepelRemainSec } from '../systems/encounter';
 
-const TILE    = 48;
-const COLS    = 15; // must be odd
-const ROWS    = 17; // must be odd — 17*48=816px maze, bottom at y=896, d-pad safely above 1100
-const OX      = Math.floor((750 - COLS * TILE) / 2); // 15px
 const OY      = 80;  // HUD height
 const MAX_FLOOR = 30;
+
+// 階層ごとの迷路サイズ（深いほど大きくなる、奇数必須）
+function floorDims(floor: number): { cols: number; rows: number; tile: number } {
+  if (floor <= 5)  return { cols: 11, rows: 13, tile: 48 };
+  if (floor <= 10) return { cols: 13, rows: 15, tile: 48 };
+  if (floor <= 15) return { cols: 15, rows: 17, tile: 48 };
+  if (floor <= 20) return { cols: 15, rows: 19, tile: 44 };
+  return               { cols: 15, rows: 21, tile: 40 };
+}
 
 // ── フロア状態を戦闘後も保持するモジュールレベルキャッシュ ──────────
 interface TreasureCell { r: number; c: number; taken: boolean; def: TreasureDef }
 interface FloorCache {
-  floor: number;
+  floor: number; cols: number; rows: number; tile: number;
   grid: boolean[][];
   stairsC: number; stairsR: number;
   healC: number;   healR: number; healUsed: boolean;
@@ -50,23 +55,29 @@ function getTreasureItem(floor: number): TreasureDef {
 
 export class TowerDungeonScene extends Phaser.Scene {
   private floor      = 1;
+  private _cols      = 11;
+  private _rows      = 13;
+  private _tile      = 48;
+  private get ox()   { return Math.floor((750 - this._cols * this._tile) / 2); }
+
   private grid       : boolean[][] = [];
-  private startC     = 7;
-  private startR     = ROWS - 2;
-  private stairsC    = 7;
+  private startC     = 5;
+  private startR     = 11;
+  private stairsC    = 5;
   private stairsR    = 1;
   private healC      = -1;
   private healR      = -1;
   private healUsed   = false;
   private treasures  : TreasureCell[] = [];
 
-  private playerC    = 7;
-  private playerR    = ROWS - 2;
+  private playerC    = 5;
+  private playerR    = 11;
   private playerSpr  !: Phaser.GameObjects.Sprite;
   private playerLbl  !: Phaser.GameObjects.Text;
 
   private tileGfx    !: Phaser.GameObjects.Graphics;
   private overlays   : Phaser.GameObjects.GameObject[] = [];
+  private dpadObjs   : Phaser.GameObjects.GameObject[] = [];
 
   private msgWin     !: MessageWindow;
   private floorTxt   !: Phaser.GameObjects.Text;
@@ -184,9 +195,18 @@ export class TowerDungeonScene extends Phaser.Scene {
 
   // ── Maze generation ──────────────────────────────────────────────
 
+  private applyFloorDims(): void {
+    const d = floorDims(this.floor);
+    this._cols = d.cols; this._rows = d.rows; this._tile = d.tile;
+  }
+
   private generateFloor(): void {
+    this.applyFloorDims();
+    const COLS = this._cols, ROWS = this._rows;
+
     // 戦闘後は同じフロアを復元（迷路が変わらないように）
     if (_cache && _cache.floor === this.floor) {
+      this._cols = _cache.cols; this._rows = _cache.rows; this._tile = _cache.tile;
       this.grid      = _cache.grid.map(row => [...row]);
       this.stairsC   = _cache.stairsC; this.stairsR = _cache.stairsR;
       this.healC     = _cache.healC;   this.healR   = _cache.healR;
@@ -198,8 +218,8 @@ export class TowerDungeonScene extends Phaser.Scene {
 
     this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
 
-    this.startC = Math.floor(COLS / 2); // = 7 (odd ✓)
-    this.startR = ROWS - 2;             // = 19 (odd ✓)
+    this.startC = Math.floor(COLS / 2);
+    this.startR = ROWS - 2;
 
     // DFS carving
     const dfs = (r: number, c: number): void => {
@@ -227,9 +247,10 @@ export class TowerDungeonScene extends Phaser.Scene {
 
     // Heal zone every 5 floors (not on boss floor)
     this.healUsed = false;
+    const midStart = Math.floor(ROWS * 0.4), midEnd = Math.floor(ROWS * 0.7);
     if (this.floor % 5 === 0 && this.floor < MAX_FLOOR) {
       const midCells: [number, number][] = [];
-      for (let r = 9; r <= 13; r += 2)
+      for (let r = midStart % 2 === 0 ? midStart + 1 : midStart; r <= midEnd; r += 2)
         for (let c = 1; c <= COLS - 2; c += 2)
           midCells.push([r, c]);
       [this.healR, this.healC] = midCells[Math.floor(Math.random() * midCells.length)];
@@ -261,7 +282,7 @@ export class TowerDungeonScene extends Phaser.Scene {
 
   private saveFloor(): void {
     _cache = {
-      floor: this.floor,
+      floor: this.floor, cols: this._cols, rows: this._rows, tile: this._tile,
       grid:  this.grid.map(row => [...row]),
       stairsC: this.stairsC, stairsR: this.stairsR,
       healC: this.healC, healR: this.healR, healUsed: this.healUsed,
@@ -273,6 +294,7 @@ export class TowerDungeonScene extends Phaser.Scene {
   // ── Drawing ──────────────────────────────────────────────────────
 
   private drawTiles(): void {
+    const COLS = this._cols, ROWS = this._rows, TILE = this._tile, OX = this.ox;
     this.tileGfx.clear();
     this.overlays.forEach(o => { if ((o as Phaser.GameObjects.Graphics).destroy) (o as Phaser.GameObjects.Graphics).destroy(); });
     this.overlays = [];
@@ -369,30 +391,64 @@ export class TowerDungeonScene extends Phaser.Scene {
   }
 
   private buildDpad(): void {
-    // Maze bottom = OY + ROWS*TILE = 80+17*48 = 896
-    // D-pad occupies 896~1100 — well above browser bar (~1100+)
-    const cy = OY + ROWS * TILE + 110; // = 1006
+    const mazeBottom = OY + this._rows * this._tile;
+    const cy = mazeBottom + 100;
+    const cx = 375;
+
+    // 背景パネル（十字ガイド）
+    const bg = this.add.graphics().setDepth(19).setScrollFactor(0);
+    bg.fillStyle(0x0a0a2a, 0.85);
+    bg.fillRoundedRect(cx - 110, cy - 70, 220, 140, 20);
+    bg.lineStyle(2, 0x3344aa, 0.6);
+    bg.strokeRoundedRect(cx - 110, cy - 70, 220, 140, 20);
+    // 十字ガイドライン
+    bg.lineStyle(1, 0x224488, 0.4);
+    bg.lineBetween(cx, cy - 60, cx, cy + 60);
+    bg.lineBetween(cx - 100, cy, cx + 100, cy);
+    this.dpadObjs.push(bg);
+
     type DK = 'up' | 'down' | 'left' | 'right';
     const dirs: { label: string; key: DK; dx: number; dy: number }[] = [
-      { label: '▲', key: 'up',    dx:   0, dy: -44 },
-      { label: '▼', key: 'down',  dx:   0, dy:  44 },
-      { label: '◀', key: 'left',  dx: -58, dy:   0 },
-      { label: '▶', key: 'right', dx:  58, dy:   0 },
+      { label: '▲', key: 'up',    dx:   0, dy: -50 },
+      { label: '▼', key: 'down',  dx:   0, dy:  50 },
+      { label: '◀', key: 'left',  dx: -78, dy:   0 },
+      { label: '▶', key: 'right', dx:  78, dy:   0 },
     ];
     const dp = this.dpadState;
+    const COLOR_IDLE = 0x1a2d88;
+    const COLOR_DOWN = 0x4466ff;
     for (const d of dirs) {
-      const bx = 375 + d.dx, by = cy + d.dy;
-      const btn = this.add.rectangle(bx, by, 52, 44, T.panelMid, 0.85)
-        .setStrokeStyle(2, T.borderGold).setDepth(20)
+      const bx = cx + d.dx, by = cy + d.dy;
+      // 円ボタン（グラフィクス）
+      const circle = this.add.graphics().setDepth(20).setScrollFactor(0);
+      const drawCircle = (col: number) => {
+        circle.clear();
+        circle.fillStyle(col, 1);
+        circle.fillCircle(bx, by, 30);
+        circle.lineStyle(3, 0x7799ff, 0.9);
+        circle.strokeCircle(bx, by, 30);
+      };
+      drawCircle(COLOR_IDLE);
+      // 透明インタラクションレイヤー
+      const hit = this.add.rectangle(bx, by, 60, 60, 0xffffff, 0)
+        .setDepth(20).setScrollFactor(0)
         .setInteractive({ useHandCursor: true });
-      this.add.text(bx, by, d.label, {
-        fontSize: '22px', color: '#ffffff', fontFamily: 'sans-serif',
-      }).setOrigin(0.5).setDepth(21);
+      const lbl = this.add.text(bx, by - 2, d.label, {
+        fontSize: '28px', color: '#eeeeff', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#001166', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(21).setScrollFactor(0);
       const k = d.key;
-      btn.on('pointerdown', () => { dp[k] = true; });
-      btn.on('pointerup',   () => { dp[k] = false; });
-      btn.on('pointerout',  () => { dp[k] = false; });
+      hit.on('pointerdown',  () => { dp[k] = true;  drawCircle(COLOR_DOWN); });
+      hit.on('pointerup',    () => { dp[k] = false; drawCircle(COLOR_IDLE); });
+      hit.on('pointerout',   () => { dp[k] = false; drawCircle(COLOR_IDLE); });
+      this.dpadObjs.push(circle, hit, lbl);
     }
+  }
+
+  private rebuildDpad(): void {
+    this.dpadObjs.forEach(o => o.destroy());
+    this.dpadObjs = [];
+    this.buildDpad();
   }
 
   // ── Update ───────────────────────────────────────────────────────
@@ -425,7 +481,7 @@ export class TowerDungeonScene extends Phaser.Scene {
 
   private tryMove(dc: number, dr: number): void {
     const nc = this.playerC + dc, nr = this.playerR + dr;
-    if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return;
+    if (nr < 0 || nr >= this._rows || nc < 0 || nc >= this._cols) return;
     if (!this.grid[nr][nc]) return;
 
     this.playerC = nc; this.playerR = nr;
@@ -473,6 +529,7 @@ export class TowerDungeonScene extends Phaser.Scene {
       this.floor++;
       this.generateFloor();
       this.drawTiles();
+      this.rebuildDpad();
       const [px, py] = this.cell2px(this.playerC, this.playerR);
       this.playerSpr.x = px; this.playerSpr.y = py;
       this.playerLbl.x = px; this.playerLbl.y = py - 22;
@@ -538,7 +595,8 @@ export class TowerDungeonScene extends Phaser.Scene {
   // ── Helpers ──────────────────────────────────────────────────────
 
   private cell2px(c: number, r: number): [number, number] {
-    return [OX + c * TILE + TILE / 2, OY + r * TILE + TILE / 2];
+    const T = this._tile, ox = this.ox;
+    return [ox + c * T + T / 2, OY + r * T + T / 2];
   }
 
   private floorLabel(): string {
