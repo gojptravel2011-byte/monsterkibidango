@@ -43,6 +43,10 @@ function make(scene: Phaser.Scene): G { return scene.make.graphics({ x: 0, y: 0 
 function fin(g: G, key: string, w: number, h: number): void {
   g.generateTexture(key, w, h); g.destroy();
 }
+// 実画像がロード済みならスキップ
+function skip(scene: Phaser.Scene, key: string): boolean {
+  return scene.textures.exists(key);
+}
 
 // ── 共通パーツ ──────────────────────────────────────────────────────
 // 水彩アニメ風の大きな瞳（白目→瞳孔→虹彩→ハイライト2点）
@@ -214,6 +218,7 @@ function genNpcKaya(scene: Phaser.Scene): void {
 
 // ---- クロスケ（黒シュナウザー 80×80） ----
 function genKurosuke(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_kurosuke')) return;
   const g = make(scene);
   const cx = 40, cy = 44;
 
@@ -345,6 +350,7 @@ function genPiyon(scene: Phaser.Scene): void {
 // ---- みずぼん（水のしずく 80×80） ----
 // 透明感のある水色・ぷよぷよした体・青い大きな目
 function genMizubon(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_mizubon')) return;
   const g = make(scene);
   const cx = 40, cy = 44;
 
@@ -388,6 +394,7 @@ function genMizubon(scene: Phaser.Scene): void {
 // ---- ほのん（炎のせいれい 80×80） ----
 // 丸い体から炎が揺れる・怒り顔だが小さくてかわいい
 function genHonon(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_honon')) return;
   const g = make(scene);
   const cx = 40, cy = 46;
 
@@ -447,6 +454,7 @@ function genHonon(scene: Phaser.Scene): void {
 // ---- くさぐみ（植物のせいれい 80×80） ----
 // まるくてふくふくした緑の体・葉っぱのかんむり・おだやかな顔
 function genKusagumi(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_kusagumi')) return;
   const g = make(scene);
   const cx = 40, cy = 46;
 
@@ -505,6 +513,7 @@ function genKusagumi(scene: Phaser.Scene): void {
 // ---- いわごん（岩のせいれい 80×80） ----
 // ずんぐり丸くて重たそう・岩の表面テクスチャ・ぐりんとした目
 function genIwagon(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_iwagon')) return;
   const g = make(scene);
   const cx = 40, cy = 46;
 
@@ -773,6 +782,7 @@ function genBench(scene: Phaser.Scene): void {
 //  水彩風：暗い神秘的なシルエット・禍々しい光る目
 // ════════════════════════════════════════════════════════════
 function genRasuboss(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_rasuboss')) return;
   const g = make(scene);
   const cx = 40, cy = 52;
 
@@ -858,6 +868,7 @@ function genRasuboss(scene: Phaser.Scene): void {
 //  赤鱗・大きな翼・炎の息・金色の目
 // ════════════════════════════════════════════════════════════
 function genDragon(scene: Phaser.Scene): void {
+  if (skip(scene, 'monster_dragon')) return;
   const g = make(scene);
   const cx = 40, cy = 44;
 
@@ -1380,7 +1391,7 @@ function generateAnotherWorldSprites(scene: Phaser.Scene): void {
 
   // ── レアモンスター ──────────────────────────────────────────
   // くろいドラゴン: 伝説の黒龍
-  (() => {
+  if (!skip(scene, 'aw_black_dragon')) (() => {
     const g = make(scene);
     const cx = 40, cy = 44;
     g.fillStyle(0x080010); g.fillEllipse(cx, cy+2, 52, 62);
@@ -1439,7 +1450,7 @@ function generateAnotherWorldSprites(scene: Phaser.Scene): void {
   })();
 
   // ── やみのていおう（ラスボス第2形態）─────────────────────
-  (() => {
+  if (!skip(scene, 'aw_yami_no_teiou')) (() => {
     const g = make(scene);
     const cx = 40, cy = 40;
     g.fillStyle(0x0a0010); g.fillRect(2, 0, 76, 78);
@@ -1696,7 +1707,7 @@ function generateTowerBossSprites(scene: Phaser.Scene): void {
   const mk = () => scene.make.graphics({ x: 0, y: 0 });
 
   // いにしえのドラゴン（虹色）
-  (() => {
+  if (!skip(scene, 'kodai_dragon')) (() => {
     const g = mk(), W = 96, H = 96, cx = 48, cy = 52;
 
     // 虹グラデーション効果：重ね合わせで虹色に見せる
