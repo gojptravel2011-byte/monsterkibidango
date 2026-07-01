@@ -34,7 +34,7 @@ function createInitialState(): PlayerState {
     coins: 100,
     party: [],
     box: [],
-    inventory: [],
+    inventory: [{ itemId: 'nioidkusa', count: 99 }], // テスト用：使い放題
     position: { field: 'hoikuen', x: 400, y: 300 },
     flags: {},
     dex: {},

@@ -5,6 +5,7 @@ import { drawPanel } from '../ui/Panel';
 import { TS } from '../ui/StyledText';
 import { T } from '../ui/theme';
 import { BGM } from '../systems/bgm';
+import { activateRepel, isRepelActive, getRepelRemainSec } from '../systems/encounter';
 
 const TILE    = 48;
 const COLS    = 15; // must be odd
@@ -13,7 +14,19 @@ const OX      = Math.floor((750 - COLS * TILE) / 2); // 15px
 const OY      = 80;  // HUD height
 const MAX_FLOOR = 30;
 
-// Encounter pools scaled by floor
+// ── フロア状態を戦闘後も保持するモジュールレベルキャッシュ ──────────
+interface TreasureCell { r: number; c: number; taken: boolean; def: TreasureDef }
+interface FloorCache {
+  floor: number;
+  grid: boolean[][];
+  stairsC: number; stairsR: number;
+  healC: number;   healR: number; healUsed: boolean;
+  playerC: number; playerR: number;
+  treasures: TreasureCell[];
+}
+let _cache: FloorCache | null = null;
+
+// ── Encounter pools scaled by floor
 const POOLS: { max: number; species: string[]; lv: number }[] = [
   { max:  5,  species: ['piyon','kazepon','kusagumi'],                                  lv: 3  },
   { max: 10,  species: ['honon','denkon','iwagon','mizubon'],                           lv: 6  },
@@ -34,8 +47,6 @@ function getTreasureItem(floor: number): TreasureDef {
   if (floor >= 6)  return { itemId: 'daikyuball', count: 2, label: 'きびだんご ×2' };
   return              { itemId: 'okyuball',    count: 2, label: 'かるいきびだんご ×2' };
 }
-
-interface TreasureCell { r: number; c: number; taken: boolean; def: TreasureDef }
 
 export class TowerDungeonScene extends Phaser.Scene {
   private floor      = 1;
@@ -60,6 +71,7 @@ export class TowerDungeonScene extends Phaser.Scene {
   private msgWin     !: MessageWindow;
   private floorTxt   !: Phaser.GameObjects.Text;
   private coinsTxt   !: Phaser.GameObjects.Text;
+  private repelTxt   !: Phaser.GameObjects.Text;
 
   private cursors    !: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd       !: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key };
@@ -109,8 +121,27 @@ export class TowerDungeonScene extends Phaser.Scene {
     this.coinsTxt = this.add.text(10, 38, `コイン: ${state.coins}`, { ...TS.coin })
       .setDepth(150).setScrollFactor(0);
 
+    // においくさボタン（テスト用：消費しない）
+    this.add.rectangle(420, 40, 140, 40, 0x1a3a1a, 0.9)
+      .setStrokeStyle(2, 0x44bb44).setDepth(150).setScrollFactor(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        activateRepel(180000);
+        this.repelTxt.setText('においくさ：3:00');
+        this.repelTxt.setColor('#44ff44');
+        this.msgWin.show('', 'においくさを　つかった！\n3ぷんかん　モンスターが\nでてこなくなった！');
+      });
+    this.add.text(420, 40, 'においくさ', {
+      fontSize: '17px', color: '#44ff44', fontFamily: 'sans-serif', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(151).setScrollFactor(0);
+
+    // においくさ残り時間表示
+    this.repelTxt = this.add.text(375, 68, '', {
+      fontSize: '14px', color: '#44ff44', fontFamily: 'sans-serif',
+    }).setOrigin(0.5).setDepth(151).setScrollFactor(0);
+
     // Back button
-    this.add.rectangle(700, 40, 80, 44, T.panelMid, 0.9)
+    this.add.rectangle(665, 40, 80, 44, T.panelMid, 0.9)
       .setStrokeStyle(2, T.borderGold).setDepth(150).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.goBack());
@@ -154,6 +185,17 @@ export class TowerDungeonScene extends Phaser.Scene {
   // ── Maze generation ──────────────────────────────────────────────
 
   private generateFloor(): void {
+    // 戦闘後は同じフロアを復元（迷路が変わらないように）
+    if (_cache && _cache.floor === this.floor) {
+      this.grid      = _cache.grid.map(row => [...row]);
+      this.stairsC   = _cache.stairsC; this.stairsR = _cache.stairsR;
+      this.healC     = _cache.healC;   this.healR   = _cache.healR;
+      this.healUsed  = _cache.healUsed;
+      this.playerC   = _cache.playerC; this.playerR = _cache.playerR;
+      this.treasures = _cache.treasures.map(t => ({ ...t }));
+      return;
+    }
+
     this.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
 
     this.startC = Math.floor(COLS / 2); // = 7 (odd ✓)
@@ -214,6 +256,18 @@ export class TowerDungeonScene extends Phaser.Scene {
       const [r, c] = candidates[i];
       this.treasures.push({ r, c, taken: false, def: getTreasureItem(this.floor) });
     }
+    this.saveFloor();
+  }
+
+  private saveFloor(): void {
+    _cache = {
+      floor: this.floor,
+      grid:  this.grid.map(row => [...row]),
+      stairsC: this.stairsC, stairsR: this.stairsR,
+      healC: this.healC, healR: this.healR, healUsed: this.healUsed,
+      playerC: this.playerC, playerR: this.playerR,
+      treasures: this.treasures.map(t => ({ ...t })),
+    };
   }
 
   // ── Drawing ──────────────────────────────────────────────────────
@@ -344,6 +398,16 @@ export class TowerDungeonScene extends Phaser.Scene {
   // ── Update ───────────────────────────────────────────────────────
 
   update(time: number, _delta: number): void {
+    // においくさ残り時間を毎フレーム更新
+    if (isRepelActive()) {
+      const s = getRepelRemainSec();
+      const m = Math.floor(s / 60), sec = s % 60;
+      this.repelTxt.setText(`においくさ：${m}:${sec.toString().padStart(2, '0')}`);
+      this.repelTxt.setColor('#44ff44');
+    } else if (this.repelTxt.text !== '') {
+      this.repelTxt.setText('');
+    }
+
     if (this.msgWin.isVisible()) return;
     if (time - this.lastMove < this.MOVE_CD) return;
 
@@ -405,6 +469,7 @@ export class TowerDungeonScene extends Phaser.Scene {
     }
 
     this.msgWin.showConfirm('', `${this.floor + 1}かいへ　のぼりますか？`, () => {
+      _cache = null; // 新しいフロアは新規生成
       this.floor++;
       this.generateFloor();
       this.drawTiles();
@@ -428,6 +493,7 @@ export class TowerDungeonScene extends Phaser.Scene {
       this.msgWin.show('', 'パーティは　もう　げんきだよ！'); return;
     }
     this.healUsed = true;
+    if (_cache && _cache.floor === this.floor) _cache.healUsed = true;
     state.party.forEach(m => { m.hp = m.maxHp; });
     this.coinsTxt.setText(`コイン: ${state.coins}`);
     // Redraw to show "used" state
@@ -451,6 +517,7 @@ export class TowerDungeonScene extends Phaser.Scene {
   }
 
   private maybeEncounter(): void {
+    if (isRepelActive()) return; // においくさ効果中
     const chance = this.floor <= 10 ? 0.12 : this.floor <= 20 ? 0.14 : 0.16;
     if (Math.random() > chance) return;
     const state = getState();
@@ -460,6 +527,10 @@ export class TowerDungeonScene extends Phaser.Scene {
     const sId  = pool.species[Math.floor(Math.random() * pool.species.length)];
     const lv   = pool.lv + Math.floor(Math.random() * 4);
     const enemy = createMonsterInstance(sId, lv);
+    // 戦闘前にプレイヤー位置をキャッシュに保存
+    if (_cache && _cache.floor === this.floor) {
+      _cache.playerC = this.playerC; _cache.playerR = this.playerR;
+    }
     state.position = { field: 'tower_dungeon', x: this.floor, y: 0 };
     this.scene.start('BattleScene', { enemy });
   }

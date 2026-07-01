@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { MessageWindow } from '../ui/MessageWindow';
 import { getState, setFlag, getFlag, addItem, createMonsterInstance } from '../state/playerState';
-import { countStep, resetStepCount, generateEncounter } from '../systems/encounter';
+import { countStep, resetStepCount, generateEncounter, isRepelActive } from '../systems/encounter';
 import { FIELDS } from '../data/fields';
 import { STORY_EVENTS } from '../data/story';
 import { PLACEHOLDER_COLORS } from '../assets/assetKeys';
@@ -1037,7 +1037,7 @@ export class MapScene extends Phaser.Scene {
       if (this.moveTimer > 500) {
         this.moveTimer = 0;
         const field = FIELDS[state.position.field];
-        if (!field?.isSafeZone && countStep()) {
+        if (!field?.isSafeZone && countStep() && !isRepelActive()) {
           const party = state.party;
           const playerLevel = party.length > 0 ? party[0].level : 1;
           const enemy = generateEncounter(state.position.field, playerLevel);

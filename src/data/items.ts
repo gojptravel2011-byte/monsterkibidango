@@ -1,4 +1,4 @@
-export type ItemType = 'food' | 'heal' | 'ball' | 'accessory';
+export type ItemType = 'food' | 'heal' | 'ball' | 'accessory' | 'repel';
 
 export interface Item {
   id: string;
@@ -9,6 +9,7 @@ export interface Item {
   catchBonus?: number;       // ball用（捕獲率補正 0.0〜1.0追加）
   affectionBonus?: number;   // food用（なつき度増加）
   expBonus?: number;         // accessory用（経験値倍率）
+  repelMs?: number;          // repel用（エンカウント無効ミリ秒）
 }
 
 export const ITEMS: Record<string, Item> = {
@@ -68,5 +69,12 @@ export const ITEMS: Record<string, Item> = {
     type: 'ball',
     price: 0, // おみせでは　うっていない。ダンジョンのみ
     catchBonus: 0.98,
+  },
+  nioidkusa: {
+    id: 'nioidkusa',
+    name: 'においくさ',
+    type: 'repel',
+    price: 0,
+    repelMs: 180000, // 3分
   },
 };

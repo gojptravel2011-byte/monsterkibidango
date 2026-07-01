@@ -86,6 +86,12 @@ export function generateEncounter(fieldId: string, _playerLevel: number): Monste
   return createMonsterInstance(chosen, level);
 }
 
+// においくさ：エンカウント無効タイマー
+let repelUntil = 0;
+export function activateRepel(ms: number): void { repelUntil = Date.now() + ms; }
+export function isRepelActive(): boolean         { return Date.now() < repelUntil; }
+export function getRepelRemainSec(): number      { return Math.max(0, Math.ceil((repelUntil - Date.now()) / 1000)); }
+
 // 捕獲判定
 export function tryCatch(
   enemy: MonsterInstance,
