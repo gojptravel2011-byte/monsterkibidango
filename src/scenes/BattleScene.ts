@@ -361,7 +361,7 @@ export class BattleScene extends Phaser.Scene {
       ...TS.body, align: 'center',
     }).setOrigin(0.5).setDepth(21);
 
-    state.party.forEach((member, i) => {
+    state.party.filter(m => m.speciesId !== 'kurosuke').forEach((member, i) => {
       const mName = MONSTER_SPECIES[member.speciesId]?.name ?? member.speciesId;
       const y = h * 0.30 + i * 52;
       const bg = makeBtn(this, w / 2, y, 300, 44, { depth: 20 })
