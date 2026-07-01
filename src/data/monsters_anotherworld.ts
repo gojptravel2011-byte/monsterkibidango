@@ -274,7 +274,13 @@ export const ANOTHER_WORLD_SPECIES: Record<string, MonsterSpecies> = {
 
 // 別世界モンスターのコイン・経験値倍率（BattleScene で参照）
 export const AW_MONSTER_REWARDS: Record<string, { coins: number; exp: number }> = {
-  black_dragon:  { coins: 500, exp: 800 },
-  coin_slime:    { coins: 800, exp: 50 },
-  exp_ghost:     { coins: 30,  exp: 1500 },
+  black_dragon:   { coins: 500,  exp: 800 },
+  coin_slime:     { coins: 800,  exp: 50 },
+  exp_ghost:      { coins: 30,   exp: 1500 },
+  yami_no_teiou:  { coins: 2000, exp: 5000 },
+};
+
+// ボス専用報酬（monsters.tsのrasubossなどはここで参照）
+export const BOSS_REWARDS: Record<string, { coins: number; exp: number }> = {
+  rasuboss: { coins: 1000, exp: 2000 },
 };

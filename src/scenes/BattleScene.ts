@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { MessageWindow } from '../ui/MessageWindow';
 import { BGM } from '../systems/bgm';
 import type { MonsterInstance } from '../state/playerState';
-import { getState, addToParty, gainExp, addCoins, removeItem, setFlag } from '../state/playerState';
+import { getState, addToParty, canAddToParty, releaseMonster, gainExp, addCoins, removeItem, setFlag, markSeen, PARTY_MAX } from '../state/playerState';
 import { MONSTER_SPECIES } from '../data/monsters';
 import { SKILLS } from '../data/skills';
 import { ITEMS } from '../data/items';
@@ -101,6 +101,8 @@ export class BattleScene extends Phaser.Scene {
 
     this.updateHpDisplay();
     this.showCommandMenu();
+
+    markSeen(this.enemy.speciesId);
 
     // バトル開始メッセージ（レアエンカウント時は特別演出）
     const appearMsg = this.enemy.isRare
@@ -324,9 +326,13 @@ export class BattleScene extends Phaser.Scene {
           this.clearButtons();
           const caught = tryCatch(this.enemy, item.catchBonus ?? 0);
           if (caught) {
-            addToParty(this.enemy);
             const eSpecies = MONSTER_SPECIES[this.enemy.speciesId];
-            this.msgWin.show('', `${eSpecies?.name}を\nつかまえた！`, () => this.endBattle(false));
+            if (canAddToParty()) {
+              addToParty(this.enemy);
+              this.msgWin.show('', `${eSpecies?.name}を\nつかまえた！`, () => this.endBattle(false));
+            } else {
+              this.msgWin.show('', `${eSpecies?.name}を\nつかまえた！\nなかまが　いっぱい！\nだれかを　にがしてあげてね`, () => this.showReleaseMenu(this.enemy));
+            }
           } else {
             this.msgWin.show('', 'のがしちゃった…\nもう　いちど　がんばろう！', () => this.enemyTurn());
           }
@@ -342,6 +348,49 @@ export class BattleScene extends Phaser.Scene {
       .on('pointerdown', () => { this.clearButtons(); this.showCommandMenu(); });
     this.commandButtons.push(cancelBg, this.add.text(w / 2, h * 0.85, 'もどる', {
       ...TS.btn,
+    }).setOrigin(0.5).setDepth(21));
+  }
+
+  private showReleaseMenu(newMonster: MonsterInstance): void {
+    this.clearButtons();
+    const state = getState();
+    const w = this.scale.width, h = this.scale.height;
+    const newName = MONSTER_SPECIES[newMonster.speciesId]?.name ?? newMonster.speciesId;
+
+    this.add.text(w / 2, h * 0.18, `${newName}を　いれるために\nだれかを　にがす`, {
+      ...TS.body, align: 'center',
+    }).setOrigin(0.5).setDepth(21);
+
+    state.party.forEach((member, i) => {
+      const mName = MONSTER_SPECIES[member.speciesId]?.name ?? member.speciesId;
+      const y = h * 0.30 + i * 52;
+      const bg = makeBtn(this, w / 2, y, 300, 44, { depth: 20 })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerover', () => bg.setFillStyle(0x882222))
+        .on('pointerout', () => bg.setFillStyle(T.panelMid))
+        .on('pointerdown', () => {
+          this.clearButtons();
+          releaseMonster(member.uid);
+          addToParty(newMonster);
+          this.msgWin.show('', `${mName}を　にがした！\n${newName}が　なかまに　なった！`, () => this.endBattle(false));
+        });
+      const txt = this.add.text(w / 2, y, `${mName}　Lv.${member.level}　HP:${member.hp}/${member.maxHp}`, {
+        ...TS.btn, fontSize: '18px',
+      }).setOrigin(0.5).setDepth(21);
+      this.commandButtons.push(bg, txt);
+    });
+
+    // キャンセル（新モンスターを逃がす）
+    const cancelY = h * 0.30 + state.party.length * 52 + 10;
+    const cancelBg = makeBtn(this, w / 2, cancelY, 200, 44, { depth: 20 })
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        this.clearButtons();
+        const newName2 = MONSTER_SPECIES[newMonster.speciesId]?.name ?? newMonster.speciesId;
+        this.msgWin.show('', `${newName2}を　にがした…`, () => this.endBattle(false));
+      });
+    this.commandButtons.push(cancelBg, this.add.text(w / 2, cancelY, 'にがす（キャンセル）', {
+      ...TS.btn, fontSize: '18px',
     }).setOrigin(0.5).setDepth(21));
   }
 
@@ -402,24 +451,28 @@ export class BattleScene extends Phaser.Scene {
     });
     if (hasExpBonus) exp = Math.floor(exp * 1.5);
 
-    const prevLevel = this.ally.level;
-    const newSkills = gainExp(this.ally, exp);
-    const didLevelUp = this.ally.level > prevLevel;
-
+    // 全員に経験値を配布
+    const livingParty = state.party.filter(m => m.hp > 0);
+    const allyPrevLevel = this.ally.level;
     const messages: string[] = [
       `${eSpecies?.name}を　たおした！`,
       `けいけんち　${exp}　ゲット！`,
       `コイン　${coins}まい　ゲット！`,
     ];
-    if (didLevelUp) {
-      messages.push(`${MONSTER_SPECIES[this.ally.speciesId]?.name}は\nレベル${this.ally.level}に　なった！`);
-    }
-    if (newSkills.length > 0) {
-      newSkills.forEach(s => messages.push(`${MONSTER_SPECIES[this.ally.speciesId]?.name}は\n${SKILLS[s]?.name}を　おぼえた！`));
-    }
+
+    livingParty.forEach(member => {
+      const prevLevel = member.level;
+      const newSkills = gainExp(member, exp);
+      const didLevelUp = member.level > prevLevel;
+      const mName = MONSTER_SPECIES[member.speciesId]?.name ?? member.speciesId;
+      if (didLevelUp) {
+        messages.push(`${mName}は\nレベル${member.level}に　なった！`);
+      }
+      newSkills.forEach(s => messages.push(`${mName}は\n${SKILLS[s]?.name}を　おぼえた！`));
+    });
 
     this.updateHpDisplay();
-    if (didLevelUp) {
+    if (this.ally.level > allyPrevLevel) {
       const w = this.scale.width, h = this.scale.height;
       const lvBanner = this.add.text(w / 2, h * 0.3, `★ LEVEL UP! Lv.${this.ally.level} ★`, {
         ...TS.heading,

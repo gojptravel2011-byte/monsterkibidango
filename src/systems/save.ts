@@ -13,6 +13,7 @@ export function loadGame(): boolean {
   if (!raw) return false;
   try {
     const state: PlayerState = JSON.parse(raw);
+    if (!state.dex) state.dex = {};
     setState(state);
     return true;
   } catch {

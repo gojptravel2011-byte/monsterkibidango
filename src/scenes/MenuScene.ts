@@ -18,7 +18,7 @@ export class MenuScene extends Phaser.Scene {
     // 半透明オーバーレイ
     this.add.rectangle(w / 2, h / 2, w, h, 0x000011, 0.7).setDepth(10);
 
-    drawPanel(this, w / 2 - 200, h / 2 - 290, 400, 580, { depth: 11 });
+    drawPanel(this, w / 2 - 200, h / 2 - 310, 400, 640, { depth: 11 });
 
     this.add.text(w / 2, h * 0.18, 'メニュー', {
       ...TS.heading,
@@ -26,6 +26,7 @@ export class MenuScene extends Phaser.Scene {
 
     const items: { label: () => string; action: () => void }[] = [
       { label: () => 'モンスター　いちらん', action: () => { this.scene.launch('MonsterListScene'); this.close(); } },
+      { label: () => 'モンスター　ずかん', action: () => { this.scene.launch('MonsterDexScene'); this.close(); } },
       { label: () => 'そだてる', action: () => { this.scene.launch('CareScene'); this.close(); } },
       { label: () => 'もちもの', action: () => { this.scene.launch('ItemListScene'); this.close(); } },
       { label: () => 'セーブ', action: () => this.doSave() },

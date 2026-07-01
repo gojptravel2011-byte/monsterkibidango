@@ -23,6 +23,7 @@ export interface PlayerState {
   inventory: { itemId: string; count: number }[];
   position: { field: string; x: number; y: number };
   flags: Record<string, boolean>;
+  dex: Record<string, 'seen' | 'caught'>;
 }
 
 let _state: PlayerState = createInitialState();
@@ -36,6 +37,7 @@ function createInitialState(): PlayerState {
     inventory: [],
     position: { field: 'hoikuen', x: 400, y: 300 },
     flags: {},
+    dex: {},
   };
 }
 
@@ -81,12 +83,33 @@ export function createMonsterInstance(speciesId: string, level: number): Monster
   };
 }
 
+export const PARTY_MAX = 10;
+
+export function canAddToParty(): boolean {
+  return _state.party.length < PARTY_MAX;
+}
+
 export function addToParty(monster: MonsterInstance): void {
-  if (_state.party.length < 6) {
+  if (_state.party.length < PARTY_MAX) {
     _state.party.push(monster);
+    markCaught(monster.speciesId);
   } else {
     _state.box.push(monster);
+    markCaught(monster.speciesId);
   }
+}
+
+export function releaseMonster(uid: string): void {
+  _state.party = _state.party.filter(m => m.uid !== uid);
+  _state.box = _state.box.filter(m => m.uid !== uid);
+}
+
+export function markSeen(speciesId: string): void {
+  if (!_state.dex[speciesId]) _state.dex[speciesId] = 'seen';
+}
+
+export function markCaught(speciesId: string): void {
+  _state.dex[speciesId] = 'caught';
 }
 
 export function addItem(itemId: string, count: number = 1): void {
