@@ -282,5 +282,138 @@ export const AW_MONSTER_REWARDS: Record<string, { coins: number; exp: number }> 
 
 // ボス専用報酬（monsters.tsのrasubossなどはここで参照）
 export const BOSS_REWARDS: Record<string, { coins: number; exp: number }> = {
-  rasuboss: { coins: 1000, exp: 2000 },
+  rasuboss:        { coins: 1000, exp: 2000 },
+  honoo_nushi:     { coins: 600,  exp: 1200 },
+  koori_nushi:     { coins: 600,  exp: 1200 },
+  kaminari_nushi:  { coins: 600,  exp: 1200 },
+  mizu_nushi:      { coins: 600,  exp: 1200 },
+  sora_nushi:      { coins: 600,  exp: 1200 },
+};
+
+// ── こどもたち（別世界の各フィールドで出会える）────────────────
+export const CHILDREN_SPECIES: Record<string, MonsterSpecies> = {
+  riri: {
+    id: 'riri', name: 'りり', baseMaxHp: 52,
+    spriteKey: 'child_riri', placeholderColor: 0xff88aa, catchable: true,
+    learnset: [
+      { level: 1, skill: 'honoo' },
+      { level: 5, skill: 'taiatarikko' },
+      { level: 10, skill: 'hikkaku' },
+      { level: 15, skill: 'honooibuki' },
+    ],
+  },
+  asa: {
+    id: 'asa', name: 'あさ', baseMaxHp: 55,
+    spriteKey: 'child_asa', placeholderColor: 0x88ddff, catchable: true,
+    learnset: [
+      { level: 1, skill: 'mizudeppo' },
+      { level: 5, skill: 'taiatarikko' },
+      { level: 10, skill: 'koorikiba' },
+      { level: 15, skill: 'fubuki' },
+    ],
+  },
+  kaho: {
+    id: 'kaho', name: 'かほ', baseMaxHp: 50,
+    spriteKey: 'child_kaho', placeholderColor: 0xffee44, catchable: true,
+    learnset: [
+      { level: 1, skill: 'denkogeki' },
+      { level: 5, skill: 'taiatarikko' },
+      { level: 10, skill: 'kamitsuku' },
+      { level: 15, skill: 'raigeki' },
+    ],
+  },
+  haru: {
+    id: 'haru', name: 'はる', baseMaxHp: 58,
+    spriteKey: 'child_haru', placeholderColor: 0x44aaff, catchable: true,
+    learnset: [
+      { level: 1, skill: 'mizudeppo' },
+      { level: 5, skill: 'taiatarikko' },
+      { level: 10, skill: 'kamitsuku' },
+      { level: 15, skill: 'shinkaiuzu' },
+    ],
+  },
+  yuuki: {
+    id: 'yuuki', name: 'ゆうき', baseMaxHp: 50,
+    spriteKey: 'child_yuuki', placeholderColor: 0xaaeeff, catchable: true,
+    learnset: [
+      { level: 1, skill: 'kaze' },
+      { level: 5, skill: 'taiatarikko' },
+      { level: 10, skill: 'hikkaku' },
+      { level: 15, skill: 'kamaitachi' },
+    ],
+  },
+  takeru: {
+    id: 'takeru', name: 'たける', baseMaxHp: 65,
+    spriteKey: 'child_takeru', placeholderColor: 0xffaa44, catchable: true,
+    learnset: [
+      { level: 1, skill: 'taiatarikko' },
+      { level: 5, skill: 'iwanage' },
+      { level: 10, skill: 'kamitsuku' },
+      { level: 15, skill: 'hikkaku' },
+    ],
+  },
+  yuzu: {
+    id: 'yuzu', name: 'ゆず', baseMaxHp: 48,
+    spriteKey: 'child_yuzu', placeholderColor: 0xffcc88, catchable: true,
+    learnset: [
+      { level: 1, skill: 'hikari' },
+      { level: 5, skill: 'kaze' },
+      { level: 10, skill: 'taiatarikko' },
+      { level: 15, skill: 'honoo' },
+    ],
+  },
+};
+
+// ── フィールドぬし（各世界のボス）──────────────────────────────
+export const FIELD_BOSS_SPECIES: Record<string, MonsterSpecies> = {
+  honoo_nushi: {
+    id: 'honoo_nushi', name: 'ほのおのぬし', baseMaxHp: 220,
+    spriteKey: 'boss_honoo_nushi', placeholderColor: 0xff4400, catchable: false,
+    learnset: [
+      { level: 1, skill: 'honooibuki' },
+      { level: 1, skill: 'magumakick' },
+      { level: 1, skill: 'kaenhou' },
+      { level: 1, skill: 'shakunetsu' },
+    ],
+  },
+  koori_nushi: {
+    id: 'koori_nushi', name: 'こおりのぬし', baseMaxHp: 220,
+    spriteKey: 'boss_koori_nushi', placeholderColor: 0x66ccff, catchable: false,
+    learnset: [
+      { level: 1, skill: 'koorikiba' },
+      { level: 1, skill: 'fubuki' },
+      { level: 1, skill: 'zettaireid' },
+      { level: 1, skill: 'soulfreeze' },
+    ],
+  },
+  kaminari_nushi: {
+    id: 'kaminari_nushi', name: 'かみなりのぬし', baseMaxHp: 210,
+    spriteKey: 'boss_kaminari_nushi', placeholderColor: 0xffff00, catchable: false,
+    learnset: [
+      { level: 1, skill: 'denkogeki' },
+      { level: 1, skill: 'raigeki' },
+      { level: 1, skill: 'thunderstorm' },
+      { level: 1, skill: 'kamitsuku' },
+    ],
+  },
+  mizu_nushi: {
+    id: 'mizu_nushi', name: 'みずのぬし', baseMaxHp: 230,
+    spriteKey: 'boss_mizu_nushi', placeholderColor: 0x2266ff, catchable: false,
+    learnset: [
+      { level: 1, skill: 'mizudeppo' },
+      { level: 1, skill: 'shinkaiuzu' },
+      { level: 1, skill: 'tidalwave' },
+      { level: 1, skill: 'kamitsuku' },
+    ],
+  },
+  sora_nushi: {
+    id: 'sora_nushi', name: 'そらのぬし', baseMaxHp: 200,
+    spriteKey: 'boss_sora_nushi', placeholderColor: 0x88bbff, catchable: false,
+    learnset: [
+      { level: 1, skill: 'kaze' },
+      { level: 1, skill: 'kamaitachi' },
+      { level: 1, skill: 'skyfall' },
+      { level: 1, skill: 'taiatarikko' },
+    ],
+  },
 };

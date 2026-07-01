@@ -43,6 +43,20 @@ export const ASSET_KEYS = {
     AW_COIN_SLIME:      'aw_coin_slime',
     AW_EXP_GHOST:       'aw_exp_ghost',
     AW_YAMI_NO_TEIOU:   'aw_yami_no_teiou',
+    // こどもたち
+    CHILD_RIRI:    'child_riri',
+    CHILD_ASA:     'child_asa',
+    CHILD_KAHO:    'child_kaho',
+    CHILD_HARU:    'child_haru',
+    CHILD_YUUKI:   'child_yuuki',
+    CHILD_TAKERU:  'child_takeru',
+    CHILD_YUZU:    'child_yuzu',
+    // フィールドぬし
+    BOSS_HONOO_NUSHI:    'boss_honoo_nushi',
+    BOSS_KOORI_NUSHI:    'boss_koori_nushi',
+    BOSS_KAMINARI_NUSHI: 'boss_kaminari_nushi',
+    BOSS_MIZU_NUSHI:     'boss_mizu_nushi',
+    BOSS_SORA_NUSHI:     'boss_sora_nushi',
   },
 
   // マップタイル

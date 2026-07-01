@@ -6,13 +6,21 @@ import { T } from '../ui/theme';
 import { TS } from '../ui/StyledText';
 import { drawPanel, makeBtn } from '../ui/Panel';
 
-const BALL_ITEMS = ['okyuball', 'daikyuball'];
+const DEFAULT_ITEMS = ['okyuball', 'daikyuball'];
+const AW_ITEMS = ['douball', 'ginball'];
 
 export class BallShopScene extends Phaser.Scene {
   private coinsText!: Phaser.GameObjects.Text;
   private feedbackText!: Phaser.GameObjects.Text;
+  private shopItems: string[] = DEFAULT_ITEMS;
+  private shopTitle: string = 'えんちょうせんせいの\nきびだんごやさん';
 
   constructor() { super({ key: 'BallShopScene', active: false }); }
+
+  init(data?: { items?: string[]; title?: string }): void {
+    this.shopItems = data?.items ?? DEFAULT_ITEMS;
+    this.shopTitle = data?.title ?? 'えんちょうせんせいの\nきびだんごやさん';
+  }
 
   create(): void {
     const w = this.scale.width;
@@ -23,7 +31,7 @@ export class BallShopScene extends Phaser.Scene {
     // えんちょうせんせいの絵
     this.add.image(w * 0.18, h * 0.2, 'npc_encho').setDisplaySize(64, 80).setDepth(6);
 
-    this.add.text(w * 0.28, h * 0.12, 'えんちょうせんせいの\nきびだんごやさん', {
+    this.add.text(w * 0.28, h * 0.12, this.shopTitle, {
       ...TS.subheading,
     }).setDepth(6);
 
@@ -41,9 +49,11 @@ export class BallShopScene extends Phaser.Scene {
     const desc: Record<string, string> = {
       okyuball: 'つかまえやすさ　ふつう',
       daikyuball: 'つかまえやすさ　たかい！',
+      douball: 'つかまえやすさ　まあまあ',
+      ginball: 'つかまえやすさ　とてもたかい！',
     };
 
-    BALL_ITEMS.forEach((itemId, i) => {
+    this.shopItems.forEach((itemId, i) => {
       const item = ITEMS[itemId];
       if (!item) return;
       const y = h * 0.38 + i * 110;

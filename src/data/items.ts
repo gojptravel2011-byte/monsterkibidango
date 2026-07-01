@@ -48,4 +48,18 @@ export const ITEMS: Record<string, Item> = {
     price: 500,
     expBonus: 1.5,
   },
+  douball: {
+    id: 'douball',
+    name: 'どうのきびだんご',
+    type: 'ball',
+    price: 350,
+    catchBonus: 0.5,
+  },
+  ginball: {
+    id: 'ginball',
+    name: 'ぎんのきびだんご',
+    type: 'ball',
+    price: 700,
+    catchBonus: 0.82,
+  },
 };

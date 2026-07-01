@@ -5,6 +5,8 @@ import Phaser from 'phaser';
 // generateAllSprites() の呼び出しを削除するだけでよい
 
 export function generateAllSprites(scene: Phaser.Scene): void {
+  generateChildrenSprites(scene);
+  generateFieldBossSprites(scene);
   generateAnotherWorldSprites(scene);
   genNpcEncho(scene);
   genPlayerFrames(scene);
@@ -1468,5 +1470,220 @@ function generateAnotherWorldSprites(scene: Phaser.Scene): void {
     g.fillStyle(0x9900ff, 0.8);
     g.fillRect(cx-24, cy-24, 48, 4);
     fin(g, 'aw_yami_no_teiou', 80, 80);
+  })();
+}
+
+function generateChildrenSprites(scene: Phaser.Scene): void {
+  const fin = (g: Phaser.GameObjects.Graphics, key: string, w: number, h: number) => {
+    g.generateTexture(key, w, h); g.destroy();
+  };
+  const mk = () => scene.make.graphics({ x: 0, y: 0 });
+  const cuteEye = (g: Phaser.GameObjects.Graphics, x: number, y: number, r: number, col: number) => {
+    g.fillStyle(0xffffff); g.fillCircle(x, y, r);
+    g.fillStyle(col); g.fillCircle(x + 1, y + 1, r * 0.55);
+    g.fillStyle(0xffffff); g.fillCircle(x - 2, y - 2, r * 0.2);
+  };
+
+  // りり (red-pink girl)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0xff88aa); g.fillCircle(cx, cy, 22);
+    g.fillStyle(0xff5588); g.fillRect(cx-20, cy+10, 40, 20);
+    cuteEye(g, cx-7, cy-4, 5, 0x330000);
+    cuteEye(g, cx+7, cy-4, 5, 0x330000);
+    g.fillStyle(0xff3366); g.fillCircle(cx, cy+8, 3);
+    // hair
+    g.fillStyle(0xdd4477); g.fillRect(cx-20, cy-22, 40, 10);
+    g.fillCircle(cx, cy-20, 12);
+    fin(g, 'child_riri', 60, 60);
+  })();
+
+  // あさ (light blue girl)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0x88ddff); g.fillCircle(cx, cy, 22);
+    g.fillStyle(0x44aadd); g.fillRect(cx-20, cy+10, 40, 20);
+    cuteEye(g, cx-7, cy-4, 5, 0x003366);
+    cuteEye(g, cx+7, cy-4, 5, 0x003366);
+    g.fillStyle(0x2288bb); g.fillCircle(cx, cy+8, 3);
+    g.fillStyle(0x33aacc); g.fillRect(cx-20, cy-22, 40, 8);
+    g.fillCircle(cx-16, cy-14, 8);
+    g.fillCircle(cx+16, cy-14, 8);
+    fin(g, 'child_asa', 60, 60);
+  })();
+
+  // かほ (yellow girl)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0xffee66); g.fillCircle(cx, cy, 22);
+    g.fillStyle(0xddcc00); g.fillRect(cx-20, cy+10, 40, 20);
+    cuteEye(g, cx-7, cy-4, 5, 0x332200);
+    cuteEye(g, cx+7, cy-4, 5, 0x332200);
+    g.fillStyle(0xcc9900); g.fillCircle(cx, cy+8, 3);
+    g.fillStyle(0xeecc00);
+    g.fillCircle(cx-18, cy-12, 9); g.fillCircle(cx+18, cy-12, 9);
+    g.fillRect(cx-18, cy-22, 36, 12);
+    fin(g, 'child_kaho', 60, 60);
+  })();
+
+  // はる (blue boy)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0x88bbff); g.fillCircle(cx, cy, 22);
+    g.fillStyle(0x4488cc); g.fillRect(cx-20, cy+10, 40, 20);
+    cuteEye(g, cx-7, cy-4, 5, 0x002244);
+    cuteEye(g, cx+7, cy-4, 5, 0x002244);
+    g.fillStyle(0x226699); g.fillCircle(cx, cy+8, 3);
+    g.fillStyle(0x3366aa); g.fillRect(cx-16, cy-24, 32, 14);
+    fin(g, 'child_haru', 60, 60);
+  })();
+
+  // ゆうき (sky boy)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0xaaeeff); g.fillCircle(cx, cy, 22);
+    g.fillStyle(0x66ccdd); g.fillRect(cx-20, cy+10, 40, 20);
+    cuteEye(g, cx-7, cy-4, 5, 0x003344);
+    cuteEye(g, cx+7, cy-4, 5, 0x003344);
+    g.fillStyle(0x33aacc); g.fillCircle(cx, cy+8, 3);
+    g.fillStyle(0x55bbcc); g.fillRect(cx-14, cy-24, 28, 12);
+    g.fillCircle(cx, cy-22, 8);
+    fin(g, 'child_yuuki', 60, 60);
+  })();
+
+  // たける (orange boy, strong)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0xffaa44); g.fillCircle(cx, cy, 24);
+    g.fillStyle(0xdd7722); g.fillRect(cx-22, cy+10, 44, 22);
+    cuteEye(g, cx-8, cy-4, 6, 0x331100);
+    cuteEye(g, cx+8, cy-4, 6, 0x331100);
+    g.fillStyle(0xcc5500); g.fillCircle(cx, cy+8, 3);
+    g.fillStyle(0xcc7733); g.fillRect(cx-14, cy-26, 28, 14);
+    fin(g, 'child_takeru', 60, 60);
+  })();
+
+  // ゆず (peach/warm boy)
+  (() => {
+    const g = mk(), cx = 30, cy = 32;
+    g.fillStyle(0xffcc88); g.fillCircle(cx, cy, 22);
+    g.fillStyle(0xeeaa55); g.fillRect(cx-20, cy+10, 40, 20);
+    cuteEye(g, cx-7, cy-4, 5, 0x332200);
+    cuteEye(g, cx+7, cy-4, 5, 0x332200);
+    g.fillStyle(0xddaa44); g.fillCircle(cx, cy+8, 3);
+    g.fillStyle(0xddaa33); g.fillRect(cx-14, cy-24, 28, 12);
+    g.fillCircle(cx-8, cy-20, 6); g.fillCircle(cx+8, cy-20, 6);
+    fin(g, 'child_yuzu', 60, 60);
+  })();
+}
+
+function generateFieldBossSprites(scene: Phaser.Scene): void {
+  const fin = (g: Phaser.GameObjects.Graphics, key: string, w: number, h: number) => {
+    g.generateTexture(key, w, h); g.destroy();
+  };
+  const mk = () => scene.make.graphics({ x: 0, y: 0 });
+
+  // ほのおのぬし (fire lord)
+  (() => {
+    const g = mk(), cx = 40, cy = 40;
+    g.fillStyle(0x220000); g.fillRect(0,0,80,80);
+    g.fillStyle(0xff4400); g.fillCircle(cx, cy, 28);
+    g.fillStyle(0xff8800); g.fillCircle(cx, cy-6, 20);
+    g.fillStyle(0xffcc00); g.fillCircle(cx, cy-10, 12);
+    // flame horns
+    g.fillStyle(0xff2200);
+    g.fillTriangle(cx-16, cy-24, cx-26, cy-52, cx-8, cy-22);
+    g.fillTriangle(cx+16, cy-24, cx+26, cy-52, cx+8, cy-22);
+    g.fillTriangle(cx, cy-28, cx, cy-58, cx+10, cy-26);
+    // eyes
+    g.fillStyle(0xff0000); g.fillCircle(cx-10, cy-4, 7);
+    g.fillStyle(0xff0000); g.fillCircle(cx+10, cy-4, 7);
+    g.fillStyle(0xffff00); g.fillCircle(cx-10, cy-4, 4);
+    g.fillStyle(0xffff00); g.fillCircle(cx+10, cy-4, 4);
+    fin(g, 'boss_honoo_nushi', 80, 80);
+  })();
+
+  // こおりのぬし (ice lord)
+  (() => {
+    const g = mk(), cx = 40, cy = 40;
+    g.fillStyle(0x001122); g.fillRect(0,0,80,80);
+    g.fillStyle(0x66ccff); g.fillCircle(cx, cy, 28);
+    g.fillStyle(0xaaeeff); g.fillCircle(cx, cy-4, 22);
+    g.fillStyle(0xeeffff); g.fillCircle(cx, cy-8, 14);
+    // ice spikes
+    g.fillStyle(0x88ddff);
+    [[-16,-18],[0,-20],[16,-18]].forEach(([dx,dy]) => {
+      g.fillTriangle(cx+dx-4, cy+dy, cx+dx, cy+dy-18, cx+dx+4, cy+dy);
+    });
+    // eyes
+    g.fillStyle(0x003366); g.fillCircle(cx-9, cy-4, 6);
+    g.fillStyle(0x003366); g.fillCircle(cx+9, cy-4, 6);
+    g.fillStyle(0x88ddff); g.fillCircle(cx-9, cy-4, 3);
+    g.fillStyle(0x88ddff); g.fillCircle(cx+9, cy-4, 3);
+    fin(g, 'boss_koori_nushi', 80, 80);
+  })();
+
+  // かみなりのぬし (thunder lord)
+  (() => {
+    const g = mk(), cx = 40, cy = 40;
+    g.fillStyle(0x110022); g.fillRect(0,0,80,80);
+    g.fillStyle(0xffee00); g.fillCircle(cx, cy, 28);
+    g.fillStyle(0xffff88); g.fillCircle(cx, cy-4, 20);
+    // lightning bolts as horns
+    g.fillStyle(0xffdd00);
+    g.fillTriangle(cx-18, cy-22, cx-10, cy-38, cx-6, cy-22);
+    g.fillTriangle(cx-10, cy-38, cx-2, cy-54, cx+4, cy-38);
+    g.fillTriangle(cx+18, cy-22, cx+10, cy-38, cx+6, cy-22);
+    g.fillTriangle(cx+10, cy-38, cx+2, cy-54, cx-4, cy-38);
+    // eyes
+    g.fillStyle(0x220066); g.fillCircle(cx-9, cy-4, 7);
+    g.fillStyle(0x220066); g.fillCircle(cx+9, cy-4, 7);
+    g.fillStyle(0xffff00); g.fillCircle(cx-9, cy-4, 4);
+    g.fillStyle(0xffff00); g.fillCircle(cx+9, cy-4, 4);
+    fin(g, 'boss_kaminari_nushi', 80, 80);
+  })();
+
+  // みずのぬし (water lord)
+  (() => {
+    const g = mk(), cx = 40, cy = 40;
+    g.fillStyle(0x001133); g.fillRect(0,0,80,80);
+    g.fillStyle(0x2266ff); g.fillCircle(cx, cy, 28);
+    g.fillStyle(0x66aaff); g.fillCircle(cx, cy-4, 20);
+    g.fillStyle(0xaaccff); g.fillCircle(cx, cy-8, 12);
+    // wave fins
+    g.fillStyle(0x3388ff);
+    g.fillEllipse(cx-28, cy, 18, 30);
+    g.fillEllipse(cx+28, cy, 18, 30);
+    // crown/tentacles
+    g.fillStyle(0x1144cc);
+    [-16,-6,4,14].forEach(dx => g.fillRect(cx+dx-3, cy-38, 6, 18));
+    // eyes
+    g.fillStyle(0x001155); g.fillCircle(cx-9, cy-4, 7);
+    g.fillStyle(0x001155); g.fillCircle(cx+9, cy-4, 7);
+    g.fillStyle(0x44aaff); g.fillCircle(cx-9, cy-4, 4);
+    g.fillStyle(0x44aaff); g.fillCircle(cx+9, cy-4, 4);
+    fin(g, 'boss_mizu_nushi', 80, 80);
+  })();
+
+  // そらのぬし (sky lord)
+  (() => {
+    const g = mk(), cx = 40, cy = 40;
+    g.fillStyle(0x112233); g.fillRect(0,0,80,80);
+    g.fillStyle(0x88bbff); g.fillCircle(cx, cy, 28);
+    g.fillStyle(0xccddff); g.fillCircle(cx, cy-4, 22);
+    g.fillStyle(0xeef4ff); g.fillCircle(cx, cy-8, 14);
+    // wings
+    g.fillStyle(0x99ccff, 0.9);
+    g.fillTriangle(cx-26, cy-6, cx-70, cy-30, cx-20, cy+14);
+    g.fillTriangle(cx+26, cy-6, cx+70, cy-30, cx+20, cy+14);
+    g.fillStyle(0xddeeff, 0.6);
+    g.fillTriangle(cx-24, cy-4, cx-62, cy-28, cx-18, cy+12);
+    g.fillTriangle(cx+24, cy-4, cx+62, cy-28, cx+18, cy+12);
+    // eyes
+    g.fillStyle(0x224466); g.fillCircle(cx-9, cy-4, 7);
+    g.fillStyle(0x224466); g.fillCircle(cx+9, cy-4, 7);
+    g.fillStyle(0xaaddff); g.fillCircle(cx-9, cy-4, 4);
+    g.fillStyle(0xaaddff); g.fillCircle(cx+9, cy-4, 4);
+    fin(g, 'boss_sora_nushi', 80, 80);
   })();
 }

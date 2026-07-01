@@ -43,3 +43,89 @@ export const MAZE_TREASURES = [
   { row:  5, col: 14, itemId: 'okyuball',   count: 2,  label: 'かるいきびだんご ×2' },
   { row: 17, col: 20, itemId: 'honyakuki',  count: 1,  label: 'かいふくすい ×1' },
 ];
+
+// ── やみのめいろ（別世界・最終エリア）────────────────────────────
+// 44行 × 26列。スタート(S)→ゴール(G)まで複数のルートと行き止まりがある複雑な迷路
+function buildYamiMaze(): string[][] {
+  const YAMI_R = 44, YAMI_C = 26;
+  const grid: string[][] = Array.from({ length: YAMI_R }, () => Array(YAMI_C).fill('W'));
+
+  const set = (r: number, c: number, v = '_') => {
+    if (r >= 0 && r < YAMI_R && c >= 0 && c < YAMI_C) grid[r][c] = v;
+  };
+  const rowP = (r: number, c1: number, c2: number) => {
+    for (let c = c1; c <= c2; c++) set(r, c);
+  };
+  const colP = (c: number, r1: number, r2: number) => {
+    for (let r = r1; r <= r2; r++) set(r, c);
+  };
+
+  // ── メインルート（Z字ジグザグ）──────────────────────────
+  rowP(42, 1, 23);       // スタート行
+  colP(23, 37, 42);      // 右縦路
+  rowP(37, 1, 23);
+  colP(1,  29, 37);      // 左縦路
+  rowP(29, 1, 23);
+  colP(23, 22, 29);
+  rowP(22, 1, 23);
+  colP(1,  15, 22);
+  rowP(15, 1, 23);
+  colP(23, 8,  15);
+  rowP(8,  1, 23);
+  colP(1,  3,  8);
+  rowP(3,  1, 13);
+  colP(13, 1,  3);
+  set(0, 13, 'G');       // ゴール（やみのていおうのしろ）
+
+  // ── 上部通路（宝箱エリア）──────────────────────────────
+  rowP(1, 8, 23);        // 上部横通路
+  colP(8, 1, 3);         // col8 縦路（row1⇔row3 接続）
+
+  // ── ショートカット縦路 ─────────────────────────────────
+  colP(8, 3, 8);         // col8: row3→row8 ショートカット
+  colP(20, 15, 29);      // col20: row15→row29 第2縦路
+
+  // ── 行き止まり分岐（罠ルート）─────────────────────────
+  // row8↔row15 間
+  colP(8,  8, 12);
+  colP(16, 8, 12);
+  rowP(12, 8, 16);
+  // row8 から上方向
+  colP(8,  5, 8);
+  colP(16, 5, 8);
+  rowP(5,  8, 16);
+  // row15↔row22 間
+  colP(8,  15, 19);
+  colP(16, 15, 19);
+  rowP(19, 8, 16);
+  // row22↔row29 間
+  colP(8,  22, 26);
+  colP(16, 22, 26);
+  rowP(26, 8, 16);
+  // row29↔row37 間
+  colP(8,  29, 34);
+  colP(16, 29, 34);
+  rowP(34, 8, 16);
+  // row37 から下方向
+  colP(8,  37, 41);
+  colP(16, 37, 41);
+  rowP(41, 8, 16);
+
+  // ── 特殊タイル ──────────────────────────────────────
+  set(22, 12, 'H');      // 回復スポット
+  set(1,  21, 'T');      // 宝箱1（上部通路の奥）
+  set(8,  17, 'T');      // 宝箱2（メインルート途中）
+  set(29, 17, 'T');      // 宝箱3（メインルート途中）
+
+  return grid;
+}
+
+export const YAMI_MAZE_GRID = buildYamiMaze();
+export const YAMI_START     = { row: 42, col: 1 };
+export const YAMI_GOAL      = { row:  0, col: 13 };
+export const YAMI_HEAL      = { row: 22, col: 12 };
+export const YAMI_TREASURES = [
+  { row:  1, col: 21, itemId: 'ginball',    count: 1, label: 'ぎんのきびだんご ×1' },
+  { row:  8, col: 17, itemId: 'ginball',    count: 1, label: 'ぎんのきびだんご ×1' },
+  { row: 29, col: 17, itemId: 'daikyuball', count: 2, label: 'きびだんご ×2' },
+];

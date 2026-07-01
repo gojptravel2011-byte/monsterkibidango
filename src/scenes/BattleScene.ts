@@ -489,12 +489,16 @@ export class BattleScene extends Phaser.Scene {
     }
     const dialogs = messages.map(m => ({ speaker: '', text: m }));
     this.msgWin.showSequence(dialogs, () => {
+      const ELEMENTAL_BOSSES = ['honoo_nushi','koori_nushi','kaminari_nushi','mizu_nushi','sora_nushi'];
       if (this.isBoss && this.enemy.speciesId === 'yami_no_teiou') {
         setFlag('yamiTeiouDefeated');
         this.scene.start('EndingScene', { chapter: 2 });
-      } else if (this.isBoss) {
+      } else if (this.isBoss && this.enemy.speciesId === 'rasuboss') {
         setFlag('rasubossDefeated');
         this.scene.start('EndingScene', { chapter: 1 });
+      } else if (this.isBoss && ELEMENTAL_BOSSES.includes(this.enemy.speciesId)) {
+        setFlag(`${this.enemy.speciesId}_defeated`);
+        this.endBattle(false);
       } else {
         this.endBattle(false);
       }

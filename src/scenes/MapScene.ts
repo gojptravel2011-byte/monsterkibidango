@@ -39,6 +39,10 @@ export class MapScene extends Phaser.Scene {
       this.scene.start('DungeonMazeScene');
       return;
     }
+    if (pos.field === 'yami_world') {
+      this.scene.start('DungeonMazeScene', { mode: 'yami' });
+      return;
+    }
     this.buildField(pos.field);
 
     // プレイヤーは create() で必ず生成（shutdown で破棄された参照を再利用しないよう）
@@ -637,25 +641,30 @@ export class MapScene extends Phaser.Scene {
     } else if (fieldId === 'angel_hoikuen') {
       this.buildAngelHoikuen(w, h);
     } else if (fieldId === 'honoo_world') {
-      this.buildAnotherWorld(w, h, 'ほのおのせかい', 0xff3300, [0xcc2200, 0xff6600], [
-        '🔥', '🌋', '🔥', '🔥',
-      ]);
+      this.buildAnotherWorld(w, h, 'ほのおのせかい', 0xff3300, [0xcc2200, 0xff6600],
+        ['🔥', '🌋', '🔥', '🔥'],
+        { bossId: 'boss_honoo_nushi', bossSpeciesId: 'honoo_nushi', bossName: 'ほのおのぬし', bossFlag: 'honoo_nushi_defeated', bossLevel: 20,
+          childId: 'child_riri', childSpeciesId: 'riri', childName: 'りり', childLevel: 16 });
     } else if (fieldId === 'koori_world') {
-      this.buildAnotherWorld(w, h, 'こおりのせかい', 0x88ddff, [0x336699, 0x66aacc], [
-        '❄', '🧊', '❄', '❄',
-      ]);
+      this.buildAnotherWorld(w, h, 'こおりのせかい', 0x88ddff, [0x336699, 0x66aacc],
+        ['❄', '🧊', '❄', '❄'],
+        { bossId: 'boss_koori_nushi', bossSpeciesId: 'koori_nushi', bossName: 'こおりのぬし', bossFlag: 'koori_nushi_defeated', bossLevel: 20,
+          childId: 'child_asa', childSpeciesId: 'asa', childName: 'あさ', childLevel: 16 });
     } else if (fieldId === 'kaminari_world') {
-      this.buildAnotherWorld(w, h, 'かみなりのせかい', 0xffff00, [0x330055, 0x660099], [
-        '⚡', '⚡', '⚡', '⚡',
-      ]);
+      this.buildAnotherWorld(w, h, 'かみなりのせかい', 0xffff00, [0x330055, 0x660099],
+        ['⚡', '⚡', '⚡', '⚡'],
+        { bossId: 'boss_kaminari_nushi', bossSpeciesId: 'kaminari_nushi', bossName: 'かみなりのぬし', bossFlag: 'kaminari_nushi_defeated', bossLevel: 20,
+          childId: 'child_kaho', childSpeciesId: 'kaho', childName: 'かほ', childLevel: 16 });
     } else if (fieldId === 'mizu_world') {
-      this.buildAnotherWorld(w, h, 'みずのせかい', 0x4488ff, [0x003366, 0x336699], [
-        '🌊', '💧', '🌊', '🐟',
-      ]);
+      this.buildAnotherWorld(w, h, 'みずのせかい', 0x4488ff, [0x003366, 0x336699],
+        ['🌊', '💧', '🌊', '🐟'],
+        { bossId: 'boss_mizu_nushi', bossSpeciesId: 'mizu_nushi', bossName: 'みずのぬし', bossFlag: 'mizu_nushi_defeated', bossLevel: 20,
+          childId: 'child_haru', childSpeciesId: 'haru', childName: 'はる', childLevel: 16 });
     } else if (fieldId === 'sora_world') {
-      this.buildAnotherWorld(w, h, 'そらのせかい', 0xaaddff, [0x4488cc, 0x88bbee], [
-        '☁', '✨', '☁', '🕊',
-      ]);
+      this.buildAnotherWorld(w, h, 'そらのせかい', 0xaaddff, [0x4488cc, 0x88bbee],
+        ['☁', '✨', '☁', '🕊'],
+        { bossId: 'boss_sora_nushi', bossSpeciesId: 'sora_nushi', bossName: 'そらのぬし', bossFlag: 'sora_nushi_defeated', bossLevel: 20,
+          childId: 'child_yuuki', childSpeciesId: 'yuuki', childName: 'ゆうき', childLevel: 16 });
     } else if (fieldId === 'angel_school') {
       this.buildAngelSchool(w, h);
     } else if (fieldId === 'yami_world') {
@@ -723,14 +732,60 @@ export class MapScene extends Phaser.Scene {
       this.tweens.add({ targets: bg, alpha: 0.6, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
       const d = door;
-      this.addTriggerZone(d.x, d.y, 'とびら', d.color,
-        `${d.label}を\nくぐりますか？`,
-        () => this.changeField(d.field),
-      );
+      if (d.field === 'yami_world') {
+        this.addTriggerZone(d.x, d.y, 'とびら', d.color,
+          `${d.label}を\nくぐりますか？`,
+          () => this.tryEnterYamiWorld(),
+        );
+      } else {
+        this.addTriggerZone(d.x, d.y, 'とびら', d.color,
+          `${d.label}を\nくぐりますか？`,
+          () => this.changeField(d.field),
+        );
+      }
     }
+
+    // えんちょう先生（別世界版）- 銅・銀のきびだんご販売
+    const awEnchoX = w * 0.82, awEnchoY = h * 0.20;
+    this.decorations.push(
+      this.add.image(awEnchoX, awEnchoY + 80, 'npc_encho').setDisplaySize(44, 56).setDepth(3),
+      this.add.text(awEnchoX, awEnchoY + 114, 'えんちょう', {
+        fontSize: '18px', color: '#886622', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#ffffff', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4),
+    );
+    this.addTriggerZone(awEnchoX, awEnchoY + 148, 'きびだんご\nやさん', 0xddaa22,
+      'べつのせかいの\nきびだんごやさんに\nはいりますか？',
+      () => {
+        this.scene.launch('BallShopScene', {
+          items: ['douball', 'ginball'],
+          title: 'えんちょうせんせいの\nべつせかいきびだんご',
+        }).pause();
+      },
+    );
   }
 
-  private buildAnotherWorld(w: number, h: number, name: string, accentColor: number, bgColors: number[], decorEmoji: string[]): void {
+  private tryEnterYamiWorld(): void {
+    const bosses = ['honoo_nushi', 'koori_nushi', 'kaminari_nushi', 'mizu_nushi', 'sora_nushi'];
+    const allDefeated = bosses.every(b => getFlag(`${b}_defeated`));
+    if (!allDefeated) {
+      const names: Record<string, string> = {
+        honoo_nushi: 'ほのおのぬし', koori_nushi: 'こおりのぬし',
+        kaminari_nushi: 'かみなりのぬし', mizu_nushi: 'みずのぬし', sora_nushi: 'そらのぬし',
+      };
+      const missingNames = bosses.filter(b => !getFlag(`${b}_defeated`)).map(b => names[b]).join('、');
+      this.msgWin.show('', `やみのとびらは　しまっている…\nまだ　たおしていない　ぬしがいる！\n【${missingNames}】`);
+      return;
+    }
+    const state = getState();
+    state.position = { field: 'yami_world', x: 0, y: 0 };
+    this.scene.start('DungeonMazeScene', { mode: 'yami' });
+  }
+
+  private buildAnotherWorld(w: number, h: number, name: string, accentColor: number, bgColors: number[], decorEmoji: string[], opts?: {
+    bossId?: string; bossSpeciesId?: string; bossName?: string; bossFlag?: string; bossLevel?: number;
+    childId?: string; childSpeciesId?: string; childName?: string; childLevel?: number;
+  }): void {
     // グラデーション風の背景（2層の長方形）
     this.decorations.push(
       this.add.rectangle(w / 2, h * 0.3, w, h * 0.6, bgColors[0]).setDepth(0),
@@ -755,6 +810,60 @@ export class MapScene extends Phaser.Scene {
     for (let i = 0; i < 4; i++) {
       this.decorations.push(
         this.add.rectangle(w / 2, 300 + i * 220, w, 3, accentColor, 0.15).setDepth(1),
+      );
+    }
+
+    // ── ぬし（フィールドボス）NPC ──────────────────────────
+    if (opts?.bossId && opts.bossName && opts.bossFlag) {
+      const bossX = w / 2, bossY = h * 0.22;
+      const bossDefeated = getFlag(opts.bossFlag);
+      const bossColor = bossDefeated ? 0x888888 : accentColor;
+      this.decorations.push(
+        this.add.rectangle(bossX, bossY, 90, 90, bossColor, 0.7).setStrokeStyle(3, 0xffffff, 0.9).setDepth(3),
+        this.add.image(bossX, bossY, opts.bossId).setDisplaySize(80, 80).setDepth(4),
+        this.add.text(bossX, bossY + 54, bossDefeated ? `${opts.bossName}（たおした）` : opts.bossName, {
+          fontSize: '17px', color: bossDefeated ? '#aaaaaa' : '#ffffff',
+          fontFamily: 'sans-serif', stroke: '#000000', strokeThickness: 2,
+          align: 'center',
+        }).setOrigin(0.5).setDepth(4),
+      );
+      if (!bossDefeated) {
+        const bSpeciesId = opts.bossSpeciesId ?? opts.bossId ?? '';
+        const bName = opts.bossName, bLv = opts.bossLevel ?? 20;
+        this.addTriggerZone(bossX, bossY, 'たたかう', 0xff2200,
+          `${bName}が\nにらんでいる…\nたたかいますか？`,
+          () => {
+            const state = getState();
+            state.position.x = this.player.x;
+            state.position.y = this.player.y;
+            const enemy = createMonsterInstance(bSpeciesId, bLv);
+            enemy.uid = `${bSpeciesId}_boss`;
+            this.scene.start('BattleScene', { enemy, isBoss: true });
+          },
+        );
+      }
+    }
+
+    // ── こども NPC ──────────────────────────────────────────
+    if (opts?.childId && opts.childName) {
+      const childX = w * 0.25, childY = h * 0.55;
+      this.decorations.push(
+        this.add.image(childX, childY, opts.childId).setDisplaySize(52, 52).setDepth(3),
+        this.add.text(childX, childY + 36, opts.childName, {
+          fontSize: '20px', color: '#ffeeaa', fontFamily: 'sans-serif', fontStyle: 'bold',
+          stroke: '#220000', strokeThickness: 2,
+        }).setOrigin(0.5).setDepth(4),
+      );
+      const cSpecies = opts.childSpeciesId ?? '', cName = opts.childName, cLv = opts.childLevel ?? 15;
+      this.addTriggerZone(childX, childY, 'はなす', 0xffcc44,
+        `${cName}：「きびだんごを\nもってたら　くれる？」\nバトルしますか？`,
+        () => {
+          const state = getState();
+          state.position.x = this.player.x;
+          state.position.y = this.player.y;
+          const enemy = createMonsterInstance(cSpecies, cLv);
+          this.scene.start('BattleScene', { enemy, isBoss: false });
+        },
       );
     }
   }

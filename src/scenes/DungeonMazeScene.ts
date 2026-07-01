@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import {
   MAZE_GRID_ROWS, MAZE_START, MAZE_GOAL, MAZE_HEAL, MAZE_TREASURES,
+  YAMI_MAZE_GRID, YAMI_START, YAMI_GOAL, YAMI_HEAL, YAMI_TREASURES,
 } from '../data/maze';
 import { MessageWindow } from '../ui/MessageWindow';
 import {
@@ -13,12 +14,8 @@ import { T } from '../ui/theme';
 import { TS } from '../ui/StyledText';
 import { drawPanel, makeBtn } from '../ui/Panel';
 
-const TILE   = 50;            // 1マスのピクセルサイズ
-const COLS   = 22;
-const ROWS   = 30;
-const WORLD_W = COLS * TILE;  // 1100px
-const WORLD_H = ROWS * TILE;  // 1500px
-const PLAYER_R = 15;          // 当たり判定半径（TILE/2 - 10 = 15、余裕10px）
+const TILE     = 50;
+const PLAYER_R = 15;
 const SPEED    = 180;
 
 function tileCenter(row: number, col: number): { x: number; y: number } {
@@ -26,6 +23,18 @@ function tileCenter(row: number, col: number): { x: number; y: number } {
 }
 
 export class DungeonMazeScene extends Phaser.Scene {
+  private mode: 'dungeon' | 'yami' = 'dungeon';
+  private get mazeGrid()     { return this.mode === 'yami' ? YAMI_MAZE_GRID : MAZE_GRID_ROWS; }
+  private get mazeCols()     { return this.mode === 'yami' ? 26 : 22; }
+  private get mazeRows()     { return this.mode === 'yami' ? 44 : 30; }
+  private get worldW()       { return this.mazeCols * TILE; }
+  private get worldH()       { return this.mazeRows * TILE; }
+  private get mazeStart()    { return this.mode === 'yami' ? YAMI_START    : MAZE_START; }
+  private get mazeGoal()     { return this.mode === 'yami' ? YAMI_GOAL     : MAZE_GOAL; }
+  private get mazeHeal()     { return this.mode === 'yami' ? YAMI_HEAL     : MAZE_HEAL; }
+  private get mazeTreasures(){ return this.mode === 'yami' ? YAMI_TREASURES : MAZE_TREASURES; }
+  private get sceneTitle()   { return this.mode === 'yami' ? 'やみのめいろ' : 'ちかめいろ'; }
+  private get fieldKey()     { return this.mode === 'yami' ? 'yami_world'   : 'dungeon'; }
   private player!: Phaser.GameObjects.Sprite;
   private playerLabel!: Phaser.GameObjects.Text;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -43,27 +52,36 @@ export class DungeonMazeScene extends Phaser.Scene {
 
   constructor() { super('DungeonMazeScene'); }
 
+  init(data?: { mode?: 'dungeon' | 'yami' }): void {
+    this.mode = data?.mode ?? 'dungeon';
+  }
+
   create(): void {
     BGM.play('field_dark');
     resetStepCount();
 
     // ── 背景 ──────────────────────────────────────
-    this.add.rectangle(WORLD_W / 2, WORLD_H / 2, WORLD_W, WORLD_H, 0x080012).setDepth(0);
+    const bgColor = this.mode === 'yami' ? 0x03000a : 0x080012;
+    this.add.rectangle(this.worldW / 2, this.worldH / 2, this.worldW, this.worldH, bgColor).setDepth(0);
+    const wallColor = this.mode === 'yami' ? 0x1a0030 : 0x3a1a5a;
+    const wallInner = this.mode === 'yami' ? 0x0a0018 : 0x1e0a30;
+    const wallBorder = this.mode === 'yami' ? 0x8800cc : 0x9955dd;
 
     // ── タイル描画 ──────────────────────────────────
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS; col++) {
-        const cell = MAZE_GRID_ROWS[row][col];
+    for (let row = 0; row < this.mazeRows; row++) {
+      for (let col = 0; col < this.mazeCols; col++) {
+        const cell = this.mazeGrid[row][col];
         const cx = col * TILE + TILE / 2;
         const cy = row * TILE + TILE / 2;
 
         if (cell === 'W') {
-          this.add.rectangle(cx, cy, TILE, TILE, 0x3a1a5a).setStrokeStyle(1, 0x9955dd).setDepth(2);
-          this.add.rectangle(cx, cy, TILE - 8, TILE - 8, 0x1e0a30).setDepth(2);
+          this.add.rectangle(cx, cy, TILE, TILE, wallColor).setStrokeStyle(1, wallBorder).setDepth(2);
+          this.add.rectangle(cx, cy, TILE - 8, TILE - 8, wallInner).setDepth(2);
         } else {
-          // 通路・特殊タイルの床
-          this.add.rectangle(cx, cy, TILE, TILE, 0x110022).setDepth(1);
-          this.add.rectangle(cx, cy, TILE - 2, TILE - 2, 0x180028).setDepth(1);
+          const floorA = this.mode === 'yami' ? 0x080010 : 0x110022;
+          const floorB = this.mode === 'yami' ? 0x0c0018 : 0x180028;
+          this.add.rectangle(cx, cy, TILE, TILE, floorA).setDepth(1);
+          this.add.rectangle(cx, cy, TILE - 2, TILE - 2, floorB).setDepth(1);
         }
       }
     }
@@ -86,7 +104,7 @@ export class DungeonMazeScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(11);
 
     // ── カメラ ────────────────────────────────────
-    this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
+    this.cameras.main.setBounds(0, 0, this.worldW, this.worldH);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
     // ── キーボード ────────────────────────────────
@@ -109,23 +127,27 @@ export class DungeonMazeScene extends Phaser.Scene {
     this.buildDPad();
 
     // 初回入場メッセージ
-    if (!getFlag('shownDungeonMsg')) {
-      setFlag('shownDungeonMsg');
-      this.msgWin.show('', 'ちかめいろへ　ようこそ！\nゴールをめざして　すすもう！');
+    const shownKey = `shown_${this.fieldKey}_msg`;
+    if (!getFlag(shownKey)) {
+      setFlag(shownKey);
+      const msg = this.mode === 'yami'
+        ? 'やみのめいろへ　ようこそ！\nやみのていおうを　さがして　すすもう！'
+        : 'ちかめいろへ　ようこそ！\nゴールをめざして　すすもう！';
+      this.msgWin.show('', msg);
     }
   }
 
   // BattleSceneから戻ったとき保存済み座標を復元、新規入場ならスタート地点
   private resolveStartPos(state: ReturnType<typeof getState>): { x: number; y: number } {
-    if (state.position.field === 'dungeon' && state.position.x > 0) {
+    if (state.position.field === this.fieldKey && state.position.x > 0) {
       return { x: state.position.x, y: state.position.y };
     }
-    return tileCenter(MAZE_START.row, MAZE_START.col);
+    return tileCenter(this.mazeStart.row, this.mazeStart.col);
   }
 
   // ── ゴールマーカー（ボスの扉）─────────────────
   private drawGoalMarker(): void {
-    const { x, y } = tileCenter(MAZE_GOAL.row, MAZE_GOAL.col);
+    const { x, y } = tileCenter(this.mazeGoal.row, this.mazeGoal.col);
     this.add.rectangle(x, y, TILE, TILE, 0x440022).setStrokeStyle(2, 0xff2200).setDepth(3);
     this.add.text(x, y - 6, 'ボス', {
       fontSize: '16px', color: '#ff5555', fontFamily: 'sans-serif',
@@ -138,8 +160,9 @@ export class DungeonMazeScene extends Phaser.Scene {
 
   // ── 回復スポットマーカー ─────────────────────
   private drawHealMarker(): void {
-    if (getFlag('dungeon_heal_used')) return;
-    const { x, y } = tileCenter(MAZE_HEAL.row, MAZE_HEAL.col);
+    const healFlag = `${this.fieldKey}_heal_used`;
+    if (getFlag(healFlag)) return;
+    const { x, y } = tileCenter(this.mazeHeal.row, this.mazeHeal.col);
     const circle = this.add.circle(x, y, TILE / 2 - 4, 0x00ff88, 0.2)
       .setStrokeStyle(2, 0x00ff88, 0.9).setDepth(3);
     this.add.text(x, y, '✦', {
@@ -153,9 +176,9 @@ export class DungeonMazeScene extends Phaser.Scene {
 
   // ── 宝箱マーカー ─────────────────────────────
   private drawTreasureMarkers(): void {
-    for (const t of MAZE_TREASURES) {
+    for (const t of this.mazeTreasures) {
       const key = `${t.row}_${t.col}`;
-      const alreadyTaken = getFlag(`dungeon_t_${key}`);
+      const alreadyTaken = getFlag(`${this.fieldKey}_t_${key}`);
       const { x, y } = tileCenter(t.row, t.col);
       if (alreadyTaken) {
         this.drawEmptyChest(x, y);
@@ -195,7 +218,7 @@ export class DungeonMazeScene extends Phaser.Scene {
     const sw = this.scale.width;
 
     drawPanel(this, 0, 0, sw, 54, { depth: 148, scrollFactor: 0 });
-    this.add.text(sw / 2, 27, 'ちかめいろ', { ...TS.label })
+    this.add.text(sw / 2, 27, this.sceneTitle, { ...TS.label })
       .setOrigin(0.5).setDepth(150).setScrollFactor(0);
 
     // もどるボタン（確認あり）
@@ -203,7 +226,7 @@ export class DungeonMazeScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.msgWin.showConfirm('', 'ちかめいろを　でますか？', () => this.goBack());
+        this.msgWin.showConfirm('', `${this.sceneTitle}を　でますか？`, () => this.goBack());
       })
       .on('pointerover', () => backBtn.setFillStyle(T.accent1))
       .on('pointerout',  () => backBtn.setFillStyle(T.panelMid));
@@ -310,8 +333,8 @@ export class DungeonMazeScene extends Phaser.Scene {
       if (this.player.anims.currentAnim?.key !== 'player_walk') this.player.play('player_walk');
 
       const dt = delta / 1000;
-      const nx = Phaser.Math.Clamp(this.player.x + vx * dt, PLAYER_R, WORLD_W - PLAYER_R);
-      const ny = Phaser.Math.Clamp(this.player.y + vy * dt, PLAYER_R, WORLD_H - PLAYER_R);
+      const nx = Phaser.Math.Clamp(this.player.x + vx * dt, PLAYER_R, this.worldW - PLAYER_R);
+      const ny = Phaser.Math.Clamp(this.player.y + vy * dt, PLAYER_R, this.worldH - PLAYER_R);
       const [rx, ry] = this.resolveWalls(nx, ny);
       this.player.x = rx;
       this.player.y = ry;
@@ -325,9 +348,9 @@ export class DungeonMazeScene extends Phaser.Scene {
         const state = getState();
         const playerLevel = state.party.length > 0 ? state.party[0].level : 1;
         if (countStep()) {
-          const enemy = generateEncounter('dungeon', playerLevel);
+          const enemy = generateEncounter(this.fieldKey, playerLevel);
           if (enemy) {
-            state.position = { field: 'dungeon', x: this.player.x, y: this.player.y };
+            state.position = { field: this.fieldKey, x: this.player.x, y: this.player.y };
             this.scene.start('BattleScene', { enemy });
             return;
           }
@@ -350,8 +373,8 @@ export class DungeonMazeScene extends Phaser.Scene {
 
   // ── 壁判定ヘルパー ────────────────────────────
   private isTileWall(row: number, col: number): boolean {
-    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return true;
-    return MAZE_GRID_ROWS[row][col] === 'W';
+    if (row < 0 || row >= this.mazeRows || col < 0 || col >= this.mazeCols) return true;
+    return this.mazeGrid[row][col] === 'W';
   }
 
   // ── 壁衝突解決（X軸・Y軸を独立処理してスライド移動） ──
@@ -394,14 +417,22 @@ export class DungeonMazeScene extends Phaser.Scene {
 
   // ── 特殊タイルイベント ────────────────────────
   private checkSpecialTile(row: number, col: number): void {
-    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
-    const cell = MAZE_GRID_ROWS[row][col];
+    if (row < 0 || row >= this.mazeRows || col < 0 || col >= this.mazeCols) return;
+    const cell = this.mazeGrid[row][col];
     if (cell === 'G') this.triggerBoss();
     else if (cell === 'H') this.triggerHeal();
     else if (cell === 'T') this.triggerTreasure(row, col);
   }
 
   private triggerBoss(): void {
+    if (this.mode === 'yami') {
+      this.triggerYamiBoss();
+    } else {
+      this.triggerDungeonBoss();
+    }
+  }
+
+  private triggerDungeonBoss(): void {
     if (getFlag('rasubossDefeated')) {
       this.msgWin.show('', 'もう　やみのぬしは　いない。\nここから　にげよう。');
       return;
@@ -423,8 +454,32 @@ export class DungeonMazeScene extends Phaser.Scene {
     });
   }
 
+  private triggerYamiBoss(): void {
+    if (getFlag('yamiTeiouDefeated')) {
+      this.msgWin.show('', 'やみのていおうは　すでに　たおれた。\nへいわは　もどった…');
+      return;
+    }
+    const state = getState();
+    if (state.party.length === 0) {
+      this.msgWin.show('', 'なかまが　いないと\nたたかえないよ！');
+      return;
+    }
+    const dialogs = [
+      { speaker: '', text: 'やみのしろの　おくから\nなにかが　あらわれた！' },
+      { speaker: 'やみのていおう', text: 'フフフ…　ここまで　よくきた。\nだが　きさまに　かつ　ことは　できん！' },
+      { speaker: 'やみのていおう', text: 'このせかいは　すべて\nわしの　もの　だ！' },
+    ];
+    this.msgWin.showSequence(dialogs, () => {
+      const enemy = createMonsterInstance('yami_no_teiou', 30);
+      enemy.uid = 'yami_teiou_boss';
+      state.position = { field: 'yami_world', x: this.player.x, y: this.player.y };
+      this.scene.start('BattleScene', { enemy, isBoss: true });
+    });
+  }
+
   private triggerHeal(): void {
-    if (getFlag('dungeon_heal_used')) {
+    const healFlagKey = `${this.fieldKey}_heal_used`;
+    if (getFlag(healFlagKey)) {
       this.msgWin.show('', 'かいふくゾーンは\nもう　つかった。');
       return;
     }
@@ -433,17 +488,17 @@ export class DungeonMazeScene extends Phaser.Scene {
       'かいふくゾーンです。\nパーティのHPを　かいふくしますか？',
       () => {
         getState().party.forEach(m => { m.hp = m.maxHp; });
-        setFlag('dungeon_heal_used');
+        setFlag(healFlagKey);
         this.msgWin.show('', 'パーティのHPが\nかいふくした！');
       },
     );
   }
 
   private triggerTreasure(row: number, col: number): void {
-    const flagKey = `dungeon_t_${row}_${col}`;
+    const flagKey = `${this.fieldKey}_t_${row}_${col}`;
     if (getFlag(flagKey)) return;
 
-    const t = MAZE_TREASURES.find(t => t.row === row && t.col === col);
+    const t = this.mazeTreasures.find(t => t.row === row && t.col === col);
     if (!t) return;
 
     const chestKey = `${row}_${col}`;
@@ -467,9 +522,12 @@ export class DungeonMazeScene extends Phaser.Scene {
   }
 
   private goBack(): void {
-    // しょうがっこうのジンジャ側出口付近にスポーン
     const state = getState();
-    state.position = { field: 'shogakko', x: 375, y: 900 };
+    if (this.mode === 'yami') {
+      state.position = { field: 'angel_hoikuen', x: 375, y: 800 };
+    } else {
+      state.position = { field: 'shogakko', x: 375, y: 900 };
+    }
     BGM.play('field_dark');
     this.scene.start('MapScene');
   }
