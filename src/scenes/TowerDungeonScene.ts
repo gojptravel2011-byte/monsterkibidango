@@ -8,7 +8,7 @@ import { BGM } from '../systems/bgm';
 
 const TILE    = 48;
 const COLS    = 15; // must be odd
-const ROWS    = 21; // must be odd
+const ROWS    = 17; // must be odd — 17*48=816px maze, bottom at y=896, d-pad safely above 1100
 const OX      = Math.floor((750 - COLS * TILE) / 2); // 15px
 const OY      = 80;  // HUD height
 const MAX_FLOOR = 30;
@@ -315,7 +315,9 @@ export class TowerDungeonScene extends Phaser.Scene {
   }
 
   private buildDpad(): void {
-    const cy = OY + ROWS * TILE + 56; // below maze
+    // Maze bottom = OY + ROWS*TILE = 80+17*48 = 896
+    // D-pad occupies 896~1100 — well above browser bar (~1100+)
+    const cy = OY + ROWS * TILE + 110; // = 1006
     type DK = 'up' | 'down' | 'left' | 'right';
     const dirs: { label: string; key: DK; dx: number; dy: number }[] = [
       { label: '▲', key: 'up',    dx:   0, dy: -44 },
