@@ -62,4 +62,11 @@ export const ITEMS: Record<string, Item> = {
     price: 700,
     catchBonus: 0.82,
   },
+  kinball: {
+    id: 'kinball',
+    name: 'きんのきびだんご',
+    type: 'ball',
+    price: 0, // おみせでは　うっていない。ダンジョンのみ
+    catchBonus: 0.98,
+  },
 };

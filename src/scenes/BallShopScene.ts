@@ -51,6 +51,7 @@ export class BallShopScene extends Phaser.Scene {
       daikyuball: 'つかまえやすさ　たかい！',
       douball: 'つかまえやすさ　まあまあ',
       ginball: 'つかまえやすさ　とてもたかい！',
+      kinball: 'さいきょう！　いにしえのドラゴンも　つかまえられる！',
     };
 
     this.shopItems.forEach((itemId, i) => {

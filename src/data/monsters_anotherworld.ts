@@ -417,3 +417,24 @@ export const FIELD_BOSS_SPECIES: Record<string, MonsterSpecies> = {
     ],
   },
 };
+
+export const TOWER_BOSS_SPECIES: Record<string, MonsterSpecies> = {
+  kodai_dragon: {
+    id: 'kodai_dragon',
+    name: 'いにしえのドラゴン',
+    baseMaxHp: 500,
+    spriteKey: 'kodai_dragon',
+    placeholderColor: 0xff88ff,
+    catchable: true,
+    requiresGoldBall: true,
+    expRate: 0.3,
+    learnset: [
+      { level:  1, skill: 'taiatari' },
+      { level: 10, skill: 'honoo' },
+      { level: 20, skill: 'raikou' },
+      { level: 30, skill: 'dragonbreath' },
+      { level: 50, skill: 'reizoku' },
+      { level: 70, skill: 'honoo' },
+    ],
+  },
+};

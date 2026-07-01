@@ -322,6 +322,11 @@ export class BattleScene extends Phaser.Scene {
       const bg = makeBtn(this, x, y, 260, 52, { depth: 20 })
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => {
+          if (MONSTER_SPECIES[this.enemy.speciesId]?.requiresGoldBall && inv.itemId !== 'kinball') {
+            this.clearButtons();
+            this.msgWin.show('', 'このドラゴンは\nきんのきびだんごじゃないと\nつかまらないよ！', () => this.showCommandMenu());
+            return;
+          }
           removeItem(inv.itemId);
           this.clearButtons();
           const caught = tryCatch(this.enemy, item.catchBonus ?? 0);
@@ -489,7 +494,7 @@ export class BattleScene extends Phaser.Scene {
     }
     const dialogs = messages.map(m => ({ speaker: '', text: m }));
     this.msgWin.showSequence(dialogs, () => {
-      const ELEMENTAL_BOSSES = ['honoo_nushi','koori_nushi','kaminari_nushi','mizu_nushi','sora_nushi'];
+      const ELEMENTAL_BOSSES = ['honoo_nushi','koori_nushi','kaminari_nushi','mizu_nushi','sora_nushi','kodai_dragon'];
       if (this.isBoss && this.enemy.speciesId === 'yami_no_teiou') {
         setFlag('yamiTeiouDefeated');
         this.scene.start('EndingScene', { chapter: 2 });

@@ -7,6 +7,7 @@ import Phaser from 'phaser';
 export function generateAllSprites(scene: Phaser.Scene): void {
   generateChildrenSprites(scene);
   generateFieldBossSprites(scene);
+  generateTowerBossSprites(scene);
   generateAnotherWorldSprites(scene);
   genNpcEncho(scene);
   genPlayerFrames(scene);
@@ -1685,5 +1686,76 @@ function generateFieldBossSprites(scene: Phaser.Scene): void {
     g.fillStyle(0xaaddff); g.fillCircle(cx-9, cy-4, 4);
     g.fillStyle(0xaaddff); g.fillCircle(cx+9, cy-4, 4);
     fin(g, 'boss_sora_nushi', 80, 80);
+  })();
+}
+
+function generateTowerBossSprites(scene: Phaser.Scene): void {
+  const fin = (g: Phaser.GameObjects.Graphics, key: string, w: number, h: number) => {
+    g.generateTexture(key, w, h); g.destroy();
+  };
+  const mk = () => scene.make.graphics({ x: 0, y: 0 });
+
+  // いにしえのドラゴン（虹色）
+  (() => {
+    const g = mk(), W = 96, H = 96, cx = 48, cy = 52;
+
+    // 虹グラデーション効果：重ね合わせで虹色に見せる
+    // 胴体の影
+    g.fillStyle(0x220044, 0.8); g.fillEllipse(cx, cy, 64, 44);
+    // 胴体（赤→橙→黄→緑→青→紫の縞）
+    const rainbow = [0xff0044, 0xff6600, 0xffdd00, 0x00cc44, 0x0066ff, 0xaa00ff];
+    for (let i = 0; i < 6; i++) {
+      g.fillStyle(rainbow[i], 0.7);
+      g.fillEllipse(cx - 10 + i * 4, cy - 4 + i * 2, 28 - i * 2, 14 - i);
+    }
+    // 胴体メイン（ホワイト寄りの輝き）
+    g.fillStyle(0xffffff, 0.15); g.fillEllipse(cx, cy, 58, 38);
+
+    // 翼（左右）
+    const wingColors = [0xff4488, 0xffaa00, 0x44ffaa, 0x4488ff, 0xcc44ff];
+    // 左翼
+    for (let i = 0; i < 5; i++) {
+      g.fillStyle(wingColors[i], 0.75);
+      g.fillTriangle(cx - 20 - i * 4, cy - 8, cx - 50, cy - 30 - i * 6, cx - 30, cy - 2);
+    }
+    // 右翼
+    for (let i = 0; i < 5; i++) {
+      g.fillStyle(wingColors[i], 0.75);
+      g.fillTriangle(cx + 20 + i * 4, cy - 8, cx + 50, cy - 30 - i * 6, cx + 30, cy - 2);
+    }
+
+    // 頭（楕円）
+    g.fillStyle(0xdd0044); g.fillEllipse(cx, cy - 20, 30, 24);
+    g.fillStyle(0xff88aa); g.fillEllipse(cx, cy - 22, 22, 16);
+    // 角（2本）
+    g.fillStyle(0xffdd00);
+    g.fillTriangle(cx - 8, cy - 30, cx - 14, cy - 50, cx - 2, cy - 30);
+    g.fillTriangle(cx + 8, cy - 30, cx + 14, cy - 50, cx + 2, cy - 30);
+    // 目（光る）
+    g.fillStyle(0xffffff); g.fillCircle(cx - 7, cy - 22, 5);
+    g.fillStyle(0xffffff); g.fillCircle(cx + 7, cy - 22, 5);
+    g.fillStyle(0xff0000); g.fillCircle(cx - 6, cy - 22, 3);
+    g.fillStyle(0xff0000); g.fillCircle(cx + 8, cy - 22, 3);
+    g.fillStyle(0xffffff); g.fillCircle(cx - 5, cy - 23, 1);
+    g.fillStyle(0xffffff); g.fillCircle(cx + 9, cy - 23, 1);
+
+    // 口から炎（虹色）
+    for (let i = 0; i < 5; i++) {
+      g.fillStyle(rainbow[i], 0.8);
+      g.fillTriangle(cx + 10 - i, cy - 14, cx + 32 + i * 4, cy - 18 + i * 3, cx + 8, cy - 10 + i);
+    }
+
+    // しっぽ
+    g.fillStyle(0x9900ff);
+    g.fillTriangle(cx - 28, cy + 16, cx - 5, cy + 10, cx - 20, cy + 28);
+    g.fillStyle(0xff4400);
+    g.fillTriangle(cx - 28, cy + 16, cx - 40, cy + 26, cx - 20, cy + 28);
+
+    // 輝きエフェクト（白い光）
+    g.fillStyle(0xffffff, 0.4); g.fillCircle(cx - 16, cy - 28, 4);
+    g.fillStyle(0xffffff, 0.3); g.fillCircle(cx + 22, cy - 26, 3);
+    g.fillStyle(0xffff00, 0.5); g.fillCircle(cx, cy - 18, 2);
+
+    fin(g, 'kodai_dragon', W, H);
   })();
 }

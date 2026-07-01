@@ -1,5 +1,5 @@
 import { ASSET_KEYS } from '../assets/assetKeys';
-import { ANOTHER_WORLD_SPECIES, CHILDREN_SPECIES, FIELD_BOSS_SPECIES } from './monsters_anotherworld';
+import { ANOTHER_WORLD_SPECIES, CHILDREN_SPECIES, FIELD_BOSS_SPECIES, TOWER_BOSS_SPECIES } from './monsters_anotherworld';
 
 export interface MonsterSpecies {
   id: string;
@@ -9,6 +9,7 @@ export interface MonsterSpecies {
   placeholderColor: number;
   learnset: { level: number; skill: string }[];
   catchable: boolean;
+  requiresGoldBall?: boolean; // true = きんのきびだんごでしかつかまえられない
   expRate?: number; // 必要経験値の倍率（低いほど速く育つ）。省略時は1.0
 }
 
@@ -156,4 +157,5 @@ export const MONSTER_SPECIES: Record<string, MonsterSpecies> = {
   ...ANOTHER_WORLD_SPECIES,
   ...CHILDREN_SPECIES,
   ...FIELD_BOSS_SPECIES,
+  ...TOWER_BOSS_SPECIES,
 };

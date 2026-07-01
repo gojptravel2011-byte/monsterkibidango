@@ -57,6 +57,8 @@ export const ASSET_KEYS = {
     BOSS_KAMINARI_NUSHI: 'boss_kaminari_nushi',
     BOSS_MIZU_NUSHI:     'boss_mizu_nushi',
     BOSS_SORA_NUSHI:     'boss_sora_nushi',
+    // タワーボス
+    KODAI_DRAGON:        'kodai_dragon',
   },
 
   // マップタイル
