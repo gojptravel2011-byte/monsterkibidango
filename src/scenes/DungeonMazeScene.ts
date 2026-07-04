@@ -7,12 +7,14 @@ import { MessageWindow } from '../ui/MessageWindow';
 import {
   getState, addItem, setFlag, getFlag, createMonsterInstance,
 } from '../state/playerState';
+import { MONSTER_SPECIES } from '../data/monsters';
 import { BGM } from '../systems/bgm';
 import { countStep, generateEncounter, resetStepCount } from '../systems/encounter';
 import { STORY_EVENTS } from '../data/story';
 import { T } from '../ui/theme';
 import { TS } from '../ui/StyledText';
 import { drawPanel, makeBtn } from '../ui/Panel';
+import { resolveHeroDir, playHeroWalk, playHeroIdle, type HeroDir } from '../systems/heroAnim';
 
 const TILE     = 50;
 const PLAYER_R = 15;
@@ -35,6 +37,7 @@ export class DungeonMazeScene extends Phaser.Scene {
   private get mazeTreasures(){ return this.mode === 'yami' ? YAMI_TREASURES : MAZE_TREASURES; }
   private get sceneTitle()   { return this.mode === 'yami' ? 'やみのめいろ' : 'ちかめいろ'; }
   private get fieldKey()     { return this.mode === 'yami' ? 'yami_world'   : 'dungeon'; }
+  private get bossSpecies()  { return this.mode === 'yami' ? 'yami_no_teiou' : 'rasuboss'; }
   private player!: Phaser.GameObjects.Sprite;
   private playerLabel!: Phaser.GameObjects.Text;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -43,12 +46,15 @@ export class DungeonMazeScene extends Phaser.Scene {
     left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key;
   };
   private msgWin!: MessageWindow;
-  private lastVx = 1;
+  private lastDir: HeroDir = 'down';
   private moveTimer = 0;
   private currentCell = '';   // 直前にいたグリッドセル "row_col"（重複起動防止）
   private padState = { up: false, down: false, left: false, right: false };
   // 宝箱ビジュアル（取得後に空箱に切り替えるため参照を保持）
   private chestObjs = new Map<string, Phaser.GameObjects.GameObject[]>();
+  // ボスへの方向を示すコンパス（迷路で迷わないように常時表示）
+  private compassArrow!: Phaser.GameObjects.Text;
+  private compassLabel!: Phaser.GameObjects.Text;
 
   constructor() { super('DungeonMazeScene'); }
 
@@ -94,9 +100,9 @@ export class DungeonMazeScene extends Phaser.Scene {
     // ── プレイヤー ────────────────────────────────
     const state = getState();
     const startPos = this.resolveStartPos(state);
-    this.player = this.add.sprite(startPos.x, startPos.y, 'player_f0')
-      .setDisplaySize(28, 38).setDepth(10);
-    this.player.play('player_idle');
+    this.player = this.add.sprite(startPos.x, startPos.y, 'player')
+      .setDisplaySize(54, 72).setDepth(10);
+    playHeroIdle(this.player, this.lastDir);
 
     this.playerLabel = this.add.text(startPos.x, startPos.y - 24, state.name.charAt(0), {
       fontSize: '22px', color: '#ffffff', fontFamily: 'sans-serif',
@@ -149,10 +155,15 @@ export class DungeonMazeScene extends Phaser.Scene {
   private drawGoalMarker(): void {
     const { x, y } = tileCenter(this.mazeGoal.row, this.mazeGoal.col);
     this.add.rectangle(x, y, TILE, TILE, 0x440022).setStrokeStyle(2, 0xff2200).setDepth(3);
-    this.add.text(x, y - 6, 'ボス', {
-      fontSize: '16px', color: '#ff5555', fontFamily: 'sans-serif',
-      stroke: '#000', strokeThickness: 2,
-    }).setOrigin(0.5).setDepth(4);
+    const spriteKey = MONSTER_SPECIES[this.bossSpecies]?.spriteKey;
+    if (spriteKey && this.textures.exists(spriteKey)) {
+      this.add.image(x, y - 4, spriteKey).setDisplaySize(TILE - 6, TILE - 6).setDepth(4);
+    } else {
+      this.add.text(x, y - 6, 'ボス', {
+        fontSize: '16px', color: '#ff5555', fontFamily: 'sans-serif',
+        stroke: '#000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4);
+    }
     // 点滅
     const glow = this.add.rectangle(x, y, TILE - 4, TILE - 4, 0x880022, 0.4).setDepth(3);
     this.tweens.add({ targets: glow, alpha: 0.05, duration: 800, yoyo: true, repeat: -1 });
@@ -241,12 +252,34 @@ export class DungeonMazeScene extends Phaser.Scene {
       .on('pointerdown', () => {
         // pause/resume のキュー問題を避けるため、DungeonMazeScene は止めずに
         // MenuScene をオーバーレイ表示する。update() 内でメニュー開閉を確認する。
+        // MenuScene はシーン登録順でDungeonMazeSceneより手前にあるため、
+        // run() だけだと背面に隠れてしまう。明示的に最前面へ。
         this.scene.run('MenuScene');
+        this.scene.bringToTop('MenuScene');
       });
     for (let i = 0; i < 3; i++) {
       this.add.rectangle(menuX, menuY - 8 + i * 8, 26, 3, T.borderGold)
         .setDepth(151).setScrollFactor(0);
     }
+
+    // ボスコンパス：やみのぬし／やみのていおう がいる方向を常に矢印で示す
+    const compassX = sw / 2, compassY = 78;
+    this.add.circle(compassX, compassY, 26, 0x220011, 0.75)
+      .setStrokeStyle(2, 0xff4444, 0.9).setDepth(148).setScrollFactor(0);
+    this.compassArrow = this.add.text(compassX, compassY, '↑', {
+      fontSize: '30px', color: '#ff5555', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#220000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(149).setScrollFactor(0);
+    this.compassLabel = this.add.text(compassX, compassY + 32, 'ボスの方角', {
+      fontSize: '12px', color: '#ffaaaa', fontFamily: 'sans-serif',
+    }).setOrigin(0.5).setDepth(149).setScrollFactor(0);
+  }
+
+  private updateCompass(): void {
+    const goal = tileCenter(this.mazeGoal.row, this.mazeGoal.col);
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, goal.x, goal.y);
+    // テキストの「↑」は上向き基準(-90度)なので合わせて回転させる
+    this.compassArrow.setRotation(angle + Math.PI / 2);
   }
 
   // ── 仮想十字ボタン（タッチ操作用）─────────────
@@ -316,6 +349,8 @@ export class DungeonMazeScene extends Phaser.Scene {
     if (this.msgWin.isVisible()) return;
     if (this.scene.isActive('MenuScene')) return;
 
+    this.updateCompass();
+
     const left  = this.padState.left  || this.cursors.left.isDown  || this.wasd.left.isDown;
     const right = this.padState.right || this.cursors.right.isDown || this.wasd.right.isDown;
     const up    = this.padState.up    || this.cursors.up.isDown    || this.wasd.up.isDown;
@@ -328,9 +363,9 @@ export class DungeonMazeScene extends Phaser.Scene {
     if (down)  vy =  SPEED;
 
     if (vx !== 0 || vy !== 0) {
-      if (vx !== 0) this.lastVx = vx;
-      this.player.setFlipX(this.lastVx < 0);
-      if (this.player.anims.currentAnim?.key !== 'player_walk') this.player.play('player_walk');
+      const dir = resolveHeroDir(up, down, left, right);
+      if (dir) this.lastDir = dir;
+      playHeroWalk(this.player, this.lastDir);
 
       const dt = delta / 1000;
       const nx = Phaser.Math.Clamp(this.player.x + vx * dt, PLAYER_R, this.worldW - PLAYER_R);
@@ -367,7 +402,7 @@ export class DungeonMazeScene extends Phaser.Scene {
       }
     } else {
       this.moveTimer = 0;
-      if (this.player.anims.currentAnim?.key !== 'player_idle') this.player.play('player_idle');
+      playHeroIdle(this.player, this.lastDir);
     }
   }
 

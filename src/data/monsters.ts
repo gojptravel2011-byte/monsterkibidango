@@ -1,5 +1,6 @@
 import { ASSET_KEYS } from '../assets/assetKeys';
 import { ANOTHER_WORLD_SPECIES, CHILDREN_SPECIES, FIELD_BOSS_SPECIES, TOWER_BOSS_SPECIES } from './monsters_anotherworld';
+import { FUSION_MONSTER_SPECIES } from './fusion/fusionMonsters';
 
 export interface MonsterSpecies {
   id: string;
@@ -158,4 +159,5 @@ export const MONSTER_SPECIES: Record<string, MonsterSpecies> = {
   ...CHILDREN_SPECIES,
   ...FIELD_BOSS_SPECIES,
   ...TOWER_BOSS_SPECIES,
+  ...FUSION_MONSTER_SPECIES,
 };

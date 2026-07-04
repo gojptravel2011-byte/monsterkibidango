@@ -9,6 +9,7 @@ import { BGM } from '../systems/bgm';
 interface Racer {
   name: string;
   color: number;
+  speciesId: string;
   baseSpeed: number;   // 6-14
   maxStamina: number;  // 40-90
   stamina: number;
@@ -17,17 +18,19 @@ interface Racer {
   rank: number;
   isPlayer: boolean;
   odds: number;
+  finishTick: number;
+  wobblePhase: number;
 }
 
-const NPC_TEMPLATES: Pick<Racer, 'name' | 'color' | 'baseSpeed' | 'maxStamina'>[] = [
-  { name: 'ピヨン',   color: 0xffee22, baseSpeed: 8,  maxStamina: 65 },
-  { name: 'カゼポン', color: 0x88ff88, baseSpeed: 12, maxStamina: 50 },
-  { name: 'ホノン',   color: 0xff6633, baseSpeed: 9,  maxStamina: 72 },
-  { name: 'デンコン', color: 0xffff00, baseSpeed: 11, maxStamina: 58 },
-  { name: 'ミズボン', color: 0x44aaff, baseSpeed: 10, maxStamina: 65 },
-  { name: 'クサグミ', color: 0x66cc44, baseSpeed: 7,  maxStamina: 82 },
-  { name: 'イワゴン', color: 0xaa8855, baseSpeed: 6,  maxStamina: 90 },
-  { name: 'ドラゴン', color: 0xff4444, baseSpeed: 14, maxStamina: 42 },
+const NPC_TEMPLATES: Pick<Racer, 'name' | 'color' | 'speciesId' | 'baseSpeed' | 'maxStamina'>[] = [
+  { name: 'ぴよん',   speciesId: 'piyon',   color: 0xffee22, baseSpeed: 8,  maxStamina: 65 },
+  { name: 'かぜぽん', speciesId: 'kazepon', color: 0x88ff88, baseSpeed: 12, maxStamina: 50 },
+  { name: 'ほのん',   speciesId: 'honon',   color: 0xff6633, baseSpeed: 9,  maxStamina: 72 },
+  { name: 'でんこん', speciesId: 'denkon',  color: 0xffff00, baseSpeed: 11, maxStamina: 58 },
+  { name: 'みずぼん', speciesId: 'mizubon', color: 0x44aaff, baseSpeed: 10, maxStamina: 65 },
+  { name: 'くさぐみ', speciesId: 'kusagumi',color: 0x66cc44, baseSpeed: 7,  maxStamina: 82 },
+  { name: 'いわごん', speciesId: 'iwagon',  color: 0xaa8855, baseSpeed: 6,  maxStamina: 90 },
+  { name: 'ドラゴン', speciesId: 'dragon',  color: 0xff4444, baseSpeed: 14, maxStamina: 42 },
 ];
 
 // トラック楕円パラメータ
@@ -40,9 +43,39 @@ function trackPos(progress: number): [number, number] {
   return [CX + RX * Math.cos(angle), CY + RY * Math.sin(angle)];
 }
 
+// ゴール済みは確定した着順(rank)で、未ゴールは現在位置(position)で並べる。
+// position同士だと同値(=LAP)になったゴール済み同士の順序が毎フレームばらつき、
+// 「ゴールした後も順位がコロコロ変わる」ように見えるバグの原因だった。
+function compareRacers(a: Racer, b: Racer): number {
+  if (a.finished && b.finished) return a.rank - b.rank;
+  if (a.finished !== b.finished) return a.finished ? -1 : 1;
+  return b.position - a.position;
+}
+
 function calcOdds(speed: number): number {
   // 速いほど低オッズ、遅いほど高オッズ
-  return Math.max(0.5, parseFloat((8 / speed * 1.2).toFixed(1)));
+  return Math.max(1.0, parseFloat((8 / speed * 2.4).toFixed(1)));
+}
+
+// オッズ（＝オッズが低い＝勝ちやすい）の逆数を重みにした抽選で着順をすべて決める。
+// 加重ルーレット選択を「勝者→2着→…」の順で繰り返すことで、勝率がオッズに比例した
+// 本当のランダム着順（強い子でも負けることがある）を作る。
+function drawFinishOrder(racers: Racer[]): Racer[] {
+  const remaining = [...racers];
+  const order: Racer[] = [];
+  while (remaining.length > 0) {
+    const weights = remaining.map(r => 1 / r.odds);
+    const total = weights.reduce((a, b) => a + b, 0);
+    let roll = Math.random() * total;
+    let pick = remaining.length - 1;
+    for (let i = 0; i < weights.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) { pick = i; break; }
+    }
+    order.push(remaining[pick]);
+    remaining.splice(pick, 1);
+  }
+  return order;
 }
 
 type Phase = 'setup' | 'countdown' | 'race' | 'result';
@@ -60,7 +93,8 @@ export class ElmoRaceScene extends Phaser.Scene {
   private raceObjs:  Phaser.GameObjects.GameObject[] = [];
 
   private trackGfx!: Phaser.GameObjects.Graphics;
-  private racerDots: Phaser.GameObjects.Graphics[] = [];
+  private racerDots: Phaser.GameObjects.Image[] = [];
+  private racerRings: Phaser.GameObjects.Graphics[] = [];
   private racerLbls: Phaser.GameObjects.Text[] = [];
   private standingsTxt!: Phaser.GameObjects.Text;
   private countdownTxt!: Phaser.GameObjects.Text;
@@ -79,6 +113,7 @@ export class ElmoRaceScene extends Phaser.Scene {
     this.setupObjs = [];
     this.raceObjs = [];
     this.racerDots = [];
+    this.racerRings = [];
     this.racerLbls = [];
     this.racers = [];
     this.finishRank = 0;
@@ -118,16 +153,22 @@ export class ElmoRaceScene extends Phaser.Scene {
       stroke: '#000000', strokeThickness: 8,
     }).setOrigin(0.5).setDepth(20).setAlpha(0).setScrollFactor(0);
 
-    // レーサードット＆ラベル
+    // レーサースプライト＆ラベル
     for (let i = 0; i < this.racers.length; i++) {
-      const dot = this.add.graphics().setDepth(6);
-      const lbl = this.add.text(0, 0, `${i + 1}`, {
+      const r = this.racers[i];
+      const ring = this.add.graphics().setDepth(6);
+      const iconKey = MONSTER_SPECIES[r.speciesId]?.spriteKey;
+      const dot = (iconKey && this.textures.exists(iconKey))
+        ? this.add.image(0, 0, iconKey).setDisplaySize(30, 30).setDepth(7)
+        : this.add.image(0, 0, '__DEFAULT').setDisplaySize(30, 30).setTint(r.color).setDepth(7);
+      const lbl = this.add.text(0, 0, r.isPlayer ? '★' : `${i + 1}`, {
         fontSize: '13px', color: '#ffffff', fontFamily: 'sans-serif', fontStyle: 'bold',
         stroke: '#000000', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(7).setAlpha(0);
+      }).setOrigin(0.5, 1.6).setDepth(8).setAlpha(0);
+      this.racerRings.push(ring);
       this.racerDots.push(dot);
       this.racerLbls.push(lbl);
-      this.raceObjs.push(dot, lbl);
+      this.raceObjs.push(ring, dot, lbl);
     }
 
     // 順位テキスト（レース中）
@@ -157,6 +198,7 @@ export class ElmoRaceScene extends Phaser.Scene {
       const sta = Math.max(40, Math.min(90, Math.floor(lead.maxHp / 8)));
       templates[7] = {
         name: sp ? sp.name : lead.speciesId,
+        speciesId: lead.speciesId,
         color: sp?.placeholderColor ?? 0xffffff,
         baseSpeed: spd,
         maxStamina: sta,
@@ -171,6 +213,8 @@ export class ElmoRaceScene extends Phaser.Scene {
       rank: 0,
       isPlayer: false,
       odds: calcOdds(t.baseSpeed),
+      finishTick: 0,
+      wobblePhase: 0,
     }));
     // プレイヤー枠マーク（最後のもの）
     if (party.length > 0) this.racers[7].isPlayer = true;
@@ -226,20 +270,25 @@ export class ElmoRaceScene extends Phaser.Scene {
       const card = this.add.rectangle(bx, by, 340, 66, 0x112211, 0.95)
         .setStrokeStyle(2, i === this.selectedIdx ? 0xffdd22 : 0x336633).setDepth(5)
         .setInteractive({ useHandCursor: true });
-      // 色マーク
-      this.add.circle(bx - 145, by, 16, r.color, 1).setDepth(6);
+      // モンスターアイコン
+      const iconKey = MONSTER_SPECIES[r.speciesId]?.spriteKey;
+      const icon = iconKey && this.textures.exists(iconKey)
+        ? this.add.image(bx - 145, by, iconKey).setDisplaySize(36, 36).setDepth(6)
+        : this.add.circle(bx - 145, by, 16, r.color, 1).setDepth(6);
       // 名前
       const nameTxt = this.add.text(bx - 122, by - 10, r.isPlayer ? `★${r.name}` : r.name, {
         fontSize: '18px', color: r.isPlayer ? '#ffff66' : '#ffffff',
         fontFamily: 'sans-serif', fontStyle: 'bold',
       }).setOrigin(0, 0.5).setDepth(6);
-      // スピード・オッズ
-      const infoTxt = this.add.text(bx - 122, by + 12, `スピード:${'★'.repeat(Math.round(r.baseSpeed / 2))}  ×${r.odds}`, {
-        fontSize: '14px', color: '#aaffaa', fontFamily: 'sans-serif',
+      // スピード・オッズ・あたったときのプラス額
+      const winPlus = Math.round(this.betAmount * r.odds) - this.betAmount;
+      const infoTxt = this.add.text(bx - 122, by + 12,
+        `スピード:${'★'.repeat(Math.round(r.baseSpeed / 2))}  ×${r.odds}\nあたると +${winPlus}コイン`, {
+        fontSize: '13px', color: '#aaffaa', fontFamily: 'sans-serif', lineSpacing: 2,
       }).setOrigin(0, 0.5).setDepth(6);
       const idx = i;
       card.on('pointerdown', () => this.selectRacer(idx));
-      this.setupObjs.push(card, nameTxt, infoTxt);
+      this.setupObjs.push(card, icon, nameTxt, infoTxt);
     }
 
     // コイン賭け額
@@ -347,21 +396,35 @@ export class ElmoRaceScene extends Phaser.Scene {
     this.raceObjs.forEach(o => (o as Phaser.GameObjects.GameObject & { setAlpha?: (a: number) => void }).setAlpha?.(1));
     this.standingsTxt.setAlpha(1);
 
+    // 先に「オッズに比例した確率」でゴール順をすべて抽選しておく。
+    // レース中はその順番に収束するよう各レーサーの到着タイミングを組み、
+    // 見た目上は毎タームばたつく（追い抜きが起きる）ようにする。
+    const order = drawFinishOrder(this.racers);
+    const TICKS_BASE = 110;
+    const GAP = 10;
+    const JITTER = 3;
+    order.forEach((r, rank) => {
+      r.finishTick = TICKS_BASE + rank * GAP + (Math.random() * 2 - 1) * JITTER;
+      r.wobblePhase = Math.random() * Math.PI * 2;
+    });
+
     let finishedCount = 0;
+    let t = 0;
     this.raceTimer = this.time.addEvent({
       delay: 80,
       loop: true,
       callback: () => {
         if (this.phase !== 'race') return;
+        t++;
         let anyMoving = false;
         for (const rc of this.racers) {
           if (rc.finished) continue;
           anyMoving = true;
-          const staminaFactor = 0.5 + (rc.stamina / rc.maxStamina) * 0.5;
-          const tick = rc.baseSpeed * (0.65 + Math.random() * 0.7) * staminaFactor;
-          rc.stamina = Math.max(0, rc.stamina - tick * 0.1);
-          rc.position += tick;
-          if (rc.position >= LAP) {
+          const frac = Math.min(1, t / rc.finishTick);
+          const wobbleAmp = 40 * (1 - frac);
+          const wobble = Math.sin(t * 0.2 + rc.wobblePhase) * wobbleAmp;
+          rc.position = Math.max(0, Math.min(LAP, frac * LAP + wobble));
+          if (frac >= 1) {
             rc.position = LAP;
             rc.finished = true;
             finishedCount++;
@@ -379,7 +442,7 @@ export class ElmoRaceScene extends Phaser.Scene {
   }
 
   private updateRacerVisuals(): void {
-    const sorted = [...this.racers].sort((a, b) => b.position - a.position);
+    const sorted = [...this.racers].sort(compareRacers);
     for (let i = 0; i < this.racers.length; i++) {
       const r = this.racers[i];
       const pos = Math.max(0, Math.min(LAP, r.position));
@@ -391,21 +454,22 @@ export class ElmoRaceScene extends Phaser.Scene {
       const perpX = -Math.sin(angle), perpY = Math.cos(angle);
       const fx = wx + perpX * angleOff, fy = wy + perpY * angleOff;
 
+      const ring = this.racerRings[i];
+      ring.clear();
+      ring.lineStyle(2, 0xffffff, r.isPlayer ? 1 : 0.5);
+      ring.strokeCircle(fx, fy, 17);
+
       const dot = this.racerDots[i];
-      dot.clear();
-      dot.fillStyle(r.color, r.finished ? 0.5 : 1);
-      dot.fillCircle(fx, fy, 14);
-      dot.lineStyle(2, 0xffffff, r.isPlayer ? 1 : 0.5);
-      dot.strokeCircle(fx, fy, 14);
+      dot.x = fx; dot.y = fy;
+      dot.setAlpha(r.finished ? 0.5 : 1);
 
       const lbl = this.racerLbls[i];
       lbl.x = fx; lbl.y = fy;
-      lbl.setText(r.isPlayer ? '★' : `${i + 1}`);
     }
   }
 
   private updateStandings(): void {
-    const sorted = [...this.racers].sort((a, b) => b.position - a.position);
+    const sorted = [...this.racers].sort(compareRacers);
     const lines = sorted.map((r, i) => {
       const pct = Math.min(100, Math.round((r.position / LAP) * 100));
       const star = r.isPlayer ? '★' : '  ';
@@ -433,8 +497,8 @@ export class ElmoRaceScene extends Phaser.Scene {
     // 結果パネル
     const py = 540;
     drawPanel(this, 60, py - 20, 630, 440, { depth: 14 });
-    this.add.text(375, py + 20, betWon ? '🎉 やった！' : '残念…', {
-      fontSize: '36px', color: betWon ? '#ffdd22' : '#ff6644',
+    this.add.text(375, py + 20, betWon ? '🎉 やった！' : 'レースしゅうりょう！', {
+      fontSize: '36px', color: betWon ? '#ffdd22' : '#ffaa66',
       fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(15);

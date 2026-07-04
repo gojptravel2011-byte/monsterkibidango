@@ -6,6 +6,7 @@ import { TS } from '../ui/StyledText';
 import { T } from '../ui/theme';
 import { BGM } from '../systems/bgm';
 import { activateRepel, isRepelActive, getRepelRemainSec } from '../systems/encounter';
+import { playHeroIdle, type HeroDir } from '../systems/heroAnim';
 
 const OY      = 80;  // HUD height
 const MAX_FLOOR = 30;
@@ -107,6 +108,7 @@ export class TowerDungeonScene extends Phaser.Scene {
   private playerC    = 5;
   private playerR    = 11;
   private playerSpr  !: Phaser.GameObjects.Sprite;
+  private lastDir    : HeroDir = 'down';
   private playerLbl  !: Phaser.GameObjects.Text;
 
   private tileGfx    !: Phaser.GameObjects.Graphics;
@@ -150,9 +152,9 @@ export class TowerDungeonScene extends Phaser.Scene {
 
     // Player sprite
     const [px, py] = this.cell2px(this.playerC, this.playerR);
-    this.playerSpr = this.add.sprite(px, py, 'player_f0')
-      .setDisplaySize(30, 38).setDepth(10);
-    this.playerSpr.play('player_idle');
+    this.playerSpr = this.add.sprite(px, py, 'player')
+      .setDisplaySize(54, 69).setDepth(10);
+    playHeroIdle(this.playerSpr, this.lastDir);
     const state = getState();
     this.playerLbl = this.add.text(px, py - 22, state.name.charAt(0), {
       fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
@@ -272,21 +274,33 @@ export class TowerDungeonScene extends Phaser.Scene {
     this.playerC = this.startC;
     this.playerR = this.startR;
 
-    // Stairs: random maze cell in top quarter
-    const topCells: [number, number][] = [];
+    // Stairs: random maze cell in top quarter (通行可能なマスのみ対象)
+    let topCells: [number, number][] = [];
     for (let r = 1; r <= Math.floor(ROWS / 4); r += 2)
       for (let c = 1; c <= COLS - 2; c += 2)
-        topCells.push([r, c]);
+        if (this.grid[r][c]) topCells.push([r, c]);
+    if (topCells.length === 0) {
+      // 上部に通路がない場合は迷路全体から通行可能なマスを探す
+      for (let r = 1; r <= ROWS - 2; r += 2)
+        for (let c = 1; c <= COLS - 2; c += 2)
+          if (this.grid[r][c] && !(r === this.startR && c === this.startC)) topCells.push([r, c]);
+    }
     [this.stairsR, this.stairsC] = topCells[Math.floor(Math.random() * topCells.length)];
 
     // Heal zone every 5 floors (not on boss floor)
     this.healUsed = false;
     const midStart = Math.floor(ROWS * 0.4), midEnd = Math.floor(ROWS * 0.7);
     if (this.floor % 5 === 0 && this.floor < MAX_FLOOR) {
-      const midCells: [number, number][] = [];
+      let midCells: [number, number][] = [];
       for (let r = midStart % 2 === 0 ? midStart + 1 : midStart; r <= midEnd; r += 2)
         for (let c = 1; c <= COLS - 2; c += 2)
-          midCells.push([r, c]);
+          if (this.grid[r][c] && !(r === this.stairsR && c === this.stairsC)) midCells.push([r, c]);
+      if (midCells.length === 0) {
+        for (let r = 1; r <= ROWS - 2; r += 2)
+          for (let c = 1; c <= COLS - 2; c += 2)
+            if (this.grid[r][c] && !(r === this.stairsR && c === this.stairsC) && !(r === this.startR && c === this.startC))
+              midCells.push([r, c]);
+      }
       [this.healR, this.healC] = midCells[Math.floor(Math.random() * midCells.length)];
     } else {
       this.healR = -1; this.healC = -1;
@@ -502,6 +516,10 @@ export class TowerDungeonScene extends Phaser.Scene {
   }
 
   private tryMove(dc: number, dr: number): void {
+    const dir: HeroDir = dc < 0 ? 'left' : dc > 0 ? 'right' : dr < 0 ? 'up' : 'down';
+    this.lastDir = dir;
+    playHeroIdle(this.playerSpr, dir);
+
     const nc = this.playerC + dc, nr = this.playerR + dr;
     if (nr < 0 || nr >= this._rows || nc < 0 || nc >= this._cols) return;
     if (!this.grid[nr][nc]) return;

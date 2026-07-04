@@ -10,19 +10,24 @@ import { BGM } from '../systems/bgm';
 import { T } from '../ui/theme';
 import { TS } from '../ui/StyledText';
 import { drawPanel } from '../ui/Panel';
+import { resolveHeroDir, playHeroWalk, playHeroIdle, type HeroDir } from '../systems/heroAnim';
+import { FUSION_NPC } from './npc/FusionNpc';
 
 const SPEED = 150;
-const PLAYER_SIZE = 28;
+const PLAYER_SIZE = 36; // NPCサイズの基準値（NPCの見た目は変更しない）
+const HERO_SIZE = PLAYER_SIZE * 1.5; // 歩いている主人公だけ1.5倍
 
 export class MapScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Sprite;
-  private lastVx: number = 1;
+  private lastDir: HeroDir = 'down';
   private playerLabel!: Phaser.GameObjects.Text;
+  private labelBounce = 0;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key };
   private msgWin!: MessageWindow;
   private fieldNameText!: Phaser.GameObjects.Text;
   private coinsText!: Phaser.GameObjects.Text;
+  private levelsText!: Phaser.GameObjects.Text;
   private connections: { zone: Phaser.GameObjects.Rectangle; toField: string }[] = [];
   private triggers: { x: number; y: number; action: () => void; confirmMsg: string; fired: boolean }[] = [];
   private decorations: Phaser.GameObjects.GameObject[] = [];
@@ -50,13 +55,21 @@ export class MapScene extends Phaser.Scene {
     this.buildField(pos.field);
 
     // プレイヤーは create() で必ず生成（shutdown で破棄された参照を再利用しないよう）
-    this.player = this.add.sprite(pos.x, pos.y, 'player_f0')
-      .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(10);
-    this.player.play('player_idle');
-    this.playerLabel = this.add.text(pos.x, pos.y - 30, getState().name.charAt(0), {
-      fontSize: '34px', color: '#ffffff', fontFamily: 'sans-serif',
-      stroke: '#000000', strokeThickness: 2,
+    this.player = this.add.sprite(pos.x, pos.y, 'player')
+      .setDisplaySize(HERO_SIZE * 1.4, HERO_SIZE * 1.8).setDepth(10);
+    playHeroIdle(this.player, this.lastDir);
+    // 名前は表示せず、操作しているキャラだと一目でわかるよう頭上に矢印マーカーを浮かべる
+    this.playerLabel = this.add.text(pos.x, pos.y - 30, '▼', {
+      fontSize: '26px', color: '#ffee44', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(11);
+    // 主人公との相対オフセットだけをアニメさせる（絶対y座標を直接いじると
+    // 移動後に古い位置へ戻ろうとして頭上から離れて見えてしまうため）
+    this.labelBounce = 0;
+    this.tweens.add({
+      targets: this, labelBounce: 8,
+      duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
 
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = {
@@ -78,10 +91,19 @@ export class MapScene extends Phaser.Scene {
     drawPanel(this, 0, 0, w, 58, { depth: 148, scrollFactor: 0 });
     this.fieldNameText = this.add.text(10, 10, '', {
       ...TS.label,
+      color: T.textGold,
     }).setDepth(150).setScrollFactor(0);
 
     this.coinsText = this.add.text(10, 32, '', {
       ...TS.coin,
+      fontSize: '22px',
+      color: T.textGold,
+    }).setDepth(150).setScrollFactor(0);
+
+    this.levelsText = this.add.text(180, 32, '', {
+      ...TS.coin,
+      fontSize: '22px',
+      color: T.textGold,
     }).setDepth(150).setScrollFactor(0);
 
     this.updateHUD();
@@ -236,6 +258,22 @@ export class MapScene extends Phaser.Scene {
       this.addTriggerZone(w / 2 + 180, h * 0.70, 'けいさん\nゲーム', 0x4466cc,
         'たしざん・ひきざん\nゲームをしますか？',
         () => { this.scene.start('ArithmeticScene'); },
+      );
+
+      // カタカナクイズ（ひらがな→カタカナ黒板）
+      const kanaX = w / 2 - 180, kanaY = h * 0.64;
+      this.decorations.push(
+        this.add.rectangle(kanaX, kanaY, 120, 100, 0x3d1a3d).setDepth(2).setStrokeStyle(3, 0xff88cc),
+        this.add.text(kanaX, kanaY - 14, 'あ→ア', {
+          fontSize: '26px', color: '#ffdd88', fontFamily: 'sans-serif', fontStyle: 'bold',
+        }).setOrigin(0.5).setDepth(3),
+        this.add.text(kanaX, kanaY + 24, 'カタカナ', {
+          fontSize: '18px', color: '#ffaadd', fontFamily: 'sans-serif',
+        }).setOrigin(0.5).setDepth(3),
+      );
+      this.addTriggerZone(kanaX, h * 0.70, 'カタカナ\nクイズ', 0xcc4488,
+        'カタカナクイズを\nしますか？',
+        () => { this.scene.start('KatakanaQuizScene'); },
       );
 
       // えんちょうせんせい（きびだんご屋）おみせ(x=500)の右横
@@ -793,6 +831,26 @@ export class MapScene extends Phaser.Scene {
       }
     }
 
+    // ── もとのせかいへ戻るとびら（下部中央）───────────────────
+    // 実際の移動判定は FIELDS['angel_hoikuen'].connections の自動出入口が
+    // すでに同じ座標(375,1140)を担当しているので、ここでは目印の見た目だけ作る。
+    {
+      const bx = w * 0.5, by = 1140, color = 0x66ccff;
+      const bg = this.add.rectangle(bx, by, 100, 130, color, 0.85)
+        .setStrokeStyle(3, 0xffffff, 0.95).setDepth(3);
+      const top = this.add.rectangle(bx, by - 65, 100, 20, color, 1)
+        .setStrokeStyle(2, 0xffffff, 0.9).setDepth(3);
+      const glow = this.add.circle(bx, by - 10, 60, 0xaaddff, 0.18).setDepth(2);
+      this.tweens.add({ targets: glow, scaleX: 1.3, scaleY: 1.3, alpha: 0.05,
+        duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      const lbl = this.add.text(bx, by + 78, 'もとのせかいへの\nとびら', {
+        fontSize: '15px', color: '#ffffff', fontFamily: 'sans-serif', fontStyle: 'bold', align: 'center',
+        stroke: '#003355', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4);
+      this.tweens.add({ targets: bg, alpha: 0.6, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      this.decorations.push(glow, bg, top, lbl);
+    }
+
     // ── タワーダンジョン入り口（中央 y=490）──────────────────
     const towerX = w / 2, towerY = 490;
     const towerG = this.add.graphics().setDepth(3);
@@ -835,6 +893,21 @@ export class MapScene extends Phaser.Scene {
     this.addTriggerZone(araceX, araceY + 68, 'レース場', 0xffaa00,
       'エルモレース場に\nはいりますか？',
       () => { this.scene.start('ElmoRaceScene'); },
+    );
+
+    // ── へんなおじさん（左下、モンスターがったいNPC）──────────────────
+    const fusionX = w * 0.18, fusionY = 630;
+    this.decorations.push(
+      this.add.image(fusionX, fusionY, FUSION_NPC.spriteKey)
+        .setDisplaySize(PLAYER_SIZE * 1.4, PLAYER_SIZE * 1.8).setDepth(3),
+      this.add.text(fusionX, fusionY + 36, FUSION_NPC.name, {
+        fontSize: '15px', color: FUSION_NPC.labelColor, fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5).setDepth(4),
+    );
+    this.addTriggerZone(fusionX, fusionY + 68, 'はなす', FUSION_NPC.triggerColor,
+      FUSION_NPC.greeting,
+      () => { this.scene.launch('FusionScene').pause(); },
     );
 
     this.addTriggerZone(towerX, towerY, 'とうへ', 0x9900ff,
@@ -1051,9 +1124,9 @@ export class MapScene extends Phaser.Scene {
 
     const moved = vx !== 0 || vy !== 0;
     if (moved) {
-      if (vx !== 0) this.lastVx = vx;
-      this.player.setFlipX(this.lastVx < 0);
-      if (this.player.anims.currentAnim?.key !== 'player_walk') this.player.play('player_walk');
+      const dir = resolveHeroDir(up, down, left, right);
+      if (dir) this.lastDir = dir;
+      playHeroWalk(this.player, this.lastDir);
 
       const dt = delta / 1000;
       const w = this.scale.width, h = this.scale.height;
@@ -1062,8 +1135,6 @@ export class MapScene extends Phaser.Scene {
       const [rx, ry] = this.resolveWalls(nx, ny);
       this.player.x = rx;
       this.player.y = ry;
-      this.playerLabel.x = this.player.x;
-      this.playerLabel.y = this.player.y - 30;
 
       // 歩数カウント（フレームではなく一定間隔）
       this.moveTimer += delta;
@@ -1107,8 +1178,12 @@ export class MapScene extends Phaser.Scene {
       }
     } else {
       this.moveTimer = 0;
-      if (this.player.anims.currentAnim?.key !== 'player_idle') this.player.play('player_idle');
+      playHeroIdle(this.player, this.lastDir);
     }
+
+    // マーカーは常に主人公の頭上（＋バウンス分）に追従させる
+    this.playerLabel.x = this.player.x;
+    this.playerLabel.y = this.player.y - 30 - this.labelBounce;
   }
 
   /** ダンジョン壁との衝突解決（X軸・Y軸を独立に処理してスライド移動を実現） */
@@ -1143,8 +1218,12 @@ export class MapScene extends Phaser.Scene {
     const field = FIELDS[toField];
     if (!field) return;
 
-    // ちかめいろ → グリッド迷路シーンへ切り替え
+    // ちかめいろ（やみのぬしの迷路）→ カタカナ・けいさんレベルでゲート
     if (toField === 'dungeon') {
+      if (state.katakanaLevel < 1 || state.keisanLevel < 1) {
+        this.msgWin.show('', `やみのぬしの　めいろに　はいるには\nカタカナレベルと　けいさんレベルが\nひつようだよ！\n\nカタカナレベル：${state.katakanaLevel}　けいさんレベル：${state.keisanLevel}\nクイズや　けいさんゲームで　4もん/5もん\nせいかいすると　レベルが　あがるよ！`);
+        return;
+      }
       state.position = { field: 'dungeon', x: 0, y: 0 }; // x=0 で新規入場扱い
       this.scene.start('DungeonMazeScene');
       return;
@@ -1271,5 +1350,6 @@ export class MapScene extends Phaser.Scene {
     const field = FIELDS[state.position.field];
     this.fieldNameText.setText(field?.name ?? '');
     this.coinsText.setText(`コイン: ${state.coins}`);
+    this.levelsText.setText(`けいさん れべる${state.keisanLevel}　カタカナ れべる${state.katakanaLevel}`);
   }
 }

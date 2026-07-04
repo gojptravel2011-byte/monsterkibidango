@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { addCoins, addItem } from '../state/playerState';
+import { addCoins, addItem, addKeisanLevel, getState } from '../state/playerState';
 import { T } from '../ui/theme';
 import { TS } from '../ui/StyledText';
 
@@ -72,39 +72,95 @@ export class ArithmeticScene extends Phaser.Scene {
     this.nextQuestion();
   }
 
+  // けいさんレベル（0〜10）に応じて問題の難易度を変える
+  private get keisanLevel(): number {
+    return getState().keisanLevel;
+  }
+
   private makeProblem(): Problem {
-    const op = Math.random() < 0.5 ? '+' : '-' as '+' | '-';
-    let a: number, b: number, answer: number;
     if (this.difficulty === 'hard') {
-      // 2〜3桁の足し算・引き算
-      if (op === '+') {
-        a = 10 + Math.floor(Math.random() * 891); // 10〜900
-        b = 10 + Math.floor(Math.random() * 891);
-        answer = a + b;
-      } else {
-        a = 100 + Math.floor(Math.random() * 901); // 100〜1000
-        b = 10  + Math.floor(Math.random() * (a - 10));
-        answer = a - b;
-      }
-    } else {
-      // 通常：2〜3桁の足し算・引き算
+      // とくべつけいさん：常に高難度（2〜3桁の足し算・引き算）
+      const op = Math.random() < 0.5 ? '+' : '-';
+      let a: number, b: number, answer: number;
       if (op === '+') {
         a = 10 + Math.floor(Math.random() * 891);
         b = 10 + Math.floor(Math.random() * 891);
         answer = a + b;
       } else {
         a = 100 + Math.floor(Math.random() * 901);
-        b = 10  + Math.floor(Math.random() * (a - 10));
+        b = 10 + Math.floor(Math.random() * (a - 10));
         answer = a - b;
       }
+      return { a, op, b, answer };
     }
-    return { a, op, b, answer };
+
+    const lv = this.keisanLevel;
+
+    const add1 = (allowCarry: boolean): Problem => {
+      // ひとけた＋ひとけた
+      let a: number, b: number, answer: number;
+      do {
+        a = 1 + Math.floor(Math.random() * 9);
+        b = 1 + Math.floor(Math.random() * 9);
+        answer = a + b;
+      } while (!allowCarry && answer > 9);
+      return { a, op: '+', b, answer };
+    };
+    const sub1 = (allowCarry: boolean): Problem => {
+      // ひとけたひくひとけた（引く数はひとけた、答えが2桁になることもある場合は引かれる数を10〜18に広げる）
+      let a: number, b: number;
+      if (allowCarry) {
+        a = 10 + Math.floor(Math.random() * 9); // 10〜18
+        b = 1 + Math.floor(Math.random() * 9);
+      } else {
+        a = 1 + Math.floor(Math.random() * 9);
+        b = 1 + Math.floor(Math.random() * 9);
+        if (b > a) [a, b] = [b, a];
+      }
+      return { a, op: '-', b, answer: a - b };
+    };
+    const add2 = (): Problem => {
+      const a = 10 + Math.floor(Math.random() * 90);
+      const b = 10 + Math.floor(Math.random() * 90);
+      return { a, op: '+', b, answer: a + b };
+    };
+    const sub2 = (): Problem => {
+      let a = 10 + Math.floor(Math.random() * 90);
+      let b = 10 + Math.floor(Math.random() * 90);
+      if (b > a) [a, b] = [b, a];
+      return { a, op: '-', b, answer: a - b };
+    };
+    const add23 = (): Problem => {
+      const a = 10 + Math.floor(Math.random() * 990);
+      const b = 10 + Math.floor(Math.random() * 990);
+      return { a, op: '+', b, answer: a + b };
+    };
+    const sub23 = (): Problem => {
+      let a = 10 + Math.floor(Math.random() * 990);
+      let b = 10 + Math.floor(Math.random() * 990);
+      if (b > a) [a, b] = [b, a];
+      return { a, op: '-', b, answer: a - b };
+    };
+
+    switch (lv) {
+      case 0: return add1(false);
+      case 1: return add1(true);
+      case 2: return sub1(false);
+      case 3: return sub1(true);
+      case 4: return Math.random() < 0.5 ? add1(true) : sub1(true);
+      case 5: return add2();
+      case 6: return sub2();
+      case 7: return Math.random() < 0.5 ? add2() : sub2();
+      case 8: return add23();
+      case 9: return sub23();
+      default: return Math.random() < 0.5 ? add23() : sub23();
+    }
   }
 
   private makeChoices(correct: number): number[] {
     const choices = new Set<number>([correct]);
     while (choices.size < 4) {
-      const spread = correct > 100 ? 50 : 10;
+      const spread = correct > 1000 ? 100 : correct > 100 ? 50 : 10;
       const offset = (Math.floor(Math.random() * (spread * 2 + 1)) - spread) || spread;
       const wrong = correct + offset;
       if (wrong >= 0 && wrong !== correct) choices.add(wrong);
@@ -230,7 +286,12 @@ export class ArithmeticScene extends Phaser.Scene {
     const coins = this.score * coinPerCorrect;
     addCoins(coins);
     const passScore = isHard ? 8 : 4;
-    if (this.score >= passScore) addItem('tabenoko', isHard ? 3 : 1);
+    let leveledUp = false;
+    if (this.score >= passScore) {
+      addItem('tabenoko', isHard ? 3 : 1);
+      addKeisanLevel(1);
+      leveledUp = true;
+    }
 
     const resultColor = this.score >= passScore ? T.textGold : this.score >= Math.floor(this.totalQuestions / 2) ? T.textGreen : T.textRed;
     const resultMsg = this.score === this.totalQuestions
@@ -253,10 +314,18 @@ export class ArithmeticScene extends Phaser.Scene {
       ...TS.coin,
     }).setOrigin(0.5);
 
-    if (this.score >= 4) {
+    if (this.score >= passScore) {
       this.add.text(w / 2, h * 0.63, 'たべのこ　ゲット！', {
         ...TS.body,
         color: T.textGreen,
+      }).setOrigin(0.5);
+    }
+
+    if (leveledUp) {
+      this.add.text(w / 2, h * 0.71, `けいさんレベルが\n${getState().keisanLevel}に　あがった！`, {
+        ...TS.body,
+        color: T.textGold,
+        align: 'center',
       }).setOrigin(0.5);
     }
 

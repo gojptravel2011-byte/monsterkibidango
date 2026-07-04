@@ -63,7 +63,7 @@ export class BattleScene extends Phaser.Scene {
     // 敵スプライト
     const eSpecies = MONSTER_SPECIES[this.enemy.speciesId];
     this.enemySprite = this.add.image(w * 0.65, h * 0.24, eSpecies?.spriteKey ?? 'monster_kurosuke')
-      .setDisplaySize(110, 110).setFlipX(true).setDepth(5);
+      .setDisplaySize(176, 176).setFlipX(true).setDepth(5);
 
     // 敵ステータスパネル（左上）
     const ePanelY = 60;
@@ -78,7 +78,7 @@ export class BattleScene extends Phaser.Scene {
     // 味方スプライト
     const aSpecies = MONSTER_SPECIES[this.ally?.speciesId];
     this.allySprite = this.add.image(w * 0.28, h * 0.50, aSpecies?.spriteKey ?? 'player')
-      .setDisplaySize(110, 110).setDepth(5);
+      .setDisplaySize(176, 176).setDepth(5);
 
     // 味方ステータスパネル（右）
     const aPanelX = w - 430;
@@ -101,7 +101,6 @@ export class BattleScene extends Phaser.Scene {
     BGM.play(this.isBoss ? 'boss' : 'battle');
 
     this.updateHpDisplay();
-    this.showCommandMenu();
 
     markSeen(this.enemy.speciesId);
 
@@ -250,7 +249,7 @@ export class BattleScene extends Phaser.Scene {
     this.ally = next;
     const aSpecies = MONSTER_SPECIES[this.ally.speciesId];
     this.allyNameText.setText(`${aSpecies?.name ?? 'なかま'} Lv.${this.ally.level}`);
-    this.allySprite.setTexture(aSpecies?.spriteKey ?? 'player').setDisplaySize(96, 96);
+    this.allySprite.setTexture(aSpecies?.spriteKey ?? 'player').setDisplaySize(176, 176);
     this.updateHpDisplay();
     // こうたいは敵のターンを消費しない（即時交代）
     this.msgWin.show('', `${aSpecies?.name}、いくよ！`, () => this.showCommandMenu());
@@ -577,7 +576,7 @@ export class BattleScene extends Phaser.Scene {
       this.updateHpDisplay();
       const aSpecies = MONSTER_SPECIES[this.ally.speciesId];
       this.allyNameText.setText(`${aSpecies?.name ?? 'なかま'} Lv.${this.ally.level}`);
-      this.allySprite.setTexture(aSpecies?.spriteKey ?? 'player').setDisplaySize(96, 96);
+      this.allySprite.setTexture(aSpecies?.spriteKey ?? 'player').setDisplaySize(176, 176);
       this.msgWin.show('', `${aSpecies?.name}、いくよ！`, () => this.showCommandMenu());
     } else {
       this.msgWin.show('', 'なかまが　みんな　たおれた…\nほいくえんに　もどるよ！', () => {

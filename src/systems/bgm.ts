@@ -449,6 +449,28 @@ class BgmManager {
     }
     this.oscs = [];
   }
+
+  // 合体演出などで鳴らす単発の効果音（上昇アルペジオ）
+  playFusionJingle(): void {
+    if (!this.ctx || !this.masterGain || this.muted) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    let t = this.ctx.currentTime;
+    for (const freq of notes) {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const env = this.ctx.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.2, t + 0.02);
+      env.gain.setValueAtTime(0.2, t + 0.12);
+      env.gain.linearRampToValueAtTime(0, t + 0.18);
+      osc.connect(env);
+      env.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.2);
+      t += 0.11;
+    }
+  }
 }
 
 export const BGM = new BgmManager();

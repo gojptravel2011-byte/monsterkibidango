@@ -36,7 +36,7 @@ export const MAZE_GRID_ROWS: string[][] = [
 
 // 検証済み特殊タイル座標（row, col / 0始まり）
 export const MAZE_START  = { row: 29, col: 10 };
-export const MAZE_GOAL   = { row:  0, col: 10 };
+export const MAZE_GOAL   = { row:  1, col: 10 };
 export const MAZE_HEAL   = { row:  1, col: 16 };
 export const MAZE_TREASURES = [
   { row:  1, col: 20, itemId: 'daikyuball', count: 1,  label: 'きびだんご ×1' },

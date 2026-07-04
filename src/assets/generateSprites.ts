@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { FUSION_MONSTER_SPECIES } from '../data/fusion/fusionMonsters';
 
 // すべてのスプライトをPhaser Graphicsで生成してテクスチャ化する
 // 本番素材に差し替える場合は BootScene の preload() で実際の画像をロードし
@@ -10,7 +11,6 @@ export function generateAllSprites(scene: Phaser.Scene): void {
   generateTowerBossSprites(scene);
   generateAnotherWorldSprites(scene);
   genNpcEncho(scene);
-  genPlayerFrames(scene);
   genNpcSensei(scene);
   genNpcGaku(scene);
   genNpcRitsu(scene);
@@ -35,6 +35,8 @@ export function generateAllSprites(scene: Phaser.Scene): void {
   genCloud(scene);
   genFlower(scene);
   genBench(scene);
+  genNpcFusionOjisan(scene);
+  genFusionMonsterSprites(scene);
 }
 
 // ---- ユーティリティ ----
@@ -134,23 +136,6 @@ function drawChar(g: G, o: CharOpts): void {
   }
 }
 
-// ---- プレイヤー ウォークフレーム（48×64） ----
-function genPlayerFrames(scene: Phaser.Scene): void {
-  const opts = {
-    hairColor: 0x221100, hairStyle: 'short' as const,
-    skinColor: 0xffcc99, shirtColor: 0xee4433,
-    pantsColor: 0x2244aa, shoeColor: 0x111133,
-  };
-  for (const frame of [0, 1, 2] as const) {
-    const g = make(scene);
-    drawChar(g, { ...opts, frame });
-    fin(g, `player_f${frame}`, 48, 64);
-  }
-  const g2 = make(scene);
-  drawChar(g2, { ...opts, frame: 0 });
-  fin(g2, 'player', 48, 64);
-}
-
 function genNpcEncho(scene: Phaser.Scene): void {
   const g = make(scene);
   drawChar(g, {
@@ -210,6 +195,49 @@ function genNpcKaya(scene: Phaser.Scene): void {
     frame: 0,
   });
   fin(g, 'npc_kaya', 48, 64);
+}
+// 合体NPC「へんなおじさん」（別世界にいる怪しい発明家風）
+function genNpcFusionOjisan(scene: Phaser.Scene): void {
+  if (skip(scene, 'npc_fusion_ojisan')) return;
+  const g = make(scene);
+  drawChar(g, {
+    hairColor: 0x776644, hairStyle: 'spiky',
+    skinColor: 0xffcc99, shirtColor: 0x9955cc,
+    pantsColor: 0x442266, shoeColor: 0x221133,
+    glasses: true, frame: 0,
+  });
+  fin(g, 'npc_fusion_ojisan', 48, 64);
+}
+
+// 合体専用モンスター（新規10体）のプレースホルダー生成。
+// fusionMonsters.ts の placeholderColor を使い、丸い体＋かわいい目の
+// 汎用モンスター絵を自動生成する（見た目コンセプトは fusionMonsters.ts の
+// FUSION_MONSTER_META.concept を参照。実素材に差し替える場合はここを個別実装に置き換える）。
+function genFusionMonsterSprites(scene: Phaser.Scene): void {
+  Object.values(FUSION_MONSTER_SPECIES).forEach(species => {
+    if (skip(scene, species.spriteKey)) return;
+    const g = make(scene);
+    const cx = 40, cy = 44;
+    const color = species.placeholderColor;
+
+    g.fillStyle(0x000000, 0.15); g.fillEllipse(cx, cy + 30, 48, 10);
+
+    // オーラ（合体モンスターらしい光の輪）
+    g.fillStyle(color, 0.25); g.fillCircle(cx, cy, 36);
+    // 本体
+    g.fillStyle(color); g.fillCircle(cx, cy, 26);
+    g.fillStyle(0xffffff, 0.2); g.fillCircle(cx - 8, cy - 10, 12);
+
+    cuteEye(g, cx - 9, cy - 2, 8);
+    cuteEye(g, cx + 9, cy - 2, 8);
+    g.fillStyle(0x000000, 0.55); g.fillEllipse(cx, cy + 14, 14, 6);
+
+    // 頭上に小さな結晶（合体専用モンスターの証）
+    g.fillStyle(0xffffff, 0.85);
+    g.fillTriangle(cx, cy - 40, cx - 6, cy - 30, cx + 6, cy - 30);
+
+    fin(g, species.spriteKey, 80, 80);
+  });
 }
 
 // ════════════════════════════════════════════════════════════

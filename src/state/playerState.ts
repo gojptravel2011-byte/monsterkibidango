@@ -24,6 +24,8 @@ export interface PlayerState {
   position: { field: string; x: number; y: number };
   flags: Record<string, boolean>;
   dex: Record<string, 'seen' | 'caught'>;
+  katakanaLevel: number;
+  keisanLevel: number;
 }
 
 let _state: PlayerState = createInitialState();
@@ -38,6 +40,8 @@ function createInitialState(): PlayerState {
     position: { field: 'hoikuen', x: 400, y: 300 },
     flags: {},
     dex: {},
+    katakanaLevel: 0,
+    keisanLevel: 0,
   };
 }
 
@@ -139,6 +143,16 @@ export function spendCoins(amount: number): boolean {
   if (_state.coins < amount) return false;
   _state.coins -= amount;
   return true;
+}
+
+export const MAX_QUIZ_LEVEL = 10;
+
+export function addKatakanaLevel(amount: number = 1): void {
+  _state.katakanaLevel = Math.min(MAX_QUIZ_LEVEL, _state.katakanaLevel + amount);
+}
+
+export function addKeisanLevel(amount: number = 1): void {
+  _state.keisanLevel = Math.min(MAX_QUIZ_LEVEL, _state.keisanLevel + amount);
 }
 
 export function setFlag(key: string, value: boolean = true): void {

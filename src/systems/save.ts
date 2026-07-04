@@ -14,6 +14,8 @@ export function loadGame(): boolean {
   try {
     const state: PlayerState = JSON.parse(raw);
     if (!state.dex) state.dex = {};
+    if (typeof state.katakanaLevel !== 'number' || isNaN(state.katakanaLevel)) state.katakanaLevel = 0;
+    if (typeof state.keisanLevel !== 'number' || isNaN(state.keisanLevel)) state.keisanLevel = 0;
     setState(state);
     return true;
   } catch {

@@ -13,18 +13,21 @@ import { MenuScene } from './scenes/MenuScene';
 import { EndingScene } from './scenes/EndingScene';
 import { MinigameScene } from './scenes/MinigameScene';
 import { ArithmeticScene } from './scenes/ArithmeticScene';
+import { KatakanaQuizScene } from './scenes/KatakanaQuizScene';
 import { BallShopScene } from './scenes/BallShopScene';
 import { ItemListScene } from './scenes/ItemListScene';
 import { DungeonMazeScene } from './scenes/DungeonMazeScene';
 import { MonsterDexScene } from './scenes/MonsterDexScene';
 import { TowerDungeonScene } from './scenes/TowerDungeonScene';
 import { ElmoRaceScene } from './scenes/ElmoRaceScene';
+import { FusionScene } from './scenes/FusionScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 750,
   height: 1200,
   backgroundColor: '#000011',
+  transparent: true,
   scene: [
     BootScene,
     TitleScene,
@@ -40,12 +43,14 @@ const config: Phaser.Types.Core.GameConfig = {
     EndingScene,
     MinigameScene,
     ArithmeticScene,
+    KatakanaQuizScene,
     BallShopScene,
     ItemListScene,
     DungeonMazeScene,
     MonsterDexScene,
     TowerDungeonScene,
     ElmoRaceScene,
+    FusionScene,
   ],
   scale: {
     mode: Phaser.Scale.FIT,

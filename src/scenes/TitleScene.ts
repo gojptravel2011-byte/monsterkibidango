@@ -17,25 +17,33 @@ export class TitleScene extends Phaser.Scene {
     // shot07 をループ動画背景として配置（HTML要素、ミュート自動再生）
     this.startBgVideo();
 
-    // タイトルテキスト（動画の上に重ねる）
-    this.add.text(w / 2, h * 0.22, 'モンスター', {
+    // タイトルテキスト（動画の上、ほぼ中央に文字枠つきで一行）
+    const titleY = h * 0.46;
+    const frameW = w * 0.86;
+    const frameH = 100;
+    // 外側の淡いグロー枠
+    this.add.rectangle(w / 2, titleY, frameW + 14, frameH + 14, 0x000000, 0)
+      .setStrokeStyle(2, T.borderGold, 0.35).setDepth(1);
+    // メインの飾り枠（二重線）
+    this.add.rectangle(w / 2, titleY, frameW, frameH, 0x0b1330, 0.55)
+      .setStrokeStyle(4, T.borderGold, 0.95).setDepth(1);
+    this.add.rectangle(w / 2, titleY, frameW - 12, frameH - 12, 0x000000, 0)
+      .setStrokeStyle(1.5, T.borderGold, 0.6).setDepth(1);
+    // 四隅の飾り
+    const cornerOffX = frameW / 2 - 4;
+    const cornerOffY = frameH / 2 - 4;
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+      this.add.text(w / 2 + sx * cornerOffX, titleY + sy * cornerOffY, '✦', {
+        fontSize: '18px', color: '#ffdd88',
+      }).setOrigin(0.5).setDepth(2);
+    });
+
+    this.add.text(w / 2, titleY, 'きびだんごモンスターズ', {
       ...TS.heading,
-      fontSize: '52px',
+      fontSize: '38px',
       color: T.textGold,
       stroke: '#050b1a',
       strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(2);
-
-    this.add.text(w / 2, h * 0.33, 'きびだんご', {
-      ...TS.heading,
-      fontSize: '60px',
-      color: '#ff9933',
-      stroke: '#050b1a',
-      strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(2);
-
-    this.add.text(w / 2, h * 0.40, 'いっしょに　ぼうけんしよう', {
-      ...TS.sub,
     }).setOrigin(0.5).setDepth(2);
 
     // タイトルBGM：ボタン押下時にユーザー操作として init → play
@@ -45,13 +53,13 @@ export class TitleScene extends Phaser.Scene {
       BGM.play('title');
     };
 
-    this.makeButton(w / 2, h * 0.60, 'はじめから', () => {
+    this.makeButton(w / 2, h * 0.82, 'はじめから', () => {
       startBgm();
       this.scene.start('NameInputScene');
     });
 
     if (hasSaveData()) {
-      this.makeButton(w / 2, h * 0.75, 'つづきから', () => {
+      this.makeButton(w / 2, h * 0.92, 'つづきから', () => {
         startBgm();
         if (loadGame()) {
           this.scene.start('MapScene');
@@ -59,7 +67,7 @@ export class TitleScene extends Phaser.Scene {
       });
     }
 
-    this.add.text(w - 10, h - 10, '© 2025', {
+    this.add.text(w - 10, h - 10, '制作：りんのすけ', {
       ...TS.sub,
     }).setOrigin(1, 1).setDepth(2);
   }
