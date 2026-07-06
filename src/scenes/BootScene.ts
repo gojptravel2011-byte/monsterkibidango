@@ -11,17 +11,87 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet(HERO_SHEET_KEY, 'hero_walk.png', { frameWidth: 256, frameHeight: 258 });
 
     // 実画像を先にロード（generateSprites側でexistsチェックしてスキップ）
+    // public/monsters/monster_0NN.png が正式なモンスター素材の管理場所
+    // （番号は public/monsters/manifest.json に対応）
     const realSprites: [string, string][] = [
-      ['monster_kurosuke',   'monster_kurosuke.png'],
-      ['monster_kusagumi',   'monster_kusagumi.png'],
-      ['monster_mizubon',    'monster_mizupon.png'],   // ミズボン
-      ['monster_honon',      'monster_honon.png'],
-      ['monster_dragon',     'monster_dragon.png'],
-      ['monster_iwagon',     'monster_iwagon.png'],
-      ['aw_black_dragon',    'monster_black_dragon.png'],
-      ['kodai_dragon',       'monster_kodai_dragon.png'],
-      ['monster_rasuboss',   'monster_yami_nushi.png'],
-      ['aw_yami_no_teiou',   'monster_yami_teiou.png'],
+      ['kodai_dragon', 'monster_kodai_dragon.png'], // タワーボス（63体の通し番号には含まれない別枠）
+
+      // #1-10 基本モンスター
+      ['monster_kurosuke', 'monsters/monster_001.png'],
+      ['monster_piyon',    'monsters/monster_002.png'],
+      ['monster_mizubon',  'monsters/monster_003.png'],
+      ['monster_honon',    'monsters/monster_004.png'],
+      ['monster_kusagumi', 'monsters/monster_005.png'],
+      ['monster_iwagon',   'monsters/monster_006.png'],
+      ['monster_kazepon',  'monsters/monster_007.png'],
+      ['monster_denkon',   'monsters/monster_008.png'],
+      ['monster_dragon',   'monsters/monster_009.png'],
+      ['monster_rasuboss', 'monsters/monster_010.png'],
+
+      // #11-35 別世界モンスター
+      ['aw_inferno_golem',   'monsters/monster_011.png'],
+      ['aw_flame_dragon',    'monsters/monster_012.png'],
+      ['aw_vulcan_phoenix',  'monsters/monster_013.png'],
+      ['aw_blizzard_wolf',   'monsters/monster_014.png'],
+      ['aw_frost_giant',     'monsters/monster_015.png'],
+      ['aw_ice_specter',     'monsters/monster_016.png'],
+      ['aw_thunder_beast',   'monsters/monster_017.png'],
+      ['aw_storm_lord',      'monsters/monster_018.png'],
+      ['aw_volt_hydra',      'monsters/monster_019.png'],
+      ['aw_abyss_kraken',    'monsters/monster_020.png'],
+      ['aw_tide_leviathan',  'monsters/monster_021.png'],
+      ['aw_coral_golem',     'monsters/monster_022.png'],
+      ['aw_heaven_knight',   'monsters/monster_023.png'],
+      ['aw_sky_titan',       'monsters/monster_024.png'],
+      ['aw_wind_serpent',    'monsters/monster_025.png'],
+      ['aw_dark_angel',      'monsters/monster_026.png'],
+      ['aw_golem_teacher',   'monsters/monster_027.png'],
+      ['aw_shadow_student',  'monsters/monster_028.png'],
+      ['aw_void_reaper',     'monsters/monster_029.png'],
+      ['aw_nightmare_wolf',  'monsters/monster_030.png'],
+      ['aw_shadow_colossus', 'monsters/monster_031.png'],
+      ['aw_black_dragon',    'monsters/monster_032.png'],
+      ['aw_coin_slime',      'monsters/monster_033.png'],
+      ['aw_exp_ghost',       'monsters/monster_034.png'],
+      ['aw_yami_no_teiou',   'monsters/monster_035.png'],
+
+      // #36-42 こどもたち
+      ['child_riri',   'monsters/monster_036.png'],
+      ['child_asa',    'monsters/monster_037.png'],
+      ['child_kaho',   'monsters/monster_038.png'],
+      ['child_haru',   'monsters/monster_039.png'],
+      ['child_yuuki',  'monsters/monster_040.png'],
+      ['child_takeru', 'monsters/monster_041.png'],
+      ['child_yuzu',   'monsters/monster_042.png'],
+
+      // #43-47 フィールドぬし
+      ['boss_honoo_nushi',    'monsters/monster_043.png'],
+      ['boss_koori_nushi',    'monsters/monster_044.png'],
+      ['boss_kaminari_nushi', 'monsters/monster_045.png'],
+      ['boss_mizu_nushi',     'monsters/monster_046.png'],
+      ['boss_sora_nushi',     'monsters/monster_047.png'],
+
+      // #48-57 合体専用モンスター
+      ['fusion_mori_seirei',     'monsters/monster_048.png'],
+      ['fusion_maguroc',         'monsters/monster_049.png'],
+      ['fusion_thunder_fairy',   'monsters/monster_050.png'],
+      ['fusion_ice_phoenix',     'monsters/monster_051.png'],
+      ['fusion_crystal_golem',   'monsters/monster_052.png'],
+      ['fusion_element_dragon',  'monsters/monster_053.png'],
+      ['fusion_shine_unicorn',   'monsters/monster_054.png'],
+      ['fusion_dark_chimera',    'monsters/monster_055.png'],
+      ['fusion_seirei_ou',       'monsters/monster_056.png'],
+      ['fusion_ultimate_dragon', 'monsters/monster_057.png'],
+
+      // #58-60 レアエンカウント上位種
+      ['aw_coin_slime_king',     'monsters/monster_058.png'],
+      ['aw_exp_ghost_giant',     'monsters/monster_059.png'],
+      ['aw_betsusekai_kamisama', 'monsters/monster_060.png'],
+
+      // #61-63 NPC
+      ['npc_encho',         'monsters/monster_061.png'],
+      ['npc_sensei',        'monsters/monster_062.png'],
+      ['npc_fusion_ojisan', 'monsters/monster_063.png'],
     ];
     for (const [key, file] of realSprites) {
       this.load.image(key, file);

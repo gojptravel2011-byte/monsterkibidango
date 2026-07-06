@@ -1,0 +1,695 @@
+[
+  {
+    "number": 1,
+    "id": "kurosuke",
+    "name": "クロスケ",
+    "file": "monsters/monster_001.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 2,
+    "id": "piyon",
+    "name": "ぴよん",
+    "file": "monsters/monster_002.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 3,
+    "id": "mizubon",
+    "name": "みずぼん",
+    "file": "monsters/monster_003.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 4,
+    "id": "honon",
+    "name": "ほのん",
+    "file": "monsters/monster_004.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 5,
+    "id": "kusagumi",
+    "name": "くさぐみ",
+    "file": "monsters/monster_005.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 6,
+    "id": "iwagon",
+    "name": "いわごん",
+    "file": "monsters/monster_006.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 7,
+    "id": "kazepon",
+    "name": "かぜぽん",
+    "file": "monsters/monster_007.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 8,
+    "id": "denkon",
+    "name": "でんこん",
+    "file": "monsters/monster_008.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 9,
+    "id": "dragon",
+    "name": "ドラゴン",
+    "file": "monsters/monster_009.png",
+    "sourceSheet": "sprites1-9.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "number": 10,
+    "id": "rasuboss",
+    "name": "やみのぬし",
+    "file": "monsters/monster_010.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 11,
+    "id": "inferno_golem",
+    "name": "インフェルノゴーレム",
+    "file": "monsters/monster_011.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 12,
+    "id": "flame_dragon",
+    "name": "フレイムドラゴン",
+    "file": "monsters/monster_012.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 13,
+    "id": "vulcan_phoenix",
+    "name": "バルカンフェニックス",
+    "file": "monsters/monster_013.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 14,
+    "id": "blizzard_wolf",
+    "name": "ブリザードウルフ",
+    "file": "monsters/monster_014.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 15,
+    "id": "frost_giant",
+    "name": "フロストジャイアント",
+    "file": "monsters/monster_015.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 16,
+    "id": "ice_specter",
+    "name": "アイススペクター",
+    "file": "monsters/monster_016.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 17,
+    "id": "thunder_beast",
+    "name": "サンダービースト",
+    "file": "monsters/monster_017.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 18,
+    "id": "storm_lord",
+    "name": "ストームロード",
+    "file": "monsters/monster_018.png",
+    "sourceSheet": "sprites10-18.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "number": 19,
+    "id": "volt_hydra",
+    "name": "ボルトヒドラ",
+    "file": "monsters/monster_019.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 20,
+    "id": "abyss_kraken",
+    "name": "アビスクラーケン",
+    "file": "monsters/monster_020.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 21,
+    "id": "tide_leviathan",
+    "name": "タイドレヴィアタン",
+    "file": "monsters/monster_021.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 22,
+    "id": "coral_golem",
+    "name": "コーラルゴーレム",
+    "file": "monsters/monster_022.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 23,
+    "id": "heaven_knight",
+    "name": "ヘブンナイト",
+    "file": "monsters/monster_023.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 24,
+    "id": "sky_titan",
+    "name": "スカイタイタン",
+    "file": "monsters/monster_024.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 25,
+    "id": "wind_serpent",
+    "name": "ウィンドサーペント",
+    "file": "monsters/monster_025.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 26,
+    "id": "dark_angel",
+    "name": "ダークエンジェル",
+    "file": "monsters/monster_026.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 27,
+    "id": "golem_teacher",
+    "name": "ゴーレムせんせい",
+    "file": "monsters/monster_027.png",
+    "sourceSheet": "sprites19-27.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "number": 28,
+    "id": "shadow_student",
+    "name": "シャドウせいと",
+    "file": "monsters/monster_028.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 29,
+    "id": "void_reaper",
+    "name": "ヴォイドリーパー",
+    "file": "monsters/monster_029.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 30,
+    "id": "nightmare_wolf",
+    "name": "ナイトメアウルフ",
+    "file": "monsters/monster_030.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 31,
+    "id": "shadow_colossus",
+    "name": "シャドウコロッサス",
+    "file": "monsters/monster_031.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 32,
+    "id": "black_dragon",
+    "name": "ぶらっくドラゴン",
+    "file": "monsters/monster_032.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 33,
+    "id": "coin_slime",
+    "name": "ゴールドスライム",
+    "file": "monsters/monster_033.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 34,
+    "id": "exp_ghost",
+    "name": "けいけんちのゆうれい",
+    "file": "monsters/monster_034.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 35,
+    "id": "yami_no_teiou",
+    "name": "やみのていおう",
+    "file": "monsters/monster_035.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 36,
+    "id": "riri",
+    "name": "りり",
+    "file": "monsters/monster_036.png",
+    "sourceSheet": "sprites28-36.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "number": 37,
+    "id": "asa",
+    "name": "あさ",
+    "file": "monsters/monster_037.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 38,
+    "id": "kaho",
+    "name": "かほ",
+    "file": "monsters/monster_038.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 39,
+    "id": "haru",
+    "name": "はる",
+    "file": "monsters/monster_039.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 40,
+    "id": "yuuki",
+    "name": "ゆうき",
+    "file": "monsters/monster_040.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 41,
+    "id": "takeru",
+    "name": "たける",
+    "file": "monsters/monster_041.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 42,
+    "id": "yuzu",
+    "name": "ゆず",
+    "file": "monsters/monster_042.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 43,
+    "id": "honoo_nushi",
+    "name": "ほのおのぬし",
+    "file": "monsters/monster_043.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 44,
+    "id": "koori_nushi",
+    "name": "こおりのぬし",
+    "file": "monsters/monster_044.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 45,
+    "id": "kaminari_nushi",
+    "name": "かみなりのぬし",
+    "file": "monsters/monster_045.png",
+    "sourceSheet": "sprites37-45.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "number": 46,
+    "id": "mizu_nushi",
+    "name": "みずのぬし",
+    "file": "monsters/monster_046.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 47,
+    "id": "sora_nushi",
+    "name": "そらのぬし",
+    "file": "monsters/monster_047.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 48,
+    "id": "mori_seirei",
+    "name": "もりのせいれい",
+    "file": "monsters/monster_048.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 49,
+    "id": "maguroc",
+    "name": "マグロック",
+    "file": "monsters/monster_049.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 50,
+    "id": "thunder_fairy",
+    "name": "サンダーフェアリー",
+    "file": "monsters/monster_050.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 51,
+    "id": "ice_phoenix",
+    "name": "アイスフェニックス",
+    "file": "monsters/monster_051.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 52,
+    "id": "crystal_golem",
+    "name": "クリスタルゴーレム",
+    "file": "monsters/monster_052.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 53,
+    "id": "element_dragon",
+    "name": "エレメントドラゴン",
+    "file": "monsters/monster_053.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 54,
+    "id": "shine_unicorn",
+    "name": "シャインユニコーン",
+    "file": "monsters/monster_054.png",
+    "sourceSheet": "sprites46-54.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  },
+  {
+    "number": 55,
+    "id": "dark_chimera",
+    "name": "ダークキメラ",
+    "file": "monsters/monster_055.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 0,
+      "col": 0
+    }
+  },
+  {
+    "number": 56,
+    "id": "seirei_ou",
+    "name": "せいれいおう",
+    "file": "monsters/monster_056.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 0,
+      "col": 1
+    }
+  },
+  {
+    "number": 57,
+    "id": "ultimate_dragon",
+    "name": "きゅうきょくのドラゴン",
+    "file": "monsters/monster_057.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 0,
+      "col": 2
+    }
+  },
+  {
+    "number": 58,
+    "id": "coin_slime_king",
+    "name": "ゴールドスライムキング",
+    "file": "monsters/monster_058.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 1,
+      "col": 0
+    }
+  },
+  {
+    "number": 59,
+    "id": "exp_ghost_giant",
+    "name": "けいけんちの大ゆうれい",
+    "file": "monsters/monster_059.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 1,
+      "col": 1
+    }
+  },
+  {
+    "number": 60,
+    "id": "betsusekai_kamisama",
+    "name": "べつせかいのかみさま",
+    "file": "monsters/monster_060.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 1,
+      "col": 2
+    }
+  },
+  {
+    "number": 61,
+    "id": "enchou",
+    "name": "えんちょう",
+    "file": "monsters/monster_061.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 2,
+      "col": 0
+    }
+  },
+  {
+    "number": 62,
+    "id": "sensei",
+    "name": "せんせい",
+    "file": "monsters/monster_062.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 2,
+      "col": 1
+    }
+  },
+  {
+    "number": 63,
+    "id": "hen_na_ojisan",
+    "name": "へんなおじさん",
+    "file": "monsters/monster_063.png",
+    "sourceSheet": "sprites55-64.png",
+    "cell": {
+      "row": 2,
+      "col": 2
+    }
+  }
+]

@@ -259,6 +259,38 @@ export const ANOTHER_WORLD_SPECIES: Record<string, MonsterSpecies> = {
     ],
   },
 
+  // ── レアエンカウント上位種 ────────────────────────────────────
+  coin_slime_king: {
+    id: 'coin_slime_king', name: 'ゴールドスライムキング', baseMaxHp: 200,
+    spriteKey: 'aw_coin_slime_king', placeholderColor: 0xffdd00, catchable: false,
+    learnset: [
+      { level: 15, skill: 'coinatk' },
+      { level: 15, skill: 'nigeruS' },
+      { level: 15, skill: 'goldsplash' },
+      { level: 15, skill: 'nigeruS' },
+    ],
+  },
+  exp_ghost_giant: {
+    id: 'exp_ghost_giant', name: 'けいけんちの大ゆうれい', baseMaxHp: 140,
+    spriteKey: 'aw_exp_ghost_giant', placeholderColor: 0xffee88, catchable: false,
+    learnset: [
+      { level: 15, skill: 'hikari' },
+      { level: 15, skill: 'jishibari' },
+      { level: 15, skill: 'kurayami' },
+      { level: 15, skill: 'nigeruS' },
+    ],
+  },
+  betsusekai_kamisama: {
+    id: 'betsusekai_kamisama', name: 'べつせかいのかみさま', baseMaxHp: 400,
+    spriteKey: 'aw_betsusekai_kamisama', placeholderColor: 0xffffff, catchable: false,
+    learnset: [
+      { level: 30, skill: 'hikari' },
+      { level: 30, skill: 'seinaru' },
+      { level: 30, skill: 'metsubou' },
+      { level: 30, skill: 'zettaireid' },
+    ],
+  },
+
   // ── ラスボス第2形態 ──────────────────────────────────────────
   yami_no_teiou: {
     id: 'yami_no_teiou', name: 'やみのていおう', baseMaxHp: 600,
@@ -278,6 +310,9 @@ export const AW_MONSTER_REWARDS: Record<string, { coins: number; exp: number }> 
   coin_slime:     { coins: 800,  exp: 50 },
   exp_ghost:      { coins: 30,   exp: 1500 },
   yami_no_teiou:  { coins: 2000, exp: 5000 },
+  coin_slime_king:      { coins: 2000, exp: 100 },
+  exp_ghost_giant:      { coins: 50,   exp: 3000 },
+  betsusekai_kamisama:  { coins: 3000, exp: 6000 },
 };
 
 // ボス専用報酬（monsters.tsのrasubossなどはここで参照）

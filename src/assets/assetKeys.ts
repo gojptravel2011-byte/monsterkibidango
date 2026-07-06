@@ -43,6 +43,9 @@ export const ASSET_KEYS = {
     AW_COIN_SLIME:      'aw_coin_slime',
     AW_EXP_GHOST:       'aw_exp_ghost',
     AW_YAMI_NO_TEIOU:   'aw_yami_no_teiou',
+    AW_COIN_SLIME_KING:      'aw_coin_slime_king',
+    AW_EXP_GHOST_GIANT:      'aw_exp_ghost_giant',
+    AW_BETSUSEKAI_KAMISAMA:  'aw_betsusekai_kamisama',
     // こどもたち
     CHILD_RIRI:    'child_riri',
     CHILD_ASA:     'child_asa',
