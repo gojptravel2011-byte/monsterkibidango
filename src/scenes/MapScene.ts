@@ -791,12 +791,12 @@ export class MapScene extends Phaser.Scene {
       },
     );
 
-    // ── とびら（7種＋タワー入り口）────────────────────────────
+    // ── とびら（6種＋タワー入り口）────────────────────────────
+    // 上部 (y≈250): タワー入り口（けいさん・カタカナ れべる5以上でひらく）
     // Row 1 (y≈370): ほのお、こおり、かみなり
-    // Tower entrance (y≈490): 中央
     // [中央スポーン y=630]
     // Row 2 (y≈750): みず、そら
-    // Row 3 (y≈880): えんじぇるがっこう
+    // Row 3 (y≈880): けいさん・カタカナ ミニゲーム（下の方）
     // Row 4 (y≈1010): やみ
 
     const doors: { label: string; field: string; color: number; x: number; y: number }[] = [
@@ -805,7 +805,6 @@ export class MapScene extends Phaser.Scene {
       { label: 'かみなりのとびら', field: 'kaminari_world', color: 0xffee00, x: w * 0.82, y: 370 },
       { label: 'みずのとびら',     field: 'mizu_world',     color: 0x2266ff, x: w * 0.18, y: 750 },
       { label: 'そらのとびら',     field: 'sora_world',     color: 0x88ccff, x: w * 0.82, y: 750 },
-      { label: 'えんじぇるのとびら', field: 'angel_school', color: 0xffdd44, x: w * 0.50, y: 880 },
       { label: 'やみのとびら',     field: 'yami_world',     color: 0x440066, x: w * 0.50, y: 1010 },
     ];
 
@@ -851,8 +850,8 @@ export class MapScene extends Phaser.Scene {
       this.decorations.push(glow, bg, top, lbl);
     }
 
-    // ── タワーダンジョン入り口（中央 y=490）──────────────────
-    const towerX = w / 2, towerY = 490;
+    // ── タワーダンジョン入り口（上部中央 y=250、けいさん・カタカナ れべる5以上で開放）──────────────────
+    const towerX = w / 2, towerY = 250;
     const towerG = this.add.graphics().setDepth(3);
     // 塔の外形
     towerG.fillStyle(0x3d1a6e);
@@ -913,9 +912,44 @@ export class MapScene extends Phaser.Scene {
     this.addTriggerZone(towerX, towerY, 'とうへ', 0x9900ff,
       'とうのダンジョンへ\nはいりますか？\n（30かいまで　あるよ！）',
       () => {
-        getState().position = { field: 'tower_dungeon', x: 1, y: 0 };
+        const state = getState();
+        if (state.keisanLevel < 5 || state.katakanaLevel < 5) {
+          this.msgWin.show('', `とうのダンジョンに　はいるには\nカタカナレベルと　けいさんレベルが\nどちらも　5いじょう　ひつようだよ！\n\nカタカナレベル：${state.katakanaLevel}　けいさんレベル：${state.keisanLevel}\nクイズや　けいさんゲームで　レベルを　あげよう！`);
+          return;
+        }
+        state.position = { field: 'tower_dungeon', x: 1, y: 0 };
         this.scene.start('TowerDungeonScene', { floor: 1 });
       },
+    );
+
+    // ── けいさん・カタカナ ミニゲーム（下の方、旧えんじぇるのとびら跡地）──────────────
+    const calcX = w * 0.5 - 130, kanaX = w * 0.5 + 130, quizY = 880;
+    this.decorations.push(
+      this.add.rectangle(calcX, quizY, 120, 100, 0x1a3d1a).setDepth(2).setStrokeStyle(3, 0x8888ff),
+      this.add.text(calcX, quizY - 14, '＋ －', {
+        fontSize: '30px', color: '#ffff88', fontFamily: 'sans-serif', fontStyle: 'bold',
+      }).setOrigin(0.5).setDepth(3),
+      this.add.text(calcX, quizY + 24, 'けいさん', {
+        fontSize: '18px', color: '#aaffaa', fontFamily: 'sans-serif',
+      }).setOrigin(0.5).setDepth(3),
+    );
+    this.addTriggerZone(calcX, quizY + 68, 'けいさん\nゲーム', 0x4466cc,
+      'たしざん・ひきざん\nゲームをしますか？',
+      () => { this.scene.start('ArithmeticScene'); },
+    );
+
+    this.decorations.push(
+      this.add.rectangle(kanaX, quizY, 120, 100, 0x3d1a3d).setDepth(2).setStrokeStyle(3, 0xff88cc),
+      this.add.text(kanaX, quizY - 14, 'あ→ア', {
+        fontSize: '26px', color: '#ffdd88', fontFamily: 'sans-serif', fontStyle: 'bold',
+      }).setOrigin(0.5).setDepth(3),
+      this.add.text(kanaX, quizY + 24, 'カタカナ', {
+        fontSize: '18px', color: '#ffaadd', fontFamily: 'sans-serif',
+      }).setOrigin(0.5).setDepth(3),
+    );
+    this.addTriggerZone(kanaX, quizY + 68, 'カタカナ\nクイズ', 0xcc4488,
+      'カタカナクイズを\nしますか？',
+      () => { this.scene.start('KatakanaQuizScene'); },
     );
   }
 
@@ -1229,7 +1263,51 @@ export class MapScene extends Phaser.Scene {
       return;
     }
 
-    // （しょうがっこうの制限は撤廃：撃破後は別世界ワープポイントが開く）
+    // 別世界（えんじぇるほいくえん）→ 現世界へ戻るときは、くるくる渦のえんしゅつ
+    if (toField === 'shogakko' && state.position.field === 'angel_hoikuen') {
+      this.playVortexTransition(() => this.applyFieldChange(toField));
+      return;
+    }
+
+    this.applyFieldChange(toField);
+  }
+
+  // くるくる渦の演出（別世界からもどるとき用・やさしいパステルカラー）
+  private playVortexTransition(onCovered: () => void): void {
+    const w = this.scale.width, h = this.scale.height;
+    const cx = w / 2, cy = h / 2;
+    const colors = [0xffe0ee, 0xe0f0ff, 0xfff6cc, 0xe2ffe4]; // ピンク・そらいろ・クリーム・ミント
+    const arms = 6;
+    const container = this.add.container(cx, cy).setDepth(999).setScrollFactor(0).setScale(0);
+    for (let i = 0; i < arms; i++) {
+      const g = this.add.graphics();
+      const color = colors[i % colors.length];
+      const start = (Math.PI * 2 / arms) * i;
+      const end = start + (Math.PI * 2 / arms) * 0.72;
+      g.fillStyle(color, 0.9);
+      g.slice(0, 0, Math.max(w, h), start, end, false);
+      g.fillPath();
+      container.add(g);
+    }
+    this.tweens.add({
+      targets: container, rotation: Math.PI * 3, duration: 1300, ease: 'Cubic.easeInOut',
+    });
+    this.tweens.add({
+      targets: container, scale: 1, duration: 550, ease: 'Cubic.easeIn',
+      onComplete: () => {
+        onCovered();
+        this.tweens.add({
+          targets: container, scale: 0, duration: 550, delay: 80, ease: 'Cubic.easeOut',
+          onComplete: () => container.destroy(),
+        });
+      },
+    });
+  }
+
+  private applyFieldChange(toField: string): void {
+    const state = getState();
+    const field = FIELDS[toField];
+    if (!field) return;
 
     // 入ってきた方向の出口付近にスポーン（戻り口を探す）
     const fromField = state.position.field;
