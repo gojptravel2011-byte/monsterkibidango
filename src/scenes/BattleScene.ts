@@ -148,7 +148,7 @@ export class BattleScene extends Phaser.Scene {
       const y = isLast ? h * 0.84 : h * 0.68 + Math.floor(i / 2) * 70;
       const bg = makeBtn(this, x, y, isLast ? 340 : 180, 60, { depth: 20 })
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { this.clearButtons(); cmd.action(); })
+        .on('pointerup', () => { this.clearButtons(); cmd.action(); })
         .on('pointerover', () => bg.setFillStyle(0x2a4090))
         .on('pointerout', () => bg.setFillStyle(T.panelMid));
       const text = this.add.text(x, y, cmd.label, {

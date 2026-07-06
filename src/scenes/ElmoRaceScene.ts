@@ -133,15 +133,14 @@ export class ElmoRaceScene extends Phaser.Scene {
       fontSize: '18px', color: '#ffcc44', fontFamily: 'sans-serif',
     }).setOrigin(0, 0.5).setDepth(10).setScrollFactor(0);
 
-    // もどるボタン
-    const backBtn = this.add.rectangle(680, 36, 100, 44, T.panelMid, 0.9)
+    // もどるボタン（常時表示。setupObjsには入れずシーン全体で残す）
+    this.add.rectangle(680, 36, 100, 44, T.panelMid, 0.9)
       .setStrokeStyle(2, T.borderGold).setDepth(10).setScrollFactor(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.goBack());
     this.add.text(680, 36, 'もどる', {
       fontSize: '18px', color: '#ffffff', fontFamily: 'sans-serif',
     }).setOrigin(0.5).setDepth(11).setScrollFactor(0);
-    this.setupObjs.push(backBtn);
 
     // トラック描画（常時表示）
     this.trackGfx = this.add.graphics().setDepth(2);
